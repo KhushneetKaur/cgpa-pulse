@@ -111,6 +111,7 @@ function FieldInput({
       <div style={{ position: "relative" }}>
         <input
           type={type}
+          autoComplete={autoComplete}
           value={value}
           onChange={onChange}
           onBlur={onBlur}
@@ -442,12 +443,21 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
                 </div>
               </div>
             )}
+            
+            {/* Hidden fields trick — prevents browser autofill on signup */}
+{isSignup && (
+  <>
+    <input type="text"     style={{ display: "none" }} aria-hidden="true" readOnly />
+    <input type="password" style={{ display: "none" }} aria-hidden="true" readOnly />
+  </>
+)}
 
             {/* Email — signup only */}
             {isSignup && (
               <FieldInput
                 label="Email"
                 type="email"
+                autoComplete={isSignup ? "off" : "email"}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 onBlur={() => handleBlur("email")}
@@ -462,6 +472,7 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
             <FieldInput
               label={isSignup ? "Username" : "Username or Email"}
               value={uname}
+              autoComplete={isSignup ? "off" : "username"}
               onChange={e => {
              setUname(e.target.value);
              if (fieldErrors.uname) {
