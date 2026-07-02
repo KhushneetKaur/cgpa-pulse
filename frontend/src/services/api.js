@@ -18,13 +18,16 @@ const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
 async function ensureCsrfToken() {
   if (csrfToken) return csrfToken;
 
-  const res = await api.get("/auth/csrf", {
-    skipCsrf: true,
-  });
-
-  csrfToken = res.data.csrfToken;
- 
-  return csrfToken;
+  try {
+    const res = await api.get("/auth/csrf", {
+      skipCsrf: true,
+    });
+    csrfToken = res.data.csrfToken;
+    return csrfToken;
+  } catch (err) {
+    console.error("Failed to fetch CSRF token:", err);
+    throw err;
+  }
 }
 
 // ── Request interceptor ───────────────────────────────────────────────────────
@@ -94,21 +97,26 @@ api.interceptors.response.use(
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
 
-    // CSRF retry
+    // CSRF retry — reset token and try again with fresh one
     if (
       status === 403 &&
       message === "Invalid CSRF token" &&
       !error.config?._csrfRetry
     ) {
-      csrfToken = null;
-      const retryConfig = { ...error.config, _csrfRetry: true };
-      return ensureCsrfToken().then(token => {
-        retryConfig.headers = retryConfig.headers || {};
-        retryConfig.headers["x-csrf-token"] = token;
-        return api.request(retryConfig);
-      });
+      csrfToken = null; // Reset cached token
+      error.config._csrfRetry = true;
+      try {
+        const token = await ensureCsrfToken();
+        error.config.headers = error.config.headers || {};
+        error.config.headers["x-csrf-token"] = token;
+        return api.request(error.config);
+      } catch (err) {
+        console.error("CSRF retry failed:", err);
+        return Promise.reject({ status, message, errors: error.response?.data?.errors || [] });
+      }
     }
 
+    // If CSRF failure after retry, clear token
     if (status === 403 && message === "Invalid CSRF token") {
       csrfToken = null;
     }
