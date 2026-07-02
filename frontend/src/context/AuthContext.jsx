@@ -53,36 +53,36 @@ export function AuthProvider({ children }) {
   // When token expires mid-session, force back to login
   useEffect(() => {
     function handleUnauthorized() {
-  setUser(prev => {
-    if (prev !== null) {
-      // Was logged in — session expired mid-session
-      setAuthErr("Session expired — please log in again");
+      setUser(prev => {
+        if (prev !== null) {
+          // Was logged in — session expired mid-session
+          setAuthErr("Session expired — please log in again");
+        }
+        return null;
+      });
     }
-    return null;
-  });
-}
     window.addEventListener("auth:unauthorized", handleUnauthorized);
     return () =>
       window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
-  // ── Signup ────────────────────────────────────────────────────────────────
+  // ── Signup ───────────────────────────────────────────────────────────
   const signup = useCallback(async (email) => {
-  setAuthErr("");
-  try {
-    const data = await apiSignup({
-      username: uname.trim(),
-      email:    email.trim(),
-      password: pwd,
-    });
-    return { userId: data.user.id, email: email.trim() };
-  } catch (err) {
-    setAuthErr(err.message || "Signup failed");
-    throw err;
-  } 
-}, [uname, pwd]);
+    setAuthErr("");
+    try {
+      const data = await apiSignup({
+        username: uname.trim(),
+        email:    email.trim(),
+        password: pwd,
+      });
+      return { userId: data.user.id, email: email.trim() };
+    } catch (err) {
+      setAuthErr(err.message || "Signup failed");
+      throw err;
+    }
+  }, [uname, pwd]);
 
-  // ── Login ─────────────────────────────────────────────────────────────────
+  // ── Login ───────────────────────────────────────────────────────────
   const login = useCallback(async () => {
     setAuthErr("");
     try {
@@ -96,10 +96,10 @@ export function AuthProvider({ children }) {
     } catch (err) {
       setAuthErr(err.message || "Login failed");
       throw err;
-    } 
+    }
   }, [uname, pwd]);
 
-  // ── Logout ────────────────────────────────────────────────────────────────
+  // ── Logout ──────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try {
       await apiLogout();
@@ -113,60 +113,59 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-
   const verifyOTP = useCallback(async (userId, otp) => {
-  setAuthErr("");
-  try {
-    const user = await apiVerifyOTP(userId, otp);
-    // After verification — don't auto-login, switch to login mode
-    setIsSignup(false);
-    return "verified";
-  } catch (err) {
-    setAuthErr(err.message || "OTP verification failed");
-    throw err;
-  } 
-}, []);
+    setAuthErr("");
+    try {
+      const user = await apiVerifyOTP(userId, otp);
+      // After verification — don't auto-login, switch to login mode
+      setIsSignup(false);
+      return "verified";
+    } catch (err) {
+      setAuthErr(err.message || "OTP verification failed");
+      throw err;
+    }
+  }, []);
 
-const resendOTP = useCallback(async (userId) => {
-  setAuthErr("");
-  try {
-    await apiResendOTP(userId);
-  } catch (err) {
-    setAuthErr(err.message || "Failed to resend OTP");
-    throw err;
-  }
-}, []);
+  const resendOTP = useCallback(async (userId) => {
+    setAuthErr("");
+    try {
+      await apiResendOTP(userId);
+    } catch (err) {
+      setAuthErr(err.message || "Failed to resend OTP");
+      throw err;
+    }
+  }, []);
 
-const forgotPassword = useCallback(async (email) => {
-  setAuthErr("");
-  try {
-    await apiForgotPassword(email);
-    return "sent";
-  } catch (err) {
-    setAuthErr(err.message || "Failed to send reset email");
-    throw err;
-  } 
-}, []);
+  const forgotPassword = useCallback(async (email) => {
+    setAuthErr("");
+    try {
+      await apiForgotPassword(email);
+      return "sent";
+    } catch (err) {
+      setAuthErr(err.message || "Failed to send reset email");
+      throw err;
+    }
+  }, []);
 
-const resetPassword = useCallback(async (token, password) => {
-  setAuthErr("");
-  try {
-    await apiResetPassword(token, password);
-    setIsSignup(false);
-    return "reset";
-  } catch (err) {
-    setAuthErr(err.message || "Password reset failed");
-    throw err;
-  } 
-}, []);
+  const resetPassword = useCallback(async (token, password) => {
+    setAuthErr("");
+    try {
+      await apiResetPassword(token, password);
+      setIsSignup(false);
+      return "reset";
+    } catch (err) {
+      setAuthErr(err.message || "Password reset failed");
+      throw err;
+    }
+  }, []);
 
-const clearForm = useCallback(() => {
-  setUname("");
-  setPwd("");
-  setAuthErr("");
-}, []);
+  const clearForm = useCallback(() => {
+    setUname("");
+    setPwd("");
+    setAuthErr("");
+  }, []);
 
- const value = {
+  const value = {
     user,
     authErr,
     setAuthErr,
@@ -180,7 +179,10 @@ const clearForm = useCallback(() => {
     login,
     signup,
     logout,
-    verifyOTP,resendOTP,forgotPassword,resetPassword,
+    verifyOTP,
+    resendOTP,
+    forgotPassword,
+    resetPassword,
     clearForm,
   };
 

@@ -2,6 +2,7 @@ import jwt  from "jsonwebtoken";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
+import { logger } from "../config/logger.js";
 import {
   sendVerificationOTP,
   sendPasswordResetEmail,
@@ -34,7 +35,7 @@ export function clearTokenCookie(res) {
     expires:  new Date(0),
   });
 }
-// ── Signup ────────────────────────────────────────────────────────────────────
+// ── Signup ───────────────────────────────────────────────────────────
 
 export async function registerUser({ username, email, password }) {
   // Check if username already taken
@@ -61,16 +62,23 @@ export async function registerUser({ username, email, password }) {
     role:         "student",
   });
 
-  await sendOTP(user._id);
+  try {
+    await sendOTP(user._id);
+  } catch (err) {
+    logger.error("Failed to send OTP during signup:", err.message);
+    // Delete the user since we couldn't send OTP
+    await User.findByIdAndDelete(user._id);
+    throw ApiError.internal("Failed to send verification email. Please try again.");
+  }
 
-const accessToken  = generateAccessToken(user._id);
-const refreshToken = generateRefreshToken(user._id);
+  const accessToken  = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
 
-return { user: user.toPublicJSON(), accessToken, refreshToken };
+  return { user: user.toPublicJSON(), accessToken, refreshToken };
 }
 
 
-// ── Login ─────────────────────────────────────────────────────────────────────
+// ── Login ────────────────────────────────────────────────────────────
 
 export async function loginUser({ identifier, password }) {
   // identifier can be username or email
@@ -97,18 +105,18 @@ export async function loginUser({ identifier, password }) {
     throw ApiError.unauthorized("Invalid credentials");
   }
 
-if (!user.isEmailVerified) {
-  throw ApiError.forbidden("ACCOUNT_NOT_VERIFIED");
-}
+  if (!user.isEmailVerified) {
+    throw ApiError.forbidden("ACCOUNT_NOT_VERIFIED");
+  }
 
-// Update last login timestamp
-user.lastLogin = new Date();
-await user.save({ validateBeforeSave: false });
+  // Update last login timestamp
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
 
-const accessToken  = generateAccessToken(user._id);
-const refreshToken = generateRefreshToken(user._id);
+  const accessToken  = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
 
-return { user: user.toPublicJSON(), accessToken, refreshToken };
+  return { user: user.toPublicJSON(), accessToken, refreshToken };
 }
 
 // ── Get current user from token ───────────────────────────────────────────────
@@ -143,7 +151,7 @@ export async function sendOTP(userId) {
   await sendVerificationOTP(user.email, user.username, otp);
 }
 
-// ── Verify OTP ────────────────────────────────────────────────────────────────
+// ── Verify OTP ──────────────────────────────────────────────────────────
 export async function verifyOTP(userId, otp) {
   const user = await User.findById(userId).select("+emailOTP +emailOTPExpiry");
   if (!user) throw ApiError.notFound("User not found");
@@ -169,7 +177,7 @@ export async function verifyOTP(userId, otp) {
   return user.toPublicJSON();
 }
 
-// ── Forgot password ───────────────────────────────────────────────────────────
+// ── Forgot password ────────────────────────────────────────────────────────
 export async function forgotPassword(email) {
   const user = await User.findOne({ email: email.toLowerCase().trim() });
 
@@ -187,10 +195,19 @@ export async function forgotPassword(email) {
   user.passwordResetExpiry = expiry;
   await user.save({ validateBeforeSave: false });
 
-  await sendPasswordResetEmail(user.email, user.username, resetToken);
+  try {
+    await sendPasswordResetEmail(user.email, user.username, resetToken);
+  } catch (err) {
+    logger.error("Failed to send password reset email:", err.message);
+    // Clear the reset token since we couldn't send the email
+    user.passwordResetToken  = null;
+    user.passwordResetExpiry = null;
+    await user.save({ validateBeforeSave: false });
+    throw ApiError.internal("Failed to send reset email. Please try again.");
+  }
 }
 
-// ── Reset password ────────────────────────────────────────────────────────────
+// ── Reset password ────────────────────────────────────────────────────────
 export async function resetPassword(resetToken, newPassword) {
   const tokenHash = crypto
     .createHash("sha256")
@@ -214,7 +231,7 @@ export async function resetPassword(resetToken, newPassword) {
   return user.toPublicJSON();
 }
 
-// ── Refresh token ─────────────────────────────────────────────────────────────
+// ── Refresh token ─────────────────────────────────────────────────────────
 export function generateAccessToken(userId) {
   return jwt.sign(
     { id: userId },

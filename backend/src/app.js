@@ -36,17 +36,17 @@ if (process.env.NODE_ENV !== "production") {
 
 const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 
-// ── Security headers ──────────────────────────────────────────────────────────
+// ── Security headers ────────────────────────────────────────────────────────
 app.use(helmet());
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
+// ── CORS ────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: true, // This dynamically allows whatever URL is trying to reach it (your Vercel link)
+  origin: uniqueAllowedOrigins,
   credentials: true,   // allow cookies
   methods:     ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
 }));
-// ── Body parsing ──────────────────────────────────────────────────────────────
+// ── Body parsing ─────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10kb" }));        // reject huge payloads
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -78,13 +78,13 @@ app.use("/api", rateLimiter({
   message:  "Too many requests, please try again later.",
 }));
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+// ── Routes ───────────────────────────────────────────────────────────
 app.use("/api/auth",        authRoutes);
 app.use("/api/user",        userRoutes);
 app.use("/api/semesters",   semesterRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 
-// ── Health check ──────────────────────────────────────────────────────────────
+// ── Health check ─────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
@@ -94,7 +94,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ── 404 handler ───────────────────────────────────────────────────────────────
+// ── 404 handler ──────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
     success: false,
