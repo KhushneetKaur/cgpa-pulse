@@ -3,7 +3,7 @@ import api from "./api.js";
 // ── GET /api/user/profile ─────────────────────────────────────────────────────
 export async function apiGetProfile() {
   const res = await api.get("/user/profile");
-  return res.data.user;
+  return res.user;
 }
 
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
