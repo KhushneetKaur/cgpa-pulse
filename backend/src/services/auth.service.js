@@ -13,13 +13,12 @@ import {
 
 export function setTokenCookie(res, token) {
   const isProduction = process.env.NODE_ENV === "production";
-  const sameSite = process.env.COOKIE_SAMESITE || (isProduction ? "strict" : "lax");
-
+  
   res.cookie("token", token, {
     httpOnly: true,
-    secure:   isProduction,         // HTTPS only in production
-    sameSite,
-    maxAge:   7 * 24 * 60 * 60 * 1000,  // 7 days in milliseconds
+    secure:   isProduction, // True on Render (HTTPS)
+    sameSite: isProduction ? "none" : "lax", // CRUCIAL: "none" allows cross-domain cookies
+    maxAge:   7 * 24 * 60 * 60 * 1000,
   });
 }
 
@@ -27,16 +26,14 @@ export function setTokenCookie(res, token) {
 
 export function clearTokenCookie(res) {
   const isProduction = process.env.NODE_ENV === "production";
-  const sameSite = process.env.COOKIE_SAMESITE || (isProduction ? "strict" : "lax");
 
   res.cookie("token", "", {
     httpOnly: true,
     secure:   isProduction,
-    sameSite,
-    expires:  new Date(0),   // immediately expired
+    sameSite: isProduction ? "none" : "lax", // Match the setting used when creating it
+    expires:  new Date(0),
   });
 }
-
 // ── Signup ────────────────────────────────────────────────────────────────────
 
 export async function registerUser({ username, email, password }) {
@@ -236,10 +233,11 @@ export function generateRefreshToken(userId) {
 
 export function setRefreshTokenCookie(res, token) {
   const isProduction = process.env.NODE_ENV === "production";
+  
   res.cookie("refreshToken", token, {
     httpOnly: true,
     secure:   isProduction,
-    sameSite: isProduction ? "strict" : "lax",
+    sameSite: isProduction ? "none" : "lax", // CRUCIAL: "none" allows cross-domain cookies
     maxAge:   7 * 24 * 60 * 60 * 1000,
   });
 }
