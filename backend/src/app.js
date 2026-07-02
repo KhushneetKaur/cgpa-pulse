@@ -40,18 +40,6 @@ const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 app.use(helmet());
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// app.use(cors({
-//   origin(origin, callback) {
-//     if (!origin || uniqueAllowedOrigins.includes(origin)) {
-//       return callback(null, true);
-//     
-//     callback(new Error("Not allowed by CORS"));
-//   },
-//   credentials: true,   // allow cookies
-//   methods:     ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//   allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
-// }));
-// ── CORS ──────────────────────────────────────────────────────────────────────
 app.use(cors({
   origin: true, // This dynamically allows whatever URL is trying to reach it (your Vercel link)
   credentials: true,   // allow cookies

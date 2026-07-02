@@ -19,14 +19,6 @@ export default function NavBar() {
 
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
   const showSecondBar = screen === "app" && !!branch;
-  useEffect(() => {
-  if (!branchMenuOpen) return;
-  function handleClick(e) {
-    setBranchMenuOpen(false);
-  }
-  document.addEventListener("mousedown", handleClick);
-  return () => document.removeEventListener("mousedown", handleClick);
-}, [branchMenuOpen]);
 
   return (
     <header style={{
