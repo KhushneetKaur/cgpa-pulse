@@ -163,7 +163,7 @@ export default function CustomiseSubjectsModal({
                     fontSize: 10,
                     color:    c.muted,
                   }}>
-                    {sub.code} · {sub.credits} cr · {sub.type}
+                     {sub.credits} cr · {sub.type}
                   </p>
                 </div>
                 <button
@@ -217,13 +217,6 @@ export default function CustomiseSubjectsModal({
                       color:    c.text,
                     }}>
                       {sub.name}
-                    </p>
-                    <p style={{
-                      margin:   0,
-                      fontSize: 10,
-                      color:    c.muted,
-                    }}>
-                      {sub.credits} cr · {sub.type} 
                     </p>
                   </div>
                   <button
