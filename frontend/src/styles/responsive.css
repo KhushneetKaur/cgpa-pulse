@@ -1,0 +1,248 @@
+/* ── Responsive breakpoints for CGPA Pulse ──────────────────────────────── */
+
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Tablet and below (≤900px) ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .calc-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .calc-sidebar-wrap {
+    position: static !important;
+    max-height: none !important;
+  }
+  .navbar-top-grid {
+    grid-template-columns: auto 1fr auto !important;
+    gap: 8px !important;
+  }
+  .navbar-center-pills {
+    display: none !important;
+  }
+  .navbar-username-text {
+    display: none !important;
+  }
+  main {
+    padding: 1rem 0.85rem 1.5rem !important;
+  }
+}
+
+/* ── Mobile (≤640px) ─────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .navbar-brand-subtitle {
+    display: none !important;
+  }
+  .navbar-signout-text {
+    display: none !important;
+  }
+  .branch-select-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .summary-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── Small mobile (≤420px) ──────────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .summary-cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .navbar-cgpa-pill {
+    padding: 4px 10px !important;
+  }
+  .navbar-cgpa-pill .pct-suffix {
+    display: none !important;
+  }
+}
+@media (max-width: 640px) {
+  .navbar-signout-icon-only {
+    display: inline !important;
+  }
+}
+/* ── Subject row — mobile 2-row layout ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .subject-row-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-areas:
+      "name  name  name  type  bl"
+      "int   ext   total grade gp" !important;
+    row-gap: 8px !important;
+  }
+  .subject-row-grid > .sr-name  { grid-area: name; }
+  .subject-row-grid > .sr-type  { grid-area: type; }
+  .subject-row-grid > .sr-bl    { grid-area: bl; }
+  .subject-row-grid > .sr-int   { grid-area: int; }
+  .subject-row-grid > .sr-ext   { grid-area: ext; }
+  .subject-row-grid > .sr-total { grid-area: total; }
+  .subject-row-grid > .sr-grade { grid-area: grade; }
+  .subject-row-grid > .sr-gp    { grid-area: gp; }
+}
+/* ── Tab strip — mobile scroll hint + tighter spacing ───────────────────── */
+@media (max-width: 640px) {
+  .navbar-second-bar-inner {
+    padding: 0 0.5rem !important;
+  }
+  .navbar-tab-btn {
+    padding: 0 10px !important;
+    font-size: 11px !important;
+  }
+  .navbar-tab-btn .tab-icon {
+    font-size: 12px !important;
+  }
+  .navbar-branch-btn {
+    padding: 0 10px 0 8px !important;
+    font-size: 12px !important;
+  }
+  /* Fade edge to signal more tabs are scrollable */
+  .navbar-tabs-scroll {
+    -webkit-mask-image: linear-gradient(
+      to right, black 88%, transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right, black 88%, transparent 100%
+    );
+  }
+}
+/* ── Target Page — mobile stacking ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  .target-input-row {
+    grid-template-columns: 1fr !important;
+  }
+  .target-result-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .target-result-grid > div {
+    text-align: left !important;
+  }
+  .target-cgpa-highlight {
+    flex-wrap: wrap !important;
+  }
+  .target-pct-table {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+/* ── Predictor Page — mobile stacking ───────────────────────────────────── */
+@media (max-width: 640px) {
+  .predictor-top-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .predictor-row-grid {
+    grid-template-columns: 1fr 50px !important;
+    grid-template-areas:
+      "name  type"
+      "int   int"
+      "chips chips" !important;
+    row-gap: 6px !important;
+  }
+  .predictor-row-grid > .pr-name  { grid-area: name; }
+  .predictor-row-grid > .pr-type  { grid-area: type; }
+  .predictor-row-grid > .pr-int   { grid-area: int; }
+  .predictor-row-grid > .pr-chips { grid-area: chips; }
+  .predictor-col-headers {
+    display: none !important;
+  }
+}
+/* ── History Page — mobile stacking ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .history-summary-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .history-bar-chart {
+    min-width: 0 !important;
+    height: 70px !important;
+  }
+  .history-cgpa-block p:first-child {
+    font-size: 11px !important;
+  }
+}
+/* ── Backlogs Page — mobile stacking ────────────────────────────────────── */
+@media (max-width: 480px) {
+  .backlog-subject-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .backlog-clear-btn {
+    align-self: stretch !important;
+    text-align: center !important;
+  }
+}
+/* ── Grade Table Page — mobile reflow ───────────────────────────────────── */
+@media (max-width: 480px) {
+  .grade-table-header {
+    display: none !important;
+  }
+  .grade-table-row {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "marks  grade"
+      "marks  gp"
+      "perf   perf" !important;
+    row-gap: 4px !important;
+  }
+  .grade-table-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+  }
+  .gt-marks { grid-column: 1; grid-row: 1; }
+  .gt-grade { grid-column: 2; grid-row: 1; justify-self: end; }
+  .gt-gp    { display: none !important; }
+  .gt-pct   { display: none !important; }
+  .gt-perf  {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 11px !important;
+    color: var(--muted-color, inherit);
+  }
+}
+/* ── Leaderboard Page — mobile reflow ───────────────────────────────────── */
+@media (max-width: 480px) {
+  .lb-row {
+    grid-template-columns: 32px 1fr auto !important;
+    grid-template-areas:
+      "rank info cgpa"
+      "rank badge cgpa" !important;
+    row-gap: 4px !important;
+  }
+  .lb-rank  { grid-area: rank; }
+  .lb-info  { grid-area: info; }
+  .lb-badge { grid-area: badge; justify-self: start; }
+  .lb-cgpa  { grid-area: cgpa; }
+
+  .lb-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .lb-header-row button {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  .lb-your-standing {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
+/* ── QuickSGPAModal — mobile button stacking ────────────────────────────── */
+@media (max-width: 380px) {
+  .qsgpa-actions {
+    flex-direction: column !important;
+  }
+  .qsgpa-actions button {
+    flex: 1 1 100% !important;
+  }
+}
+/* ── Customise Subjects Modal — responsive ───────────────────────────────── */
+@media (max-width: 640px) {
+  .customise-modal-card {
+    max-width:    92vw !important;
+    max-height:   75vh !important;
+    padding:      16px !important;
+    border-radius: 14px !important;
+  }
+}

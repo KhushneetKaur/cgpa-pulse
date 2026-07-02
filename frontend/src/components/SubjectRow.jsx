@@ -1,0 +1,300 @@
+import { useAppData } from "../context/AppDataContext";
+import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
+import { getGrade, getMaxMarks } from "../data/gradeTable";
+
+export default function SubjectRow({ sub, selSem, branch }) {
+  const {
+    marks,
+    changeMark,
+    bBacklogs,
+    bElectiveNames,
+    setElectiveName,
+    toggleBacklog,
+    c, dark, inp, scoreClr,
+  } = useAppData();
+
+  const mx         = getMaxMarks(sub.type);
+  const entry      = marks[sub.code] || {};
+  const isLab      = sub.type === "lab";
+  const isBacklog  = (bBacklogs[selSem] || []).includes(sub.code);
+
+  const iVal = entry.int !== "" && entry.int !== undefined
+    ? Number(entry.int) : null;
+  const eVal = entry.ext !== "" && entry.ext !== undefined
+    ? Number(entry.ext) : null;
+
+  const total      = iVal !== null && eVal !== null ? iVal + eVal : null;
+  const grade      = getGrade(total);
+  const bothFilled = iVal !== null && eVal !== null;
+  const iWarn      = iVal !== null && iVal > mx.int;
+  const eWarn      = eVal !== null && eVal > mx.ext;
+
+  const electiveName = bElectiveNames[sub.code] || "";
+  const opts         = sub.elective
+    ? (ELECTIVE_OPTIONS[branch]?.[sub.code] || [])
+    : [];
+  const isCustom     = electiveName && !opts.includes(electiveName);
+  const dropVal      = isCustom ? "__other__" : electiveName;
+
+  const displayName = electiveName && electiveName !== "__other__"
+    ? electiveName
+    : sub.name;
+
+  return (
+    <div style={{ paddingBottom: 2 }}>
+      <div
+        className="subject-row-grid"
+        style={{
+          display:             "grid",
+          gridTemplateColumns: "1fr 34px 80px 80px 90px 50px 34px 34px",
+          gap:                 6,
+          alignItems:          "start",
+        }}
+      >
+
+        {/* ── Subject name + elective picker ──────────────────────── */}
+        <div className="sr-name">
+          <p style={{
+            margin:     0,
+            fontSize:   13,
+            color:      isBacklog ? c.bad : c.text,
+            lineHeight: 1.3,
+            fontWeight: isBacklog ? 600 : 500,
+          }}>
+            {isBacklog && "⚠ "}
+            {displayName}
+          </p>
+          <p style={{
+            margin:    0,
+            fontSize:  10,
+            color:     c.muted,
+            marginTop: 1,
+          }}>
+            {sub.code} · {sub.credits} cr
+          </p>
+
+          {sub.elective && (
+            <div style={{ marginTop: 4 }}>
+              <select
+                value={dropVal}
+                onChange={e => {
+                  const val = e.target.value;
+                  setElectiveName(
+                    sub.code,
+                    val === "__other__" ? "__other__" : val
+                  );
+                }}
+                style={{
+                  ...inp({ fontSize: 10, padding: "3px 6px" }),
+                  width: "100%",
+                }}
+              >
+                <option value="">— Select subject —</option>
+                {opts.map(o => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+                <option value="__other__">✏ Other (type below)</option>
+              </select>
+
+              {(electiveName === "__other__" || isCustom) && (
+                <input
+                  value={electiveName === "__other__" ? "" : electiveName}
+                  onChange={e =>
+                    setElectiveName(sub.code, e.target.value || "__other__")
+                  }
+                  placeholder="Type your subject name…"
+                  autoFocus
+                  style={{
+                    ...inp({
+                      fontSize:    10,
+                      padding:     "3px 8px",
+                      marginTop:   4,
+                      borderColor: c.accent,
+                    }),
+                    width: "100%",
+                  }}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── Type badge ──────────────────────────────────────────── */}
+        <div className="sr-type" style={{
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          paddingTop:     3,
+        }}>
+          <span style={{
+            fontSize:     9,
+            fontWeight:   700,
+            borderRadius: 5,
+            padding:      "2px 4px",
+            background:   isLab
+              ? (dark ? "rgba(52,211,153,0.15)" : "rgba(5,150,105,0.1)")
+              : (dark ? "rgba(124,131,245,0.15)" : "rgba(109,40,217,0.08)"),
+            color:        isLab ? c.ok : c.accent,
+            letterSpacing: 0.3,
+          }}>
+            {isLab ? "LAB" : "TH"}
+          </span>
+        </div>
+
+        {/* ── Internal input ──────────────────────────────────────── */}
+        <div className="sr-int">
+          <input
+            type="number"
+            min="0"
+            max={mx.int}
+            value={entry.int ?? ""}
+            onChange={e =>
+              changeMark(sub.code, "int", e.target.value, sub.type)
+            }
+            placeholder={`0–${mx.int}`}
+            style={{
+              ...inp({
+                textAlign:   "center",
+                fontSize:    13,
+                padding:     "6px 4px",
+                borderColor: iWarn ? c.bad : undefined,
+                boxShadow:   iWarn ? `0 0 0 2px ${c.bad}33` : undefined,
+              }),
+              width: "100%",
+            }}
+          />
+          <p style={{
+            margin:    "2px 0 0",
+            fontSize:  9,
+            color:     c.muted,
+            textAlign: "center",
+          }}>
+            max {mx.int}
+          </p>
+        </div>
+
+        {/* ── External input ──────────────────────────────────────── */}
+        <div className="sr-ext">
+          <input
+            type="number"
+            min="0"
+            max={mx.ext}
+            value={entry.ext ?? ""}
+            onChange={e =>
+              changeMark(sub.code, "ext", e.target.value, sub.type)
+            }
+            placeholder={`0–${mx.ext}`}
+            style={{
+              ...inp({
+                textAlign:   "center",
+                fontSize:    13,
+                padding:     "6px 4px",
+                borderColor: eWarn ? c.bad : undefined,
+                boxShadow:   eWarn ? `0 0 0 2px ${c.bad}33` : undefined,
+              }),
+              width: "100%",
+            }}
+          />
+          <p style={{
+            margin:    "2px 0 0",
+            fontSize:  9,
+            color:     c.muted,
+            textAlign: "center",
+          }}>
+            max {mx.ext}
+          </p>
+        </div>
+
+        {/* ── Total ───────────────────────────────────────────────── */}
+        <div className="sr-total" style={{
+          background:   bothFilled
+            ? (grade ? `${scoreClr(grade.points)}14` : c.hover)
+            : c.hover,
+          borderRadius: 8,
+          padding:      "7px 6px",
+          textAlign:    "center",
+          fontSize:     14,
+          fontWeight:   600,
+          border:       `1px solid ${c.border}`,
+          color:        bothFilled
+            ? (grade ? scoreClr(grade.points) : c.muted)
+            : c.muted,
+          minHeight:    34,
+          display:      "flex",
+          alignItems:   "center",
+          justifyContent: "center",
+        }}>
+          {total !== null
+            ? total
+            : (iVal !== null || eVal !== null)
+            ? <span style={{ fontSize: 10, color: c.muted }}>fill both</span>
+            : "—"}
+        </div>
+
+        {/* ── Grade ───────────────────────────────────────────────── */}
+        <span className="sr-grade" style={{
+          fontSize:       13,
+          fontWeight:     700,
+          color:          grade ? scoreClr(grade.points) : c.muted,
+          textAlign:      "center",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          paddingTop:     6,
+        }}>
+          {grade ? grade.grade : "—"}
+        </span>
+
+        {/* ── Grade points ──────────────────────────────────────────── */}
+        <span className="sr-gp" style={{
+          fontSize:       13,
+          fontWeight:     600,
+          color:          grade ? scoreClr(grade.points) : c.muted,
+          textAlign:      "center",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          paddingTop:     6,
+        }}>
+          {grade ? grade.points : "—"}
+        </span>
+
+        {/* ── Backlog toggle ──────────────────────────────────────── */}
+        <button
+          className="sr-bl"
+          onClick={() => toggleBacklog(selSem, sub.code)}
+          title={isBacklog ? "Clear backlog" : "Mark as backlog"}
+          style={{
+            padding:        "5px 4px",
+            borderRadius:   7,
+            border:         `1px solid ${isBacklog ? c.bad : c.border}`,
+            background:     isBacklog ? `${c.bad}14` : "transparent",
+            cursor:         "pointer",
+            fontSize:       12,
+            color:          isBacklog ? c.bad : c.muted,
+            fontWeight:     700,
+            display:        "flex",
+            alignItems:     "center",
+            justifyContent: "center",
+            transition:     "all 0.15s",
+          }}
+          onMouseEnter={e => {
+            if (!isBacklog) {
+              e.currentTarget.style.borderColor = c.bad;
+              e.currentTarget.style.color       = c.bad;
+            }
+          }}
+          onMouseLeave={e => {
+            if (!isBacklog) {
+              e.currentTarget.style.borderColor = c.border;
+              e.currentTarget.style.color       = c.muted;
+            }
+          }}
+        >
+          {isBacklog ? "✗" : "!"}
+        </button>
+
+      </div>
+    </div>
+  );
+}
