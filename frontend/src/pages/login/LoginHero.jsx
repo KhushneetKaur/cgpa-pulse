@@ -219,17 +219,20 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
   return (
     <div
-      ref={heroRef}
-      style={{
-        width: "100%", minHeight: "100vh", boxSizing: "border-box",
-        display: "flex", flexDirection: "column",
-        position: "relative", zIndex: 1,
-        opacity:   mounted ? 1 : 0,
-        transform: mounted ? "translateY(0)" : "translateY(28px)",
-        transition: "opacity 0.65s ease, transform 0.65s ease",
-      }}
-    >
-
+  ref={heroRef}
+  style={{
+    width:     "100%",
+    minHeight: "100dvh",     // dvh = dynamic viewport height, fixes iOS bar
+    overflow:  "visible",    // allow content to flow naturally
+    display:   "flex",
+    flexDirection: "column",
+    position:  "relative",
+    zIndex:    1,
+    opacity:   mounted ? 1 : 0,
+    transform: mounted ? "translateY(0)" : "translateY(28px)",
+    transition: "opacity 0.65s ease, transform 0.65s ease",
+  }}
+>
       {/* ── Header row ─────────────────────────────────────────── */}
       <div style={{
         width:          "100%",
@@ -330,11 +333,15 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
       {/* ── Hero centre ────────────────────────────────────────── */}
       <div style={{
-        flex: 1, display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        padding: "clamp(10px,3vw,30px) clamp(16px,5vw,2rem) clamp(24px,4vw,48px)",
-        textAlign: "center",
-      }}>
+  flex:          1,
+  display:       "flex",
+  flexDirection: "column",
+  alignItems:    "center",
+  justifyContent: "center",
+  padding:       "clamp(10px,3vw,30px) clamp(16px,5vw,2rem) clamp(24px,4vw,48px)",
+  textAlign:     "center",
+  gap:           "clamp(4px,1.5vw,12px)",   // controlled spacing between sections
+}}>
 
         {/* CGPA PULSE */}
         <div style={{
@@ -410,7 +417,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           display: "flex", flexWrap: "wrap", gap: "clamp(6px,1vw,10px)",
           justifyContent: "center", maxWidth: "min(560px,92vw)",
           animation: "fadeUp 0.6s ease 0.28s both",
-          marginBottom: "clamp(20px,3.5vw,32px)",
+          marginBottom: "clamp(12px,2vw,32px)",
         }}>
           {FEATURES.map((f, i) => (
             <div key={f.label} style={{
@@ -440,7 +447,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           flexWrap: "wrap", 
           justifyContent: "center",
           animation: "fadeUp 0.6s ease 0.4s both",
-          marginBottom: "clamp(20px,3.5vw,36px)",
+          marginBottom: "clamp(10px,2vw,36px)",
         }}>
           <button
             onClick={() => onAuth("login")}
