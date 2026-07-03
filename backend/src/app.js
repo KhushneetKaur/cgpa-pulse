@@ -78,6 +78,9 @@ app.use("/api", rateLimiter({
   message:  "Too many requests, please try again later.",
 }));
 
+// Add before routes — no auth needed
+app.get("/health", (req, res) => res.json({ status: "ok" }));
+
 // ── Routes ───────────────────────────────────────────────────────────
 app.use("/api/auth",        authRoutes);
 app.use("/api/user",        userRoutes);

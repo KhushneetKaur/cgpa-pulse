@@ -37,6 +37,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function restoreSession() {
       try {
+        await fetch(
+      `${import.meta.env.VITE_API_URL?.replace("/api", "")}/health`
+      || "https://cgpa-pulse-backend.onrender.com/health"
+    ).catch(() => {}); 
         const user = await apiGetMe();
         setUser(user);
       } catch {
