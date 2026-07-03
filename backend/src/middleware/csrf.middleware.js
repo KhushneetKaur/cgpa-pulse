@@ -13,6 +13,8 @@ const CSRF_EXEMPT = new Set([
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
   "/api/auth/refresh",
+  "/api/user/leaderboard", 
+  "/api/user/branch", 
 ]);
 
 function allowedOrigins() {
