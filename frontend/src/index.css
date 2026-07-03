@@ -15,6 +15,12 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  background: #080c18;  /* matches dark mode bg */
+  overscroll-behavior: none;
+}
+
+html.light {
+  background: #f4f3ff;  /* matches light mode bg */
 }
 
 body {
@@ -22,6 +28,8 @@ body {
                'Segoe UI', sans-serif;
   font-weight: 400;
   line-height: 1.6;
+   overscroll-behavior-y: none;
+  min-height: 100dvh;
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────── */
