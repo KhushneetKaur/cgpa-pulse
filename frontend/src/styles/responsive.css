@@ -246,3 +246,16 @@
     border-radius: 14px !important;
   }
 }
+/* ── Login Hero — mobile ─────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .hero-btn-text {
+    display: none !important;
+  }
+}
+
+/* ── Prevent overscroll black gap ───────────────────────────────────────── */
+html, body {
+  background:          #080c18;
+  overscroll-behavior: none;
+  min-height:          100%;
+}

@@ -221,126 +221,138 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
     <div
   ref={heroRef}
   style={{
-    width:     "100%",
-    minHeight: "100dvh",     // dvh = dynamic viewport height, fixes iOS bar
-    overflow:  "visible",    // allow content to flow naturally
-    display:   "flex",
-    flexDirection: "column",
-    position:  "relative",
-    zIndex:    1,
-    opacity:   mounted ? 1 : 0,
-    transform: mounted ? "translateY(0)" : "translateY(28px)",
-    transition: "opacity 0.65s ease, transform 0.65s ease",
+    width:          "100%",
+    minHeight:      "100svh",
+    display:        "flex",
+    flexDirection:  "column",
+    position:       "relative",
+    zIndex:         1,
+    overflowX:      "hidden",
+    overflowY:      "auto",
+    opacity:        mounted ? 1 : 0,
+    transform:      mounted ? "translateY(0)" : "translateY(28px)",
+    transition:     "opacity 0.65s ease, transform 0.65s ease",
   }}
 >
       {/* ── Header row ─────────────────────────────────────────── */}
       <div style={{
-        width:          "100%",
-        display:        "flex",
-        alignItems:     "center",
-        // Space for the fixed dark-mode toggle on the right
-        padding:        "clamp(14px,2.5vw,22px) clamp(16px,4vw,36px)",
-        // Push right content away from the fixed toggle
-        paddingRight:   "clamp(60px,8vw,80px)",
-        animation:      "fadeDown 0.5s ease both",
-        gap:            12,
-      }}>
+  width:       "100%",
+  display:     "flex",
+  alignItems:  "center",
+  padding:     "12px 16px",
+  paddingRight: "56px",
+  animation:   "fadeDown 0.5s ease both",
+  gap:         8,
+  flexWrap:    "nowrap",
+  boxSizing:   "border-box",
+}}>
 
         {/* Logo + uni name — left */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-          <MRSPTULogo size={36} />
-          <div>
-            <p style={{
-              margin: 0, fontSize: "clamp(11px,1.4vw,13px)", fontWeight: 700,
-              lineHeight: 1.25,
-              color: dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
-            }}>
-              MRSPTU, Bathinda
-            </p>
-            <p style={{
-  margin: 0, fontSize: "clamp(9px,1.1vw,11px)", lineHeight: 1.25,
-  color: dark ? "rgba(255, 255, 255, 0.55)" : "#4a4570",
-}}>
-  Maharaja Ranjit Singh Punjab Technical University
-</p>
-          </div>
-        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, minWidth: 0 }}>
+  <MRSPTULogo size={30} />
+  <div style={{ minWidth: 0 }}>
+    <p style={{
+      margin: 0, fontSize: 12, fontWeight: 700,
+      lineHeight: 1.25, whiteSpace: "nowrap",
+      color: dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
+    }}>
+      MRSPTU, Bathinda
+    </p>
+    <p style={{
+      margin: 0, fontSize: 9, lineHeight: 1.25,
+      color: dark ? "rgba(255,255,255,0.45)" : "#4a4570",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      maxWidth: "clamp(120px, 28vw, 260px)",
+    }}>
+      Maharaja Ranjit Singh Punjab Technical University
+    </p>
+  </div>
+</div>
 
        {/* Spacer */}
 <div style={{ flex: 1 }} />
 
-{/* Developer console trigger */}
-<button
-  onClick={onAbout}
-  style={{
-    display:        "flex",
-    alignItems:     "center",
-    gap:            6,
-    padding:        "7px 14px",
-    borderRadius:   8,
-    cursor:         "pointer",
-    border:         `1px solid ${dark
-      ? "rgba(167,139,250,0.25)"
-      : "rgba(109,40,217,0.18)"}`,
-    background:     dark
-      ? "rgba(255,255,255,0.03)"
-      : "rgba(255,255,255,0.5)",
-    fontFamily:     "monospace",
-    backdropFilter: "blur(10px)",
-    transition:     "all 0.18s",
-    flexShrink:     0,
-  }}
-  onMouseEnter={e => {
-    e.currentTarget.style.borderColor = dark
-      ? "rgba(167,139,250,0.5)"
-      : "rgba(109,40,217,0.35)";
-    e.currentTarget.style.background = dark
-      ? "rgba(167,139,250,0.08)"
-      : "rgba(109,40,217,0.05)";
-  }}
-  onMouseLeave={e => {
-    e.currentTarget.style.borderColor = dark
-      ? "rgba(167,139,250,0.25)"
-      : "rgba(109,40,217,0.18)";
-    e.currentTarget.style.background = dark
-      ? "rgba(255,255,255,0.03)"
-      : "rgba(255,255,255,0.5)";
-  }}
->
-  <span style={{
-    width:        6,
-    height:       6,
-    borderRadius: "50%",
-    background:   "#10b981",
-    flexShrink:   0,
-    boxShadow:    "0 0 6px #10b981aa",
-  }} />
-  <span style={{
-    fontSize:      11,
-    fontWeight:    600,
-    color:         dark ? "rgba(167,139,250,0.9)" : "#6d28d9",
-    letterSpacing: 0.3,
-  }}>
-    [ About the Developer ]
-  </span>
-</button>
+<div style={{
+  display:    "flex",
+  alignItems: "center",
+  gap:        6,
+  flexShrink: 0,
+}}>
+// Find the Developer Console button and Disclaimer Pill section,
+// wrap both in:
+<div style={{
+  display:    "flex",
+  alignItems: "center",
+  gap:        6,
+  flexShrink: 0,
+}}>
+  {/* Developer Console button */}
+  <button
+    onClick={onAbout}
+    style={{
+      display:        "flex",
+      alignItems:     "center",
+      gap:            5,
+      padding:        "6px 10px",
+      borderRadius:   8,
+      cursor:         "pointer",
+      border:         `1px solid ${dark
+        ? "rgba(167,139,250,0.25)"
+        : "rgba(109,40,217,0.18)"}`,
+      background:     dark
+        ? "rgba(255,255,255,0.03)"
+        : "rgba(255,255,255,0.5)",
+      fontFamily:     "monospace",
+      backdropFilter: "blur(10px)",
+      transition:     "all 0.18s",
+      flexShrink:     0,
+    }}
+    onMouseEnter={e => {
+      e.currentTarget.style.borderColor = dark
+        ? "rgba(167,139,250,0.5)" : "rgba(109,40,217,0.35)";
+      e.currentTarget.style.background = dark
+        ? "rgba(167,139,250,0.08)" : "rgba(109,40,217,0.05)";
+    }}
+    onMouseLeave={e => {
+      e.currentTarget.style.borderColor = dark
+        ? "rgba(167,139,250,0.25)" : "rgba(109,40,217,0.18)";
+      e.currentTarget.style.background = dark
+        ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.5)";
+    }}
+  >
+    <span style={{
+      width: 6, height: 6, borderRadius: "50%",
+      background: "#10b981", flexShrink: 0,
+      boxShadow: "0 0 6px #10b981aa",
+    }} />
+    <span
+      className="hero-btn-text"
+      style={{
+        fontSize: 11, fontWeight: 600,
+        color: dark ? "rgba(167,139,250,0.9)" : "#6d28d9",
+        letterSpacing: 0.3,
+      }}
+    >
+      [ About the Developer ]
+    </span>
+  </button>
 
-{/* Disclaimer pill */}
-<DisclaimerPill dark={dark} onClick={onDisclaimer} />
-          
-        </div>
+  {/* Disclaimer Pill */}
+  <DisclaimerPill dark={dark} onClick={onDisclaimer} />
+</div>
       
 
       {/* ── Hero centre ────────────────────────────────────────── */}
       <div style={{
-  flex:          1,
-  display:       "flex",
-  flexDirection: "column",
-  alignItems:    "center",
+  flex:           1,
+  display:        "flex",
+  flexDirection:  "column",
+  alignItems:     "center",
   justifyContent: "center",
-  padding:       "clamp(10px,3vw,30px) clamp(16px,5vw,2rem) clamp(24px,4vw,48px)",
-  textAlign:     "center",
-  gap:           "clamp(4px,1.5vw,12px)",   // controlled spacing between sections
+  padding:        "clamp(8px,2vw,30px) clamp(14px,4vw,2rem) clamp(16px,3vw,48px)",
+  textAlign:      "center",
 }}>
 
         {/* CGPA PULSE */}
