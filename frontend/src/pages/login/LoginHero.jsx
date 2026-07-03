@@ -235,125 +235,138 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
   }}
 >
       {/* ── Header row ─────────────────────────────────────────── */}
-      <div style={{
-  width:       "100%",
-  display:     "flex",
-  alignItems:  "center",
-  padding:     "12px 16px",
-  paddingRight: "56px",
-  animation:   "fadeDown 0.5s ease both",
-  gap:         8,
-  flexWrap:    "nowrap",
-  boxSizing:   "border-box",
-}}>
-
-        {/* Logo + uni name — left */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, minWidth: 0 }}>
-  <MRSPTULogo size={30} />
-  <div style={{ minWidth: 0 }}>
-    <p style={{
-      margin: 0, fontSize: 12, fontWeight: 700,
-      lineHeight: 1.25, whiteSpace: "nowrap",
-      color: dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
-    }}>
-      MRSPTU, Bathinda
-    </p>
-    <p style={{
-      margin: 0, fontSize: 9, lineHeight: 1.25,
-      color: dark ? "rgba(255,255,255,0.45)" : "#4a4570",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap",
-      maxWidth: "clamp(120px, 28vw, 260px)",
-    }}>
-      Maharaja Ranjit Singh Punjab Technical University
-    </p>
-  </div>
-</div>
-
-       {/* Spacer */}
-<div style={{ flex: 1 }} />
-
-<div style={{
-  display:    "flex",
-  alignItems: "center",
-  gap:        6,
-  flexShrink: 0,
-}}>
-// Find the Developer Console button and Disclaimer Pill section,
-// wrap both in:
-<div style={{
-  display:    "flex",
-  alignItems: "center",
-  gap:        6,
-  flexShrink: 0,
-}}>
-  {/* Developer Console button */}
-  <button
-    onClick={onAbout}
-    style={{
-      display:        "flex",
-      alignItems:     "center",
-      gap:            5,
-      padding:        "6px 10px",
-      borderRadius:   8,
-      cursor:         "pointer",
-      border:         `1px solid ${dark
-        ? "rgba(167,139,250,0.25)"
-        : "rgba(109,40,217,0.18)"}`,
-      background:     dark
-        ? "rgba(255,255,255,0.03)"
-        : "rgba(255,255,255,0.5)",
-      fontFamily:     "monospace",
-      backdropFilter: "blur(10px)",
-      transition:     "all 0.18s",
-      flexShrink:     0,
-    }}
-    onMouseEnter={e => {
-      e.currentTarget.style.borderColor = dark
-        ? "rgba(167,139,250,0.5)" : "rgba(109,40,217,0.35)";
-      e.currentTarget.style.background = dark
-        ? "rgba(167,139,250,0.08)" : "rgba(109,40,217,0.05)";
-    }}
-    onMouseLeave={e => {
-      e.currentTarget.style.borderColor = dark
-        ? "rgba(167,139,250,0.25)" : "rgba(109,40,217,0.18)";
-      e.currentTarget.style.background = dark
-        ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.5)";
-    }}
-  >
-    <span style={{
-      width: 6, height: 6, borderRadius: "50%",
-      background: "#10b981", flexShrink: 0,
-      boxShadow: "0 0 6px #10b981aa",
-    }} />
-    <span
-      className="hero-btn-text"
+    <div
+      ref={heroRef}
       style={{
-        fontSize: 11, fontWeight: 600,
-        color: dark ? "rgba(167,139,250,0.9)" : "#6d28d9",
-        letterSpacing: 0.3,
+        width:         "100%",
+        minHeight:     "100svh",
+        display:       "flex",
+        flexDirection: "column",
+        position:      "relative",
+        zIndex:        1,
+        overflowX:     "hidden",
+        overflowY:     "auto",
+        opacity:       mounted ? 1 : 0,
+        transform:     mounted ? "translateY(0)" : "translateY(28px)",
+        transition:    "opacity 0.65s ease, transform 0.65s ease",
       }}
     >
-      [ About the Developer ]
-    </span>
-  </button>
 
-  {/* Disclaimer Pill */}
-  <DisclaimerPill dark={dark} onClick={onDisclaimer} />
-</div>
-      
+        {/* Logo + uni name */}
+        <div style={{
+          display:    "flex",
+          alignItems: "center",
+          gap:        8,
+          flexShrink: 0,
+          minWidth:   0,
+        }}>
+          <MRSPTULogo size={30} />
+          <div style={{ minWidth: 0 }}>
+            <p style={{
+              margin:     0,
+              fontSize:   12,
+              fontWeight: 700,
+              lineHeight: 1.25,
+              whiteSpace: "nowrap",
+              color:      dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
+            }}>
+              MRSPTU, Bathinda
+            </p>
+            <p style={{
+              margin:       0,
+              fontSize:     9,
+              lineHeight:   1.25,
+              color:        dark ? "rgba(255,255,255,0.45)" : "#4a4570",
+              overflow:     "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace:   "nowrap",
+              maxWidth:     "clamp(120px, 28vw, 260px)",
+            }}>
+              Maharaja Ranjit Singh Punjab Technical University
+            </p>
+          </div>
+        </div>
 
-      {/* ── Hero centre ────────────────────────────────────────── */}
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* About + Disclaimer buttons */}
+        <div style={{
+          display:    "flex",
+          alignItems: "center",
+          gap:        6,
+          flexShrink: 0,
+        }}>
+          <button
+            onClick={onAbout}
+            style={{
+              display:        "flex",
+              alignItems:     "center",
+              gap:            5,
+              padding:        "6px 10px",
+              borderRadius:   8,
+              cursor:         "pointer",
+              border:         `1px solid ${dark
+                ? "rgba(167,139,250,0.25)"
+                : "rgba(109,40,217,0.18)"}`,
+              background:     dark
+                ? "rgba(255,255,255,0.03)"
+                : "rgba(255,255,255,0.5)",
+              fontFamily:     "monospace",
+              backdropFilter: "blur(10px)",
+              transition:     "all 0.18s",
+              flexShrink:     0,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = dark
+                ? "rgba(167,139,250,0.5)" : "rgba(109,40,217,0.35)";
+              e.currentTarget.style.background = dark
+                ? "rgba(167,139,250,0.08)" : "rgba(109,40,217,0.05)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = dark
+                ? "rgba(167,139,250,0.25)" : "rgba(109,40,217,0.18)";
+              e.currentTarget.style.background = dark
+                ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.5)";
+            }}
+          >
+            <span style={{
+              width:        6,
+              height:       6,
+              borderRadius: "50%",
+              background:   "#10b981",
+              flexShrink:   0,
+              boxShadow:    "0 0 6px #10b981aa",
+            }} />
+            <span
+              className="hero-btn-text"
+              style={{
+                fontSize:      11,
+                fontWeight:    600,
+                color:         dark ? "rgba(167,139,250,0.9)" : "#6d28d9",
+                letterSpacing: 0.3,
+              }}
+            >
+              [ About the Developer ]
+            </span>
+          </button>
+
+          <DisclaimerPill dark={dark} onClick={onDisclaimer} />
+        </div>
+
+      </div>
+      {/* ── header row ends here ─────────────────────────────── */}
+
+      {/* ── Hero centre ──────────────────────────────────────── */}
       <div style={{
-  flex:           1,
-  display:        "flex",
-  flexDirection:  "column",
-  alignItems:     "center",
-  justifyContent: "center",
-  padding:        "clamp(8px,2vw,30px) clamp(14px,4vw,2rem) clamp(16px,3vw,48px)",
-  textAlign:      "center",
-}}>
+        flex:           1,
+        display:        "flex",
+        flexDirection:  "column",
+        alignItems:     "center",
+        justifyContent: "center",
+        padding:        "clamp(8px,2vw,30px) clamp(14px,4vw,2rem) clamp(16px,3vw,48px)",
+        textAlign:      "center",
+      }}>
 
         {/* CGPA PULSE */}
         <div style={{
@@ -361,16 +374,17 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           animation:    "fadeUp 0.65s ease 0.1s both",
           position:     "relative",
           display:      "inline-block",
-          // Enough padding so canvas-drawn E is fully visible
           padding:      "0 16px 12px 8px",
         }}>
-          {/* Glow */}
           <div style={{
-            position: "absolute", inset: "-20px -40px",
-            background: dark
+            position:      "absolute",
+            inset:         "-20px -40px",
+            background:    dark
               ? "radial-gradient(ellipse,rgba(124,63,245,0.2) 0%,transparent 70%)"
               : "radial-gradient(ellipse,rgba(124,58,237,0.12) 0%,transparent 70%)",
-            borderRadius: "50%", zIndex: 0, pointerEvents: "none",
+            borderRadius:  "50%",
+            zIndex:        0,
+            pointerEvents: "none",
           }} />
 
           <h1 style={{
@@ -380,24 +394,21 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             fontWeight:    900,
             letterSpacing: "clamp(-2px,-0.4vw,-4px)",
             whiteSpace:    "nowrap",
-            position:      "relative", zIndex: 1,
+            position:      "relative",
+            zIndex:        1,
             userSelect:    "none",
             display:       "flex",
             alignItems:    "baseline",
             gap:           "0.12em",
           }}>
-            {/* CGPA — plain solid text, never has clip issues */}
             <span style={{
               color: dark ? "rgba(255,255,255,0.93)" : "#1e1b4b",
             }}>
               CGPA
             </span>
-
-            {/* PULSE — canvas rendered, immune to theme switch */}
             <PulseCanvas dark={dark} fontSize={fontSize} />
           </h1>
 
-          {/* Underline */}
           <div style={{
             height:         "clamp(2px,0.3vw,3px)",
             width:          "55%",
@@ -426,27 +437,37 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
         {/* Feature pills */}
         <div style={{
-          display: "flex", flexWrap: "wrap", gap: "clamp(6px,1vw,10px)",
-          justifyContent: "center", maxWidth: "min(560px,92vw)",
-          animation: "fadeUp 0.6s ease 0.28s both",
-          marginBottom: "clamp(12px,2vw,32px)",
+          display:        "flex",
+          flexWrap:       "wrap",
+          gap:            "clamp(6px,1vw,10px)",
+          justifyContent: "center",
+          maxWidth:       "min(560px,92vw)",
+          animation:      "fadeUp 0.6s ease 0.28s both",
+          marginBottom:   "clamp(12px,2vw,32px)",
         }}>
           {FEATURES.map((f, i) => (
             <div key={f.label} style={{
-              display: "flex", 
-              alignItems: "center",
-              gap: 6, 
-              padding: "clamp(6px,0.8vw,9px) clamp(10px,1.4vw,16px)",
-              borderRadius: 99, 
-              fontSize: "clamp(11px,1.2vw,13px)",
-              fontWeight: 500, cursor: "default",
-              background: dark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.72)",
-              border: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(124,58,237,0.12)"}`,
+              display:        "flex",
+              alignItems:     "center",
+              gap:            6,
+              padding:        "clamp(6px,0.8vw,9px) clamp(10px,1.4vw,16px)",
+              borderRadius:   99,
+              fontSize:       "clamp(11px,1.2vw,13px)",
+              fontWeight:     500,
+              cursor:         "default",
+              background:     dark
+                ? "rgba(255,255,255,0.06)"
+                : "rgba(255,255,255,0.72)",
+              border:         `1px solid ${dark
+                ? "rgba(255,255,255,0.1)"
+                : "rgba(124,58,237,0.12)"}`,
               backdropFilter: "blur(12px)",
-              color: dark ? "rgba(255,255,255,0.7)" : "#5b5687",
-              animation: `fadeUp 0.5s ease ${0.32 + i * 0.05}s both`,
+              color:          dark ? "rgba(255,255,255,0.7)" : "#5b5687",
+              animation:      `fadeUp 0.5s ease ${0.32 + i * 0.05}s both`,
             }}>
-              <span style={{ fontSize: "clamp(12px,1.3vw,14px)" }}>{f.icon}</span>
+              <span style={{ fontSize: "clamp(12px,1.3vw,14px)" }}>
+                {f.icon}
+              </span>
               {f.label}
             </div>
           ))}
@@ -454,23 +475,23 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
         {/* CTA buttons */}
         <div style={{
-          display: "flex", 
-          gap: "clamp(8px,1.5vw,14px)",
-          flexWrap: "wrap", 
+          display:        "flex",
+          gap:            "clamp(8px,1.5vw,14px)",
+          flexWrap:       "wrap",
           justifyContent: "center",
-          animation: "fadeUp 0.6s ease 0.4s both",
-          marginBottom: "clamp(10px,2vw,36px)",
+          animation:      "fadeUp 0.6s ease 0.4s both",
+          marginBottom:   "clamp(10px,2vw,36px)",
         }}>
           <button
             onClick={() => onAuth("login")}
             style={{
               padding:       "clamp(11px,1.4vw,14px) clamp(24px,3.5vw,36px)",
               fontSize:      "clamp(13px,1.4vw,15px)",
-              fontWeight:    700, 
-              borderRadius: 99,
-              border:        "none", 
-              cursor: "pointer",
-              fontFamily:    "inherit", 
+              fontWeight:    700,
+              borderRadius:  99,
+              border:        "none",
+              cursor:        "pointer",
+              fontFamily:    "inherit",
               letterSpacing: 0.3,
               background:    dark
                 ? "linear-gradient(135deg,#7c3aed,#06b6d4)"
@@ -481,12 +502,12 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
                 : "0 6px 28px rgba(124,58,237,0.35)",
               transition:    "all 0.18s",
             }}
-            onMouseEnter={e => {
-              e.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.transform = "translateY(0) scale(1)";
-            }}
+            onMouseEnter={e =>
+              e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"
+            }
+            onMouseLeave={e =>
+              e.currentTarget.style.transform = "translateY(0) scale(1)"
+            }
           >
             Login →
           </button>
@@ -494,23 +515,25 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           <button
             onClick={() => onAuth("signup")}
             style={{
-              padding:       "clamp(11px,1.4vw,14px) clamp(24px,3.5vw,36px)",
-              fontSize:      "clamp(13px,1.4vw,15px)",
-              fontWeight:    700, 
-              borderRadius: 99,
-              cursor:        "pointer", 
-              fontFamily: "inherit",
-              letterSpacing: 0.3, 
-              background: "transparent",
-              border:        `2px solid ${dark ? "rgba(167,139,250,0.5)" : "rgba(124,58,237,0.35)"}`,
-              color:         dark ? "#c4b5fd" : "#7c3aed",
-              backdropFilter: "blur(10px)", 
-              transition: "all 0.18s",
+              padding:        "clamp(11px,1.4vw,14px) clamp(24px,3.5vw,36px)",
+              fontSize:       "clamp(13px,1.4vw,15px)",
+              fontWeight:     700,
+              borderRadius:   99,
+              cursor:         "pointer",
+              fontFamily:     "inherit",
+              letterSpacing:  0.3,
+              background:     "transparent",
+              border:         `2px solid ${dark
+                ? "rgba(167,139,250,0.5)"
+                : "rgba(124,58,237,0.35)"}`,
+              color:          dark ? "#c4b5fd" : "#7c3aed",
+              backdropFilter: "blur(10px)",
+              transition:     "all 0.18s",
             }}
             onMouseEnter={e => {
               e.currentTarget.style.background = dark
                 ? "rgba(167,139,250,0.12)" : "rgba(124,58,237,0.07)";
-              e.currentTarget.style.transform  = "translateY(-2px)";
+              e.currentTarget.style.transform = "translateY(-2px)";
             }}
             onMouseLeave={e => {
               e.currentTarget.style.background = "transparent";
@@ -522,6 +545,8 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
         </div>
 
       </div>
+      {/* ── hero centre ends here ─────────────────────────────── */}
+
     </div>
   );
 }
