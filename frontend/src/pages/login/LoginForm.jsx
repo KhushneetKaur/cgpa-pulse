@@ -472,7 +472,6 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
             <FieldInput
               label={isSignup ? "Username" : "Username or Email"}
               value={uname}
-              autoComplete={isSignup ? "off" : "username"}
               onChange={e => {
              setUname(e.target.value);
              if (fieldErrors.uname) {
