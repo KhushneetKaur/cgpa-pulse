@@ -54,28 +54,28 @@ function TypingText({ dark }) {
     <span style={{ color: dark ? "#a78bfa" : "#7c3aed", fontWeight: 800 }}>
       {displayed}
       <span style={{
-        display: "inline-block", width: 2, height: "0.85em",
-        background: dark ? "#a78bfa" : "#7c3aed",
-        marginLeft: 3, verticalAlign: "middle",
-        animation: "blink 0.75s step-end infinite",
+        display:       "inline-block",
+        width:         2,
+        height:        "0.85em",
+        background:    dark ? "#a78bfa" : "#7c3aed",
+        marginLeft:    3,
+        verticalAlign: "middle",
+        animation:     "blink 0.75s step-end infinite",
       }} />
     </span>
   );
 }
 
-// This completely bypasses webkit-background-clip and its theme-switch bug.
 function PulseCanvas({ dark, fontSize }) {
   const canvasRef = useRef(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
 
-  // Measure dims from font metrics without a hidden DOM element
   useEffect(() => {
     const canvas = document.createElement("canvas");
     const ctx    = canvas.getContext("2d");
     ctx.font     = `900 italic ${fontSize}px Inter, -apple-system, sans-serif`;
     const metrics = ctx.measureText("PULSE");
-    // actualBoundingBox gives exact pixel bounds including italic overhang
-    const w = Math.ceil(metrics.width) + 32;   // 32px extra for italic E overhang
+    const w = Math.ceil(metrics.width) + 32;
     const h = Math.ceil(
       (metrics.actualBoundingBoxAscent  || fontSize) +
       (metrics.actualBoundingBoxDescent || fontSize * 0.2)
@@ -86,15 +86,12 @@ function PulseCanvas({ dark, fontSize }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || dims.w === 0) return;
-
-    const dpr    = window.devicePixelRatio || 1;
+    const dpr     = window.devicePixelRatio || 1;
     canvas.width  = dims.w * dpr;
     canvas.height = dims.h * dpr;
-
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, dims.w, dims.h);
-
     const grad = ctx.createLinearGradient(0, 0, dims.w, dims.h);
     if (dark) {
       grad.addColorStop(0,    "#c084fc");
@@ -105,7 +102,6 @@ function PulseCanvas({ dark, fontSize }) {
       grad.addColorStop(0.48, "#10b981");
       grad.addColorStop(1,    "#8b5cf6");
     }
-
     ctx.fillStyle    = grad;
     ctx.font         = `900 italic ${fontSize}px Inter, -apple-system, sans-serif`;
     ctx.textBaseline = "alphabetic";
@@ -125,15 +121,12 @@ function PulseCanvas({ dark, fontSize }) {
     <canvas
       ref={canvasRef}
       style={{
-        display:       "inline-block",
+        display:      "inline-block",
         verticalAlign: "baseline",
-        // Canvas sits on baseline, sized to contain full italic glyph
         width:         dims.w,
         height:        dims.h,
-        // Pull it up so baseline aligns with CGPA
         marginBottom:  -(dims.h - fontSize * 0.15),
         marginLeft:    "0.08em",
-        // No overflow clipping
         overflow:      "visible",
       }}
     />
@@ -164,19 +157,15 @@ function DisclaimerPill({ dark, onClick }) {
       }}
       onMouseEnter={e => {
         e.currentTarget.style.borderColor = dark
-          ? "rgba(251,146,60,0.5)"
-          : "rgba(217,119,6,0.4)";
+          ? "rgba(251,146,60,0.5)" : "rgba(217,119,6,0.4)";
         e.currentTarget.style.background = dark
-          ? "rgba(251,146,60,0.08)"
-          : "rgba(217,119,6,0.05)";
+          ? "rgba(251,146,60,0.08)" : "rgba(217,119,6,0.05)";
       }}
       onMouseLeave={e => {
         e.currentTarget.style.borderColor = dark
-          ? "rgba(251,146,60,0.25)"
-          : "rgba(217,119,6,0.2)";
+          ? "rgba(251,146,60,0.25)" : "rgba(217,119,6,0.2)";
         e.currentTarget.style.background = dark
-          ? "rgba(255,255,255,0.03)"
-          : "rgba(255,255,255,0.5)";
+          ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.5)";
       }}
     >
       <span style={{
@@ -204,11 +193,9 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
   const [fontSize, setFontSize] = useState(96);
   const heroRef = useRef(null);
 
-  // Track viewport width to recompute canvas font size
   useEffect(() => {
     function measure() {
       const vw = window.innerWidth;
-      // Match the clamp: clamp(52px, 10.5vw, 116px)
       const computed = Math.min(116, Math.max(52, vw * 0.105));
       setFontSize(Math.round(computed));
     }
@@ -219,68 +206,63 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
   return (
     <div
-  ref={heroRef}
-  style={{
-    width:          "100%",
-    minHeight:      "100svh",
-    display:        "flex",
-    flexDirection:  "column",
-    position:       "relative",
-    zIndex:         1,
-    overflowX:      "hidden",
-    overflowY:      "auto",
-    opacity:        mounted ? 1 : 0,
-    transform:      mounted ? "translateY(0)" : "translateY(28px)",
-    transition:     "opacity 0.65s ease, transform 0.65s ease",
-  }}
->
-      {/* ── Header row ─────────────────────────────────────────── */}
-    <div
       ref={heroRef}
       style={{
-        width:         "100%",
-        minHeight:     "100svh",
-        display:       "flex",
-        flexDirection: "column",
-        position:      "relative",
-        zIndex:        1,
-        overflowX:     "hidden",
-        overflowY:     "auto",
-        opacity:       mounted ? 1 : 0,
-        transform:     mounted ? "translateY(0)" : "translateY(28px)",
-        transition:    "opacity 0.65s ease, transform 0.65s ease",
+        width:          "100%",
+        minHeight:      "100vh",
+        display:        "flex",
+        flexDirection:  "column",
+        position:       "relative",
+        zIndex:         1,
+        overflowX:      "hidden",
+        opacity:        mounted ? 1 : 0,
+        transform:      mounted ? "translateY(0)" : "translateY(28px)",
+        transition:     "opacity 0.65s ease, transform 0.65s ease",
       }}
     >
+
+      {/* ── Header row ─────────────────────────────────────────── */}
+      <div style={{
+        width:          "100%",
+        display:        "flex",
+        alignItems:     "center",
+        padding:        "clamp(14px,2.5vw,22px) clamp(16px,4vw,36px)",
+        paddingRight:   "clamp(60px,8vw,80px)",
+        animation:      "fadeDown 0.5s ease both",
+        gap:            12,
+        flexWrap:       "nowrap",
+        boxSizing:      "border-box",
+      }}>
 
         {/* Logo + uni name */}
         <div style={{
           display:    "flex",
           alignItems: "center",
-          gap:        8,
+          gap:        10,
           flexShrink: 0,
           minWidth:   0,
         }}>
-          <MRSPTULogo size={30} />
+          <MRSPTULogo size={36} />
           <div style={{ minWidth: 0 }}>
             <p style={{
-              margin:     0,
-              fontSize:   12,
-              fontWeight: 700,
-              lineHeight: 1.25,
-              whiteSpace: "nowrap",
-              color:      dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
+              margin:      0,
+              fontSize:    "clamp(11px,1.4vw,13px)",
+              fontWeight:  700,
+              lineHeight:  1.25,
+              whiteSpace:  "nowrap",
+              color:       dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
             }}>
               MRSPTU, Bathinda
             </p>
             <p style={{
               margin:       0,
-              fontSize:     9,
+              fontSize:     "clamp(9px,1.1vw,11px)",
               lineHeight:   1.25,
               color:        dark ? "rgba(255,255,255,0.45)" : "#4a4570",
               overflow:     "hidden",
               textOverflow: "ellipsis",
               whiteSpace:   "nowrap",
-              maxWidth:     "clamp(120px, 28vw, 260px)",
+              maxWidth:     "clamp(120px,28vw,320px)",
             }}>
               Maharaja Ranjit Singh Punjab Technical University
             </p>
@@ -302,8 +284,8 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             style={{
               display:        "flex",
               alignItems:     "center",
-              gap:            5,
-              padding:        "6px 10px",
+              gap:            6,
+              padding:        "7px 14px",
               borderRadius:   8,
               cursor:         "pointer",
               border:         `1px solid ${dark
@@ -355,7 +337,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
         </div>
 
       </div>
-      {/* ── header row ends here ─────────────────────────────── */}
+      {/* ── header row ends ──────────────────────────────────── */}
 
       {/* ── Hero centre ──────────────────────────────────────── */}
       <div style={{
@@ -364,11 +346,11 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
         flexDirection:  "column",
         alignItems:     "center",
         justifyContent: "center",
-        padding:        "clamp(8px,2vw,30px) clamp(14px,4vw,2rem) clamp(16px,3vw,48px)",
+        padding:        "clamp(10px,3vw,30px) clamp(16px,5vw,2rem) clamp(24px,4vw,48px)",
         textAlign:      "center",
       }}>
 
-        {/* CGPA PULSE */}
+        {/* CGPA PULSE title */}
         <div style={{
           marginBottom: "clamp(14px,2.8vw,26px)",
           animation:    "fadeUp 0.65s ease 0.1s both",
@@ -401,9 +383,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             alignItems:    "baseline",
             gap:           "0.12em",
           }}>
-            <span style={{
-              color: dark ? "rgba(255,255,255,0.93)" : "#1e1b4b",
-            }}>
+            <span style={{ color: dark ? "rgba(255,255,255,0.93)" : "#1e1b4b" }}>
               CGPA
             </span>
             <PulseCanvas dark={dark} fontSize={fontSize} />
@@ -443,7 +423,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           justifyContent: "center",
           maxWidth:       "min(560px,92vw)",
           animation:      "fadeUp 0.6s ease 0.28s both",
-          marginBottom:   "clamp(12px,2vw,32px)",
+          marginBottom:   "clamp(20px,3.5vw,32px)",
         }}>
           {FEATURES.map((f, i) => (
             <div key={f.label} style={{
@@ -465,22 +445,20 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
               color:          dark ? "rgba(255,255,255,0.7)" : "#5b5687",
               animation:      `fadeUp 0.5s ease ${0.32 + i * 0.05}s both`,
             }}>
-              <span style={{ fontSize: "clamp(12px,1.3vw,14px)" }}>
-                {f.icon}
-              </span>
+              <span style={{ fontSize: "clamp(12px,1.3vw,14px)" }}>{f.icon}</span>
               {f.label}
             </div>
           ))}
         </div>
 
-       {/* CTA buttons */}
+        {/* CTA buttons */}
         <div style={{
           display:        "flex",
           gap:            "clamp(8px,1.5vw,14px)",
           flexWrap:       "wrap",
           justifyContent: "center",
           animation:      "fadeUp 0.6s ease 0.4s both",
-          marginBottom:   "clamp(10px,2vw,36px)",
+          marginBottom:   "clamp(20px,3.5vw,36px)",
         }}>
           <button
             onClick={() => onAuth("login")}
@@ -545,7 +523,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
         </div>
 
       </div>
-      {/* ── hero centre ends here ─────────────────────────────── */}
+      {/* ── hero centre ends ─────────────────────────────────── */}
 
     </div>
   );
