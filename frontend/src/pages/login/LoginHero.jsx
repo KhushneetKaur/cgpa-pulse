@@ -473,7 +473,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           ))}
         </div>
 
-        {/* CTA buttons */}
+       {/* CTA buttons */}
         <div style={{
           display:        "flex",
           gap:            "clamp(8px,1.5vw,14px)",
