@@ -30,11 +30,13 @@ export const otpLimiter = rateLimiter({
 
 // ── Pre-configured limiters for specific routes ───────────────────────────────
 
-// Strict: login and signup — 10 attempts per 15 min per IP
-export const authLimiter = rateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max:      10,
-  message:  "Too many login attempts — please try again in 15 minutes",
+// Strict: login and signup — 50 attempts per 15 min per IP
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max:      50,               
+  message:  "Too many requests, please try again later",
+  standardHeaders: true,
+  legacyHeaders:   false,
 });
 
 // Medium: save semester — 60 per 15 min
@@ -49,7 +51,7 @@ setInterval(() => {
 
 export function authIdentifierLimiter(req, res, next) {
   const windowMs = 15 * 60 * 1000;
-  const max = 5;
+  const max = 50;
   const now = Date.now();
   const rawIdentifier =
     req.body?.identifier || req.body?.username || req.body?.email || "unknown";
