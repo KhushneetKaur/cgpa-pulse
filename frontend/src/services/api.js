@@ -40,25 +40,30 @@ const CSRF_SKIP_URLS = [
   "/auth/csrf",
 ];
 
-api.interceptors.request.use(
-  async (config) => {
-    const method = config.method?.toLowerCase();
-    const url    = config.url || "";
+api.interceptors.request.use(async (config) => {
+  const method = config.method?.toUpperCase();
+  if (["POST","PUT","PATCH","DELETE"].includes(method)) {
+    const url = config.url || "";
+    const isExempt = [
+      "/auth/login", "/auth/signup", "/auth/logout",
+      "/auth/verify-otp", "/auth/resend-otp",
+      "/auth/forgot-password", "/auth/reset-password",
+      "/auth/refresh",
+    ].some(u => url.includes(u));
 
-    const skipCsrf =
-      config.skipCsrf ||
-      !MUTATING_METHODS.has(method) ||
-      CSRF_SKIP_URLS.some(u => url.includes(u));
-
-    if (!skipCsrf) {
-      config.headers = config.headers || {};
-      config.headers["x-csrf-token"] = await ensureCsrfToken();
+    if (!isExempt) {
+      try {
+        const token = await ensureCsrfToken();
+        config.headers = config.headers || {};
+        config.headers["x-csrf-token"] = token;
+      } catch {
+        // CSRF fetch failed — proceed without token
+        // backend will reject if required
+      }
     }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  }
+  return config;
+});
 
 // ── Response interceptor ──────────────────────────────────────────────────────
 // Runs after every response
