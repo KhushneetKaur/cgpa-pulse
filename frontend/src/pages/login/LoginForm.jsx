@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef} from "react";
 import { useAppData } from "../../context/AppDataContext";
 import toast from "react-hot-toast";
 
@@ -66,7 +66,7 @@ function FieldInput({
   label, type = "text", value, onChange, onBlur,
   onKeyDown, placeholder, error, hint,
   dark, suffix, showStrength = false,
-  autoComplete,
+  autoComplete, inputRef,
 }) {
   const strength = showStrength ? getPasswordStrength(value) : null;
 
@@ -110,6 +110,7 @@ function FieldInput({
       {/* Input */}
       <div style={{ position: "relative" }}>
         <input
+         ref={inputRef} 
           type={type}
           autoComplete={autoComplete}
           value={value}
@@ -242,6 +243,13 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
   const [fieldErrors,   setFieldErrors]   = useState({});
   const [touched,       setTouched]       = useState({});
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+// Refs for Enter key field navigation
+const emailRef    = useRef(null);
+const unameRef    = useRef(null);
+const pwdRef      = useRef(null);
+
   // ── Validation ────────────────────────────────────────────
    function validate() {
     const errs = {};
@@ -270,7 +278,7 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
   setFieldErrors(errs);
   setTouched({ email: true, uname: true, pwd: true });
   if (Object.keys(errs).length > 0) return;
-
+  setIsSubmitting(true); 
    try {
       if (isSignup) {
   const result = await signup(email);
@@ -303,8 +311,10 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
   } else {
     toast.error(err?.message || "Something went wrong");
   }
-}
+}   finally {
+    setIsSubmitting(false);
   }
+} 
 
   // ── Styles ────────────────────────────────────────────────
   const glassCard = {
@@ -454,40 +464,40 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
 
             {/* Email — signup only */}
             {isSignup && (
-              <FieldInput
-                label="Email"
-                type="email"
-                autoComplete={isSignup ? "off" : "email"}
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onBlur={() => handleBlur("email")}
-                onKeyDown={e => e.key === "Enter" && handleAuth()}
-                placeholder="you@example.com"
-                error={touched.email && fieldErrors.email}
-                dark={dark}
-              />
-            )}
+  <FieldInput
+    label="Email"
+    type="email"
+    autoComplete="off"
+    inputRef={emailRef}
+    value={email}
+    onChange={e => setEmail(e.target.value)}
+    onBlur={() => handleBlur("email")}
+    onKeyDown={e => e.key === "Enter" && (e.preventDefault(), unameRef.current?.focus())}
+    placeholder="you@example.com"
+    error={touched.email && fieldErrors.email}
+    dark={dark}
+  />
+)}
 
             {/* Username or Email */}
-            <FieldInput
-              label={isSignup ? "Username" : "Username or Email"}
-              value={uname}
-              onChange={e => {
-             setUname(e.target.value);
-             if (fieldErrors.uname) {
-            setFieldErrors(prev => ({ ...prev, uname: undefined }));
-             }
-            }}
-              onBlur={() => handleBlur("uname")}
-              onKeyDown={e => e.key === "Enter" && handleAuth()}
-              placeholder={isSignup
-                ? "e.g. khushneet_k"
-                : "Username or email address"}
-              error={touched.uname && fieldErrors.uname}
-              hint={isSignup ? "letters, numbers, _ only" : null}
-              dark={dark}
-              autoComplete={isSignup ? "username" : "username email"} 
-            />
+           <FieldInput
+  label={isSignup ? "Username" : "Username or Email"}
+  value={uname}
+  inputRef={unameRef}
+  autoComplete={isSignup ? "off" : "username"}
+  onChange={e => {
+    setUname(e.target.value);
+    if (fieldErrors.uname) {
+      setFieldErrors(prev => ({ ...prev, uname: undefined }));
+    }
+  }}
+  onBlur={() => handleBlur("uname")}
+  onKeyDown={e => e.key === "Enter" && (e.preventDefault(), pwdRef.current?.focus())}
+  placeholder={isSignup ? "e.g. khushneet_k" : "Username or email address"}
+  error={touched.uname && fieldErrors.uname}
+  hint={isSignup ? "letters, numbers, _ only" : null}
+  dark={dark}
+/>
 
            {/* Password */}
 <div style={{ marginBottom: 20 }}>
@@ -518,12 +528,13 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
   {/* Input */}
   <div style={{ position: "relative" }}>
     <input
-      type={showPwd ? "text" : "password"}
-      autoComplete={isSignup ? "new-password" : "current-password"} 
-      value={pwd}
-      onChange={e => setPwd(e.target.value)}
-      onBlur={() => handleBlur("pwd")}
-      onKeyDown={e => e.key === "Enter" && handleAuth()}
+  ref={pwdRef}
+  type={showPwd ? "text" : "password"}
+  autoComplete={isSignup ? "new-password" : "current-password"}
+  value={pwd}
+  onChange={e => setPwd(e.target.value)}
+  onBlur={() => handleBlur("pwd")}
+  onKeyDown={e => e.key === "Enter" && handleAuth()}
       placeholder={isSignup ? "Create a strong password" : "••••••••"}
       style={{
         width:        "100%",
@@ -695,35 +706,50 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess,
 
             {/* Submit */}
             <button
-              onClick={handleAuth}
-              style={{
-                width:         "100%",
-                padding:       "13px",
-                fontSize:      14,
-                fontWeight:    700,
-                borderRadius:  14,
-                border:        "none",
-                cursor:        "pointer",
-                fontFamily:    "inherit",
-                letterSpacing: 0.3,
-                background:    dark
-                  ? "linear-gradient(135deg,#7c3aed,#06b6d4)"
-                  : "linear-gradient(135deg,#7c3aed,#10b981)",
-                color:         "#fff",
-                boxShadow:     dark
-                  ? "0 6px 24px rgba(124,63,245,0.5)"
-                  : "0 6px 24px rgba(124,58,237,0.32)",
-                transition:    "all 0.18s",
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            >
-              {isSignup ? "Create Account →" : "Login →"}
-            </button>
+  onClick={handleAuth}
+  disabled={isSubmitting}
+  style={{
+    width:         "100%",
+    padding:       "13px",
+    fontSize:      14,
+    fontWeight:    700,
+    borderRadius:  14,
+    border:        "none",
+    cursor:        isSubmitting ? "not-allowed" : "pointer",
+    fontFamily:    "inherit",
+    letterSpacing: 0.3,
+    opacity:       isSubmitting ? 0.8 : 1,
+    background:    dark
+      ? "linear-gradient(135deg,#7c3aed,#06b6d4)"
+      : "linear-gradient(135deg,#7c3aed,#10b981)",
+    color:         "#fff",
+    boxShadow:     dark
+      ? "0 6px 24px rgba(124,63,245,0.5)"
+      : "0 6px 24px rgba(124,58,237,0.32)",
+    transition:    "all 0.18s",
+    display:       "flex",
+    alignItems:    "center",
+    justifyContent: "center",
+    gap:           8,
+  }}
+>
+  {isSubmitting ? (
+    <>
+      <div style={{
+        width:        16,
+        height:       16,
+        borderRadius: "50%",
+        border:       "2px solid rgba(255,255,255,0.3)",
+        borderTop:    "2px solid #fff",
+        animation:    "spin 0.7s linear infinite",
+        flexShrink:   0,
+      }} />
+      {isSignup ? "Creating..." : "Logging in..."}
+    </>
+  ) : (
+    isSignup ? "Create Account →" : "Login →"
+  )}
+</button>
 
             {/* Switch mode */}
             <p style={{
