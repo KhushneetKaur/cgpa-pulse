@@ -141,6 +141,54 @@ body, div, section, main, nav, header, footer, button, input, select {
   from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1);    }
 }
+/* ── Global keyframes ────────────────────────────────────────────────────── */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+/* ── Prevent overscroll black gap on iOS ────────────────────────────────── */
+html, body {
+  background:          #080c18;
+  overscroll-behavior: none;
+  min-height:          100%;
+}
+
+html, body, #root {
+  margin:  0;
+  padding: 0;
+}
+
+/* ── Smooth scrolling ───────────────────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

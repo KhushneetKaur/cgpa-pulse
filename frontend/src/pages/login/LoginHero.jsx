@@ -542,14 +542,6 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
         </div>
 
-        {/* Keyframes for scroll hint float */}
-        <style>{`
-          @keyframes floatY {
-            0%, 100% { transform: translateY(0); }
-            50%       { transform: translateY(6px); }
-          }
-        `}</style>
-
       </div>
     );
   }
