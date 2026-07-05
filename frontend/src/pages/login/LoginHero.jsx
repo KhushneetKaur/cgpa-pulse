@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import MRSPTULogo from "../../components/MRSPTULogo";
 
@@ -11,12 +11,12 @@ const TYPING_TEXTS = [
 ];
 
 const FEATURES = [
-  { icon: "ðŸ§®", label: "Live SGPA" },
-  { icon: "ðŸŽ¯", label: "Target CGPA" },
-  { icon: "ðŸ”®", label: "Predictor" },
-  { icon: "âš ",  label: "Backlogs" },
-  { icon: "ðŸ†", label: "Leaderboard" },
-  { icon: "ðŸ“Š", label: "6 Branches" },
+  { icon: "🧮", label: "Live SGPA" },
+  { icon: "🎯", label: "Target CGPA" },
+  { icon: "🔮", label: "Predictor" },
+  { icon: "⚠",  label: "Backlogs" },
+  { icon: "🏆", label: "Leaderboard" },
+  { icon: "📊", label: "6 Branches" },
 ];
 
 // â”€â”€ Intersection Observer scroll reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -393,7 +393,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
                     : "0 6px 28px rgba(124,58,237,0.35)",
                 }}
               >
-                Login â†’
+                Login →
               </button>
               <button
                 onClick={() => onAuth("signup")}
@@ -481,8 +481,8 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             </div>
           </div>
 
-          {/* Developer card â€” slides in from left */}
-          {/* About Developer â€” same monospace button as desktop */}
+          {/* Developer card  slides in from left */}
+          {/* About Developer same monospace button as desktop */}
 <RevealOnScroll delay={0.1} direction="left">
   <button
     onClick={onAbout}
@@ -731,7 +731,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"}
             onMouseLeave={e => e.currentTarget.style.transform = "translateY(0) scale(1)"}
           >
-            Login â†’
+            Login →
           </button>
           <button
             onClick={() => onAuth("signup")}
