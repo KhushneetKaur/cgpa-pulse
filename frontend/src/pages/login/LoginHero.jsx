@@ -323,25 +323,23 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
                 zIndex:        0,
                 pointerEvents: "none",
               }} />
-              <h1 style={{
-                margin:        0,
-                lineHeight:    1.05,
-                fontSize:      "clamp(52px,14vw,88px)",
-                fontWeight:    900,
-                letterSpacing: "-2px",
-                whiteSpace:    "nowrap",
-                position:      "relative",
-                zIndex:        1,
-                userSelect:    "none",
-                display:       "flex",
-                alignItems:    "baseline",
-                gap:           "0.1em",
-              }}>
-                <span style={{ color: dark ? "rgba(255,255,255,0.93)" : "#1e1b4b" }}>
-                  CGPA
-                </span>
-                <PulseCanvas dark={dark} fontSize={Math.round(Math.min(88, Math.max(52, window.innerWidth * 0.14)))} />
-              </h1>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+  <h1 style={{
+    margin:        0,
+    lineHeight:    1.05,
+    fontSize:      "clamp(52px,14vw,80px)",
+    fontWeight:    900,
+    letterSpacing: "-2px",
+    userSelect:    "none",
+    color:         dark ? "rgba(255,255,255,0.93)" : "#1e1b4b",
+  }}>
+    CGPA
+  </h1>
+  <PulseCanvas
+    dark={dark}
+    fontSize={Math.round(Math.min(80, Math.max(48, window.innerWidth * 0.13)))}
+  />
+</div>
               <div style={{
                 height:         2,
                 width:          "55%",
@@ -484,76 +482,58 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           </div>
 
           {/* Developer card — slides in from left */}
-          <RevealOnScroll delay={0.1} direction="left">
-            <div
-              onClick={onAbout}
-              style={{
-                width:          "100%",
-                maxWidth:       320,
-                padding:        "18px 20px",
-                borderRadius:   16,
-                cursor:         "pointer",
-                background:     dark
-                  ? "rgba(192,132,252,0.08)"
-                  : "rgba(124,58,237,0.06)",
-                border:         `1.5px solid ${dark
-                  ? "rgba(192,132,252,0.25)"
-                  : "rgba(124,58,237,0.15)"}`,
-                backdropFilter: "blur(16px)",
-                display:        "flex",
-                alignItems:     "center",
-                gap:            14,
-              }}
-            >
-              <div style={{
-                width:          44,
-                height:         44,
-                borderRadius:   "50%",
-                background:     dark
-                  ? "linear-gradient(135deg,#c084fc,#67e8f9)"
-                  : "linear-gradient(135deg,#8b5cf6,#10b981)",
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                fontSize:       14,
-                fontWeight:     900,
-                color:          "#fff",
-                flexShrink:     0,
-                boxShadow:      dark
-                  ? "0 0 18px rgba(192,132,252,0.5)"
-                  : "0 4px 16px rgba(124,58,237,0.3)",
-              }}>
-                KK
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <p style={{
-                  margin:     0,
-                  fontSize:   10,
-                  color:      dark ? "rgba(255,255,255,0.4)" : "#a09bbf",
-                  letterSpacing: 0.8,
-                  textTransform: "uppercase",
-                  marginBottom: 2,
-                }}>
-                  crafted with ✨ by
-                </p>
-                <p style={{
-                  margin:     0,
-                  fontSize:   15,
-                  fontWeight: 800,
-                  color:      dark ? "#c4b5fd" : "#7c3aed",
-                }}>
-                  Khushneet Kaur
-                </p>
-                <p style={{
-                  margin:   0,
-                  fontSize: 11,
-                  color:    dark ? "rgba(167,139,250,0.6)" : "#a09bbf",
-                }}>
-                  [ About the Developer ] →
-                </p>
-              </div>
-            </div>
-          </RevealOnScroll>
+          {/* About Developer — same monospace button as desktop */}
+<RevealOnScroll delay={0.1} direction="left">
+  <button
+    onClick={onAbout}
+    style={{
+      display:        "flex",
+      alignItems:     "center",
+      gap:            8,
+      padding:        "10px 18px",
+      borderRadius:   10,
+      cursor:         "pointer",
+      border:         `1px solid ${dark
+        ? "rgba(167,139,250,0.25)"
+        : "rgba(109,40,217,0.18)"}`,
+      background:     dark
+        ? "rgba(255,255,255,0.03)"
+        : "rgba(255,255,255,0.6)",
+      fontFamily:     "monospace",
+      backdropFilter: "blur(10px)",
+      transition:     "all 0.18s",
+    }}
+    onMouseEnter={e => {
+      e.currentTarget.style.borderColor = dark
+        ? "rgba(167,139,250,0.5)" : "rgba(109,40,217,0.35)";
+      e.currentTarget.style.background = dark
+        ? "rgba(167,139,250,0.08)" : "rgba(109,40,217,0.05)";
+    }}
+    onMouseLeave={e => {
+      e.currentTarget.style.borderColor = dark
+        ? "rgba(167,139,250,0.25)" : "rgba(109,40,217,0.18)";
+      e.currentTarget.style.background = dark
+        ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.6)";
+    }}
+  >
+    <span style={{
+      width: 7, height: 7, borderRadius: "50%",
+      background: "#10b981", flexShrink: 0,
+      boxShadow: "0 0 6px #10b981aa",
+    }} />
+    <span style={{
+      fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
+      color: dark ? "rgba(167,139,250,0.9)" : "#6d28d9",
+    }}>
+      [ About the Developer ]
+    </span>
+  </button>
+</RevealOnScroll>
+
+{/* Disclaimer — inline row, not in a box */}
+<RevealOnScroll delay={0.15} direction="up">
+  <DisclaimerPill dark={dark} onClick={onDisclaimer} />
+</RevealOnScroll>
 
           {/* Disclaimer pill — pulses in at bottom */}
           <RevealOnScroll delay={0.15} direction="scale">

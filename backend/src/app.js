@@ -38,6 +38,8 @@ const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 
 // ── Security headers ────────────────────────────────────────────────────────
 app.use(helmet());
+// Keep-alive health check — no auth needed
+app.get("/health", (req, res) => res.json({ status: "ok", ts: Date.now() }));
 
 // ── CORS ────────────────────────────────────────────────────────────
 app.use(cors({
