@@ -1,7 +1,7 @@
-/* ── Google Font — Inter ─────────────────────────────────────── */
+﻿/* â”€â”€ Google Font â€” Inter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* ── Reset ───────────────────────────────────────────────────── */
+/* â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -38,7 +38,7 @@ body {
   min-height: 100dvh;
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────── */
+/* â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -54,7 +54,7 @@ body {
   background: #a78bfa;
 }
 
-/* ── Number inputs — hide spinner arrows ─────────────────────── */
+/* â”€â”€ Number inputs â€” hide spinner arrows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -64,26 +64,47 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* ── Focus ring — global ─────────────────────────────────────── */
+/* â”€â”€ Focus ring â€” global â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :focus-visible {
   outline: 2px solid #818cf8;
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* ── Selection color ─────────────────────────────────────────── */
+/* â”€â”€ Selection color â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::selection {
   background: #ddd6fe;
   color: #1e1b4b;
 }
 
-/* ── Smooth transitions on theme switch ──────────────────────── */
-body, div, section, main, nav, header, footer, button, input, select {
-  transition: background-color 0.2s ease, border-color 0.2s ease,
-              color 0.2s ease;
+/* â”€â”€ Focused transitions on interactive UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+button, input, select, textarea, a {
+  transition: background-color 0.18s ease, border-color 0.18s ease,
+              color 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* ── Utility: hide scrollbar but keep scroll ─────────────────── */
+@media (max-width: 640px) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  [style*="backdrop-filter"],
+  [style*="BackdropFilter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* â”€â”€ Utility: hide scrollbar but keep scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -141,7 +162,7 @@ body, div, section, main, nav, header, footer, button, input, select {
   from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1);    }
 }
-/* ── Global keyframes ────────────────────────────────────────────────────── */
+/* â”€â”€ Global keyframes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -176,7 +197,7 @@ body, div, section, main, nav, header, footer, button, input, select {
   50%       { transform: translateY(6px); }
 }
 
-/* ── Prevent overscroll black gap on iOS ────────────────────────────────── */
+/* â”€â”€ Prevent overscroll black gap on iOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 html, body {
   background:          #080c18;
   overscroll-behavior: none;
@@ -188,7 +209,8 @@ html, body, #root {
   padding: 0;
 }
 
-/* ── Smooth scrolling ───────────────────────────────────────────────────── */
+/* â”€â”€ Smooth scrolling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 * {
   -webkit-tap-highlight-color: transparent;
 }
+

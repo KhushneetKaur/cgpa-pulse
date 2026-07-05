@@ -1,4 +1,4 @@
-export default function LoginBackground({ dark }) {
+﻿export default function LoginBackground({ dark }) {
   return (
     <>
       <style>{`
@@ -30,25 +30,42 @@ export default function LoginBackground({ dark }) {
           0%,100% { opacity: 0.6; filter: blur(60px); }
           50%      { opacity: 1;   filter: blur(40px); }
         }
+
+        @media (max-width: 640px), (prefers-reduced-motion: reduce) {
+          .login-bg-gradient {
+            animation: none !important;
+            background-size: 100% 100% !important;
+          }
+
+          .login-bg-orb {
+            animation: none !important;
+            filter: blur(32px) !important;
+            opacity: 0.45;
+          }
+
+          .login-bg-orb:nth-of-type(n + 5) {
+            display: none;
+          }
+        }
       `}</style>
 
-      {/* ── Animated gradient base ───────────────────────────────── */}
-      <div style={{
+      {/*Animated gradient base */}
+      <div className="login-bg-gradient" style={{
         position:           "fixed",
         inset:              0,
         zIndex:             0,
         background:         dark
-          // dark: deep navy → purple → dark teal
+          // dark: deep navy â†’ purple â†’ dark teal
           ? "linear-gradient(-45deg, #050814, #0d0621, #071a14, #0d0621, #100520)"
-          // light: soft peach → lavender → mint → lilac
+          // light: soft peach â†’ lavender â†’ mint â†’ lilac
           : "linear-gradient(-45deg, #fde8f0, #ede9ff, #d8f5ec, #f5e6ff, #fde8f0)",
         backgroundSize:     "400% 400%",
         animation:          "gradientShift 12s ease infinite",
       }} />
 
-      {/* ── Orbs ────────────────────────────────────────────────── */}
+     
       {dark ? (
-        // Dark mode — neon glows
+        // Dark mode neon glows
         <>
           <Orb size={500} top="-120px" left="-100px"
             color="rgba(124,63,245,0.35)" blur={100} anim="orbFloat0 14s ease-in-out infinite" pulse />
@@ -75,7 +92,7 @@ export default function LoginBackground({ dark }) {
           }} />
         </>
       ) : (
-        // Light mode — soft pastel orbs
+        // Light mode soft pastel orbs
         <>
           <Orb size={500} top="-80px" left="-80px"
             color="rgba(192,132,252,0.4)" blur={100} anim="orbFloat0 14s ease-in-out infinite" />
@@ -90,13 +107,16 @@ export default function LoginBackground({ dark }) {
         </>
       )}
 
-      {/* ── Noise texture for depth ──────────────────────────────── */}
+     
       <div style={{
         position:   "fixed",
         inset:      0,
         zIndex:     0,
         opacity:    dark ? 0.06 : 0.03,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter 
+        id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'
+         stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' 
+         filter='url(%23noise)'/%3E%3C/svg%3E")`,
         pointerEvents: "none",
       }} />
     </>
@@ -105,7 +125,7 @@ export default function LoginBackground({ dark }) {
 
 function Orb({ size, top, left, right, bottom, color, blur, anim, pulse }) {
   return (
-    <div style={{
+    <div className="login-bg-orb" style={{
       position:     "fixed",
       width:        size,
       height:       size,
@@ -121,3 +141,4 @@ function Orb({ size, top, left, right, bottom, color, blur, anim, pulse }) {
     }} />
   );
 }
+

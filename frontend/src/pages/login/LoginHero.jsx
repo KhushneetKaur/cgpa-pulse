@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import MRSPTULogo from "../../components/MRSPTULogo";
 
@@ -11,15 +11,15 @@ const TYPING_TEXTS = [
 ];
 
 const FEATURES = [
-  { icon: "🧮", label: "Live SGPA" },
-  { icon: "🎯", label: "Target CGPA" },
-  { icon: "🔮", label: "Predictor" },
-  { icon: "⚠",  label: "Backlogs" },
-  { icon: "🏆", label: "Leaderboard" },
-  { icon: "📊", label: "6 Branches" },
+  { icon: "ðŸ§®", label: "Live SGPA" },
+  { icon: "ðŸŽ¯", label: "Target CGPA" },
+  { icon: "ðŸ”®", label: "Predictor" },
+  { icon: "âš ",  label: "Backlogs" },
+  { icon: "ðŸ†", label: "Leaderboard" },
+  { icon: "ðŸ“Š", label: "6 Branches" },
 ];
 
-// ── Intersection Observer scroll reveal ───────────────────────────────────────
+// â”€â”€ Intersection Observer scroll reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RevealOnScroll({ children, delay = 0, direction = "up" }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -61,7 +61,7 @@ function RevealOnScroll({ children, delay = 0, direction = "up" }) {
   );
 }
 
-// ── Typing animation ──────────────────────────────────────────────────────────
+// â”€â”€ Typing animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function TypingText({ dark }) {
   const [displayed, setDisplayed] = useState("");
   const [textIdx,   setTextIdx]   = useState(0);
@@ -106,7 +106,7 @@ function TypingText({ dark }) {
   );
 }
 
-// ── Canvas-rendered PULSE ─────────────────────────────────────────────────────
+// â”€â”€ Canvas-rendered PULSE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PulseCanvas({ dark, fontSize }) {
   const canvasRef = useRef(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
@@ -169,7 +169,7 @@ function PulseCanvas({ dark, fontSize }) {
   );
 }
 
-// ── Disclaimer pill ───────────────────────────────────────────────────────────
+// â”€â”€ Disclaimer pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DisclaimerPill({ dark, onClick }) {
   return (
     <button
@@ -205,7 +205,7 @@ function DisclaimerPill({ dark, onClick }) {
   );
 }
 
-// ── Scroll hint chevron ───────────────────────────────────────────────────────
+// â”€â”€ Scroll hint chevron â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ScrollHint({ dark }) {
   return (
     <div style={{
@@ -233,7 +233,7 @@ function ScrollHint({ dark }) {
   );
 }
 
-// ── Main hero ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
   const { dark } = useAppData();
   const [fontSize,  setFontSize]  = useState(96);
@@ -251,7 +251,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // ── Mobile layout ───────────────────────────────────────────────────────────
+  // â”€â”€ Mobile layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (isMobile) {
     return (
       <div
@@ -265,7 +265,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           transition:    "opacity 0.65s ease",
         }}
       >
-        {/* ── Section 1: Full-screen hero ─────────────────────── */}
+        {/* â”€â”€ Section 1: Full-screen hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div style={{
           minHeight:      "100svh",
           display:        "flex",
@@ -295,7 +295,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             </div>
           </div>
 
-          {/* Centrepiece — CGPA PULSE + tagline */}
+          {/* Centrepiece â€” CGPA PULSE + tagline */}
           <div style={{
             flex:           1,
             display:        "flex",
@@ -337,7 +337,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
   </h1>
   <PulseCanvas
     dark={dark}
-    fontSize={Math.round(Math.min(80, Math.max(48, window.innerWidth * 0.13)))}
+    fontSize={Math.round(Math.min(80, Math.max(48, fontSize * 0.9)))}
   />
 </div>
               <div style={{
@@ -364,7 +364,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
               The smarter way to <TypingText dark={dark} />
             </p>
 
-            {/* CTA buttons — stacked vertically on mobile */}
+            {/* CTA buttons â€” stacked vertically on mobile */}
             <div style={{
               display:       "flex",
               flexDirection: "column",
@@ -393,7 +393,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
                     : "0 6px 28px rgba(124,58,237,0.35)",
                 }}
               >
-                Login →
+                Login â†’
               </button>
               <button
                 onClick={() => onAuth("signup")}
@@ -424,7 +424,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
 
         </div>
 
-        {/* ── Section 2: Scroll-revealed details ──────────────── */}
+        {/* â”€â”€ Section 2: Scroll-revealed details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div style={{
           padding:       "40px 20px 60px",
           display:       "flex",
@@ -433,7 +433,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           gap:           40,
         }}>
 
-          {/* Feature pills — cascade in */}
+          {/* Feature pills â€” cascade in */}
           <div style={{ width: "100%", textAlign: "center" }}>
             <RevealOnScroll delay={0}>
               <p style={{
@@ -481,8 +481,8 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             </div>
           </div>
 
-          {/* Developer card — slides in from left */}
-          {/* About Developer — same monospace button as desktop */}
+          {/* Developer card â€” slides in from left */}
+          {/* About Developer â€” same monospace button as desktop */}
 <RevealOnScroll delay={0.1} direction="left">
   <button
     onClick={onAbout}
@@ -530,23 +530,17 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
   </button>
 </RevealOnScroll>
 
-{/* Disclaimer — inline row, not in a box */}
+{/* Disclaimer  inline row, not in a box */}
 <RevealOnScroll delay={0.15} direction="up">
   <DisclaimerPill dark={dark} onClick={onDisclaimer} />
 </RevealOnScroll>
-
-          {/* Disclaimer pill — pulses in at bottom */}
-          <RevealOnScroll delay={0.15} direction="scale">
-            <DisclaimerPill dark={dark} onClick={onDisclaimer} />
-          </RevealOnScroll>
-
         </div>
 
       </div>
     );
   }
 
-  // ── Desktop layout (unchanged) ──────────────────────────────────────────────
+  // Desktop layout (unchanged) 
   return (
     <div
       ref={heroRef}
@@ -737,7 +731,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px) scale(1.03)"}
             onMouseLeave={e => e.currentTarget.style.transform = "translateY(0) scale(1)"}
           >
-            Login →
+            Login â†’
           </button>
           <button
             onClick={() => onAuth("signup")}
