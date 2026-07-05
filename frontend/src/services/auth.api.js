@@ -15,8 +15,8 @@ export async function apiLogout() {
   await api.post("/auth/logout");
 }
 
-export async function apiGetMe() {
-  const res = await api.get("/auth/me");
+export async function apiGetMe(signal) {
+  const res = await api.get("/auth/me", { signal });
   return res.data.user;
 }
 

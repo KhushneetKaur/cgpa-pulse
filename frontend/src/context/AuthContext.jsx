@@ -35,21 +35,25 @@ export function AuthProvider({ children }) {
   // ── Restore session on app load ───────────────────────────────────────────
   // Hits /api/auth/me — if cookie is valid, returns user and we skip login
   useEffect(() => {
+    fetch(
+    (import.meta.env.VITE_API_URL || "").replace("/api", "") + "/health"
+  ).catch(() => {});
+
     async function restoreSession() {
-      try {
-        await fetch(
-      `${import.meta.env.VITE_API_URL?.replace("/api", "")}/health`
-      || "https://cgpa-pulse-backend.onrender.com/health"
-    ).catch(() => {}); 
-        const user = await apiGetMe();
-        setUser(user);
-      } catch {
-        // No valid session — stay on login screen
-        setUser(null);
-      } finally {
-        setAuthLoading(false);
-      }
-    }
+  try {
+    const controller = new AbortController();
+    const timeout    = setTimeout(() => controller.abort(), 5000);
+
+    const user = await apiGetMe(controller.signal);
+    clearTimeout(timeout);
+    setUser(user);
+  } catch (err) {
+    // Timed out or no session — show login immediately
+    setUser(null);
+  } finally {
+    setAuthLoading(false);
+  }
+}
     restoreSession();
   }, []);
 
