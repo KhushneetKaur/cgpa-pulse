@@ -87,6 +87,7 @@ if (authLoading) {
 
   return (
     <div
+      className="summary-cards-grid"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",

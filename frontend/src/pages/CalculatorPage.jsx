@@ -178,7 +178,7 @@ const subs = [...hardcodedSubs, ...customSubs];
 
 
       {/* ── Marks scheme reminder ──────────────────────────────────── */}
-<div style={{
+<div className="marks-scheme-grid" style={{
   display:             "grid",
   gridTemplateColumns: "1fr 1fr",
   gap:                 8,
@@ -242,7 +242,7 @@ const subs = [...hardcodedSubs, ...customSubs];
 </div>
 
       {/* ── Column headers ─────────────────────────────────────────── */}
-      <div style={{
+      <div className="calc-column-headers" style={{
         display:             "grid",
         gridTemplateColumns: "1fr 34px 80px 80px 90px 50px 34px 34px",
         gap:                 6,
@@ -302,14 +302,14 @@ const subs = [...hardcodedSubs, ...customSubs];
       </div>
 
       {/* ── Action row ─────────────────────────────────────────────── */}
-      <div style={{
+      <div className="calc-action-row" style={{
         marginTop:      12,
         display:        "flex",
         justifyContent: "space-between",
         alignItems:     "center",
         gap:            10,
       }}>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="calc-action-buttons" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button
           onClick={() => openQuick(selSem)}
           style={{ ...btn("ghost"), fontSize: 12 }}
@@ -339,6 +339,7 @@ const subs = [...hardcodedSubs, ...customSubs];
    </div>
 
         <button
+          className="calc-save-btn"
         type = "button"
           onClick={saveSem}
           disabled={saving}

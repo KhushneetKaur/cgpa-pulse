@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import MRSPTULogo from "../../components/MRSPTULogo";
 
@@ -19,7 +19,7 @@ const FEATURES = [
   { icon: "📊", label: "6 Branches" },
 ];
 
-// â”€â”€ Intersection Observer scroll reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  Intersection Observer scroll reveal 
 function RevealOnScroll({ children, delay = 0, direction = "up" }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -61,7 +61,7 @@ function RevealOnScroll({ children, delay = 0, direction = "up" }) {
   );
 }
 
-// â”€â”€ Typing animation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Typing animation 
 function TypingText({ dark }) {
   const [displayed, setDisplayed] = useState("");
   const [textIdx,   setTextIdx]   = useState(0);
@@ -106,7 +106,7 @@ function TypingText({ dark }) {
   );
 }
 
-// â”€â”€ Canvas-rendered PULSE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  Canvas-rendered PULSE 
 function PulseCanvas({ dark, fontSize }) {
   const canvasRef = useRef(null);
   const [dims, setDims] = useState({ w: 0, h: 0 });
@@ -169,7 +169,7 @@ function PulseCanvas({ dark, fontSize }) {
   );
 }
 
-// â”€â”€ Disclaimer pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Disclaimer pill 
 function DisclaimerPill({ dark, onClick }) {
   return (
     <button
@@ -205,7 +205,7 @@ function DisclaimerPill({ dark, onClick }) {
   );
 }
 
-// â”€â”€ Scroll hint chevron â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Scroll hint chevron 
 function ScrollHint({ dark }) {
   return (
     <div style={{
@@ -233,7 +233,7 @@ function ScrollHint({ dark }) {
   );
 }
 
-// â”€â”€ Main hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  Main hero 
 export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
   const { dark } = useAppData();
   const [fontSize,  setFontSize]  = useState(96);
@@ -251,7 +251,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
     return () => window.removeEventListener("resize", measure);
   }, []);
 
-  // â”€â”€ Mobile layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Mobile layout 
   if (isMobile) {
     return (
       <div
@@ -265,7 +265,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
           transition:    "opacity 0.65s ease",
         }}
       >
-        {/* â”€â”€ Section 1: Full-screen hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/*  Section 1: Full-screen hero  */}
         <div style={{
           minHeight:      "100svh",
           display:        "flex",
@@ -295,7 +295,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
             </div>
           </div>
 
-          {/* Centrepiece â€” CGPA PULSE + tagline */}
+          {/* Centrepiece  CGPA PULSE + tagline */}
           <div style={{
             flex:           1,
             display:        "flex",
@@ -364,7 +364,7 @@ export default function LoginHero({ onAuth, onAbout, onDisclaimer, mounted }) {
               The smarter way to <TypingText dark={dark} />
             </p>
 
-            {/* CTA buttons â€” stacked vertically on mobile */}
+            {/* CTA buttons stacked vertically on mobile */}
             <div style={{
               display:       "flex",
               flexDirection: "column",

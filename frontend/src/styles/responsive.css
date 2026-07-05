@@ -271,3 +271,56 @@ html, body {
     min-height: 100svh !important;
   }
 }
+/* Phone-first spacing and calculator ergonomics */
+@media (max-width: 640px) {
+  main {
+    padding: 0.75rem 0.65rem 1.25rem !important;
+  }
+
+  .marks-scheme-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .calc-column-headers {
+    display: none !important;
+  }
+
+  .calc-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .calc-action-buttons {
+    width: 100% !important;
+  }
+
+  .calc-action-buttons button,
+  .calc-save-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .subject-row-grid {
+    padding: 10px !important;
+    border: 1px solid rgba(127,127,127,0.14) !important;
+    border-radius: 10px !important;
+  }
+
+  .summary-cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .branch-select-grid,
+  .summary-cards-grid,
+  .target-pct-table {
+    grid-template-columns: 1fr !important;
+  }
+
+  .navbar-tab-btn {
+    padding: 0 8px !important;
+  }
+}
