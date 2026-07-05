@@ -91,19 +91,22 @@ export async function loginUser({ identifier, password }) {
       : { username: identifier.trim() }
   ).select("+passwordHash");
 
-  if (!user) {
-    // Deliberately vague — don't tell attacker whether user exists
-    throw ApiError.unauthorized("Invalid credentials");
-  }
+ if (!user) {
+  throw ApiError.unauthorized(
+    "No account found with this username or email. Please sign up first."
+  );
+}
 
   if (!user.isActive) {
     throw ApiError.unauthorized("Your account has been deactivated");
   }
 
   const passwordMatch = await user.comparePassword(password);
-  if (!passwordMatch) {
-    throw ApiError.unauthorized("Invalid credentials");
-  }
+if (!passwordMatch) {
+  throw ApiError.unauthorized(
+    "Incorrect password. Please try again."
+  );
+}
 
   if (!user.isEmailVerified) {
     throw ApiError.forbidden("ACCOUNT_NOT_VERIFIED");

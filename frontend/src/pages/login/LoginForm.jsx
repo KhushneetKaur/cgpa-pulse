@@ -677,7 +677,7 @@ const pwdRef      = useRef(null);
             )}
 
             {/* Server error */}
-{authErr && !fieldErrors.email && !fieldErrors.uname && (
+{authErr && (
   <div style={{
     display:      "flex",
     alignItems:   "flex-start",
