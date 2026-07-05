@@ -270,20 +270,22 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
     setIsSubmitting(true);
 
     try {
-      if (isSignup) {
-        const result = await signup(email);
-        if (!result?.userId) {
-          toast.error("Signup failed — please try again");
-          return;
-        }
-        setFieldErrors({});
-        setTouched({});
-        toast.success("Account created! Check your email for the OTP ✅");
-        onSignupSuccess(result.userId, result.email);
-      } else {
-        await login(); // Kept parameterless to match your context bindings perfectly
-        toast.success("Welcome back! 🎉");
-      }
+     if (isSignup) {
+  const result = await signup(email);
+
+  if (!result?.userId) {
+    toast.error("Signup failed — please try again");
+    return;
+  }
+
+  setFieldErrors({});
+  setTouched({});
+  toast.success("Account created! Check your email for the OTP ✅");
+  onSignupSuccess?.(result.userId, result.email);
+} else {
+  await login();
+  toast.success("Welcome back! 🎉");
+}
     } catch (err) {
       if (err?.status === 403) {
         setAuthErr("This account isn't verified yet. Please sign up again to receive a new OTP.");
