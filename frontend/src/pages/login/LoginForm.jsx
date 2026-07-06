@@ -263,6 +263,8 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
   // ── Authentication Submission ──────────────────────────────
   async function handleAuth() {
     setAuthErr("");
+    setFieldErrors({}); 
+    setTouched({});  
     const errs = validate();
     setFieldErrors(errs);
     setTouched({ email: true, uname: true, pwd: true });
@@ -432,7 +434,12 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
               autoComplete="off"
               inputRef={emailRef}
               value={email}
-              onChange={e => setEmail(e.target.value)}
+             onChange={e => {
+            setEmail(e.target.value);
+            if (fieldErrors.email) {
+           setFieldErrors(prev => ({ ...prev, email: undefined }));
+             }
+             }}
               onBlur={() => handleBlur("email")}
               onKeyDown={e => e.key === "Enter" && (e.preventDefault(), unameRef.current?.focus())}
               placeholder="you@example.com"
