@@ -38,8 +38,6 @@ const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 
 // ── Security headers ────────────────────────────────────────────────────────
 app.use(helmet());
-// Keep-alive health check — no auth needed
-app.get("/health", (req, res) => res.json({ status: "ok", ts: Date.now() }));
 
 // ── CORS ────────────────────────────────────────────────────────────
 app.use(cors({
@@ -48,6 +46,8 @@ app.use(cors({
   methods:     ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
 }));
+// Keep-alive health check — no auth needed
+app.get("/health", (req, res) => res.json({ status: "ok", ts: Date.now() }));
 // ── Body parsing ─────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10kb" }));        // reject huge payloads
 app.use(express.urlencoded({ extended: true }));

@@ -34,10 +34,14 @@ export function AuthProvider({ children }) {
 
   // ── Restore session on app load ───────────────────────────────────────────
   // Hits /api/auth/me — if cookie is valid, returns user and we skip login
-  useEffect(() => {
-    fetch(
-    (import.meta.env.VITE_API_URL || "").replace("/api", "") + "/health"
-  ).catch(() => {});
+ seEffect(() => {
+  // Wake Render from cold start — fire and forget, never throws
+  const backendUrl = (import.meta.env.VITE_API_URL || "")
+    .replace("/api", "");
+  if (backendUrl && backendUrl.includes("onrender")) {
+    fetch(`${backendUrl}/health`, { mode: "no-cors" })
+      .catch(() => {});
+  }
 
     async function restoreSession() {
   try {
