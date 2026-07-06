@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
   const backendUrl = (import.meta.env.VITE_API_URL || "")
     .replace("/api", "");
   if (backendUrl && backendUrl.includes("onrender")) {
-    fetch(`${backendUrl}/health`, { mode: "no-cors" })
+    fetch(`${backendUrl}/health`)
       .catch(() => {});
   }
 

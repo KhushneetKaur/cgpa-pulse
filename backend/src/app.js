@@ -16,6 +16,13 @@ import { csrfProtection }   from "./middleware/csrf.middleware.js";
 
 const app = express();
 
+app.get("/health", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "no-cache");
+  res.json({ status: "ok", ts: Date.now() });
+});
+
+
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
@@ -46,8 +53,7 @@ app.use(cors({
   methods:     ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
 }));
-// Keep-alive health check — no auth needed
-app.get("/health", (req, res) => res.json({ status: "ok", ts: Date.now() }));
+
 // ── Body parsing ─────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10kb" }));        // reject huge payloads
 app.use(express.urlencoded({ extended: true }));
