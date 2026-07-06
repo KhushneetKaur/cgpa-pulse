@@ -45,11 +45,11 @@ export async function login(req, res, next) {
     sendResponse(res, 200, { user }, "Login successful");
 
   } catch (err) {
-    if (err.message === "EMAIL_NOT_VERIFIED") {
+    if (err.message === "EMAIL_NOT_VERIFIED" || err.message === "ACCOUNT_NOT_VERIFIED") {
       return res.status(403).json({
         success: false,
-        message: "EMAIL_NOT_VERIFIED",
-        code:    "EMAIL_NOT_VERIFIED",
+        message: "ACCOUNT_NOT_VERIFIED",
+        code:    "ACCOUNT_NOT_VERIFIED",
       });
     }
     next(err);

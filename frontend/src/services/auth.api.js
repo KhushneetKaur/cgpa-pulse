@@ -1,14 +1,21 @@
 import api from "./api.js";
 
+function unwrapApiData(res) {
+  if (res?.data?.data) return res.data.data;
+  if (res?.data && (res.success !== undefined || res.statusCode)) return res.data;
+  if (res?.data?.user) return res.data;
+  return res;
+}
+
 export async function apiSignup({ username, email, password }) {
   const res = await api.post("/auth/signup", { username, email, password });
-  console.log("apiSignup raw response:", res);
-  return res.data;   // { user }
+  return unwrapApiData(res); // { user }
 }
 
 export async function apiLogin({ identifier, password }) {
   const res = await api.post("/auth/login", { identifier, password });
-  return res.data.user;
+  const data = unwrapApiData(res);
+  return data.user;
 }
 
 export async function apiLogout() {
@@ -17,12 +24,14 @@ export async function apiLogout() {
 
 export async function apiGetMe(signal) {
   const res = await api.get("/auth/me", { signal });
-  return res.data.user;
+  const data = unwrapApiData(res);
+  return data.user;
 }
 
 export async function apiVerifyOTP(userId, otp) {
   const res = await api.post("/auth/verify-otp", { userId, otp });
-  return res.data.user;
+  const data = unwrapApiData(res);
+  return data.user;
 }
 
 export async function apiResendOTP(userId) {
@@ -35,10 +44,12 @@ export async function apiForgotPassword(email) {
 
 export async function apiResetPassword(token, password) {
   const res = await api.post("/auth/reset-password", { token, password });
-  return res.data.user;
+  const data = unwrapApiData(res);
+  return data.user;
 }
 
 export async function apiRefreshToken() {
   const res = await api.post("/auth/refresh");
-  return res.data.user;
+  const data = unwrapApiData(res);
+  return data.user;
 }
