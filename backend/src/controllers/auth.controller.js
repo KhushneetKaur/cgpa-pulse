@@ -17,17 +17,16 @@ import { sendResponse } from "../utils/ApiResponse.js";
 // ── POST /api/auth/signup ─────────────────────────────────────────────────────
 
 export async function signup(req, res, next) {
- 
   try {
     const { username, email, password } = req.body;
     const { user, accessToken, refreshToken } = await registerUser({
-      username,
-      email,
-      password,
+      username, email, password,
     });
-   sendResponse(res, 201, { user }, "Account created — check your email for OTP");
-  } 
-  catch (err) { next(err); }
+    sendResponse(res, 201, { user }, "Account created — check your email for OTP");
+  } catch (err) {
+    console.error("=== SIGNUP ERROR ===", err.message, err.stack);
+    next(err);
+  }
 }
    
 
