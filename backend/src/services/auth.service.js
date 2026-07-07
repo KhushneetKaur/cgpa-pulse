@@ -38,37 +38,27 @@ export function clearTokenCookie(res) {
 // ── Signup ───────────────────────────────────────────────────────────
 
 export async function registerUser({ username, email, password }) {
-  // Check if username already taken
-  const existingUsername = await User.findOne({
-    username: username.trim(),
-  });
-  if (existingUsername) {
-    throw ApiError.conflict("Username is already taken");
-  }
+  const existingUsername = await User.findOne({ username: username.trim() });
+  if (existingUsername) throw ApiError.conflict("Username is already taken");
 
-  // Check if email already registered
-  const existingEmail = await User.findOne({
-    email: email.toLowerCase().trim(),
-  });
-  if (existingEmail) {
-    throw ApiError.conflict("An account with this email already exists");
-  }
+  const existingEmail = await User.findOne({ email: email.toLowerCase().trim() });
+  if (existingEmail) throw ApiError.conflict("An account with this email already exists");
 
-  // Create user — pre-save hook in User model hashes the password
   const user = await User.create({
     username:     username.trim(),
     email:        email.toLowerCase().trim(),
-    passwordHash: password,   // gets hashed by pre-save hook
+    passwordHash: password,
     role:         "student",
   });
 
+  // Send OTP — if email fails, user is still created
+  // Frontend will show OTP screen, user can resend from there
   try {
     await sendOTP(user._id);
-  } catch (err) {
-    logger.error("Failed to send OTP during signup:", err.message);
-    // Delete the user since we couldn't send OTP
-    await User.findByIdAndDelete(user._id);
-    throw ApiError.internal("Failed to send verification email. Please try again.");
+  } catch (emailErr) {
+    console.error("OTP email failed — user created but email not sent:", emailErr.message);
+    // Don't throw — user was created successfully
+    // They can use "Resend OTP" on the verification screen
   }
 
   const accessToken  = generateAccessToken(user._id);
