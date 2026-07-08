@@ -1,34 +1,27 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { logger } from "../config/logger.js";
 
-const transporter = nodemailer.createTransport({
-  host:   "smtp.gmail.com",
-  port:   587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function verifyEmailTransport() {
-  try {
-    await transporter.verify();
-    logger.info("Email transporter ready ✅");
-  } catch (err) {
-    logger.warn("Email transporter not ready:", err.message);
+  if (!process.env.RESEND_API_KEY) {
+    logger.warn("RESEND_API_KEY not set — emails will not send");
+    return;
   }
+  logger.info("Resend email service ready ✅");
 }
 
 export async function sendVerificationOTP(email, username, otp) {
-  try {
-    // Log to file/winston in production only — never log OTP to console
-    if (process.env.NODE_ENV === "development") {
-      logger.debug(`OTP for ${email}: ${otp}`);
-    }
+  console.log(`\n📧 OTP for ${email}: ${otp}\n`);
 
-    await transporter.sendMail({
-      from:    process.env.EMAIL_FROM,
+  if (!process.env.RESEND_API_KEY) {
+    logger.warn("RESEND_API_KEY missing — OTP logged to console only");
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from:    process.env.EMAIL_FROM || "CGPA Pulse <onboarding@resend.dev>",
       to:      email,
       subject: "Verify your CGPA Pulse account",
       html: `
@@ -42,42 +35,32 @@ export async function sendVerificationOTP(email, username, otp) {
           <div style="background:#fff;border-radius:12px;padding:24px;
                       text-align:center;border:1.5px solid #e4e2f0;">
             <p style="margin:0 0 8px;font-size:13px;color:#a09bbf;
-                      letter-spacing:1px;text-transform:uppercase;">
-              Your OTP
-            </p>
+                      letter-spacing:1px;text-transform:uppercase;">Your OTP</p>
             <p style="margin:0;font-size:40px;font-weight:900;
-                      letter-spacing:10px;color:#6d28d9;">
-              ${otp}
-            </p>
+                      letter-spacing:10px;color:#6d28d9;">${otp}</p>
           </div>
-          <p style="color:#a09bbf;font-size:12px;margin:20px 0 0;
-                    text-align:center;">
+          <p style="color:#a09bbf;font-size:12px;margin:20px 0 0;text-align:center;">
             Didn't sign up? Ignore this email.
           </p>
         </div>
       `,
     });
+    logger.info(`OTP email sent to ${email}`);
   } catch (err) {
-    logger.error("Failed to send verification OTP email:", {
-      email,
-      error: err.message,
-      stack: err.stack,
-    });
-    throw err;
+    logger.error("Resend email failed:", err.message);
+    // Don't rethrow — user can resend OTP from verification screen
   }
 }
 
 export async function sendPasswordResetEmail(email, username, resetToken) {
+  const resetURL = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+  console.log(`\n🔑 Reset link for ${email}: ${resetURL}\n`);
+
+  if (!process.env.RESEND_API_KEY) return;
+
   try {
-    const resetURL = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
-
-    // Log to file/winston in development only — never log reset link to console
-    if (process.env.NODE_ENV === "development") {
-      logger.debug(`Reset link for ${email}: ${resetURL}`);
-    }
-
-    await transporter.sendMail({
-      from:    process.env.EMAIL_FROM,
+    await resend.emails.send({
+      from:    process.env.EMAIL_FROM || "CGPA Pulse <onboarding@resend.dev>",
       to:      email,
       subject: "Reset your CGPA Pulse password",
       html: `
@@ -102,11 +85,6 @@ export async function sendPasswordResetEmail(email, username, resetToken) {
       `,
     });
   } catch (err) {
-    logger.error("Failed to send password reset email:", {
-      email,
-      error: err.message,
-      stack: err.stack,
-    });
-    throw err;
+    logger.error("Reset email failed:", err.message);
   }
 }
