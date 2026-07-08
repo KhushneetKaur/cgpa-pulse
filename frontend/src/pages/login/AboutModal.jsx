@@ -86,7 +86,7 @@ export default function AboutModal({ onClose, dark }) {
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#f59e0b" }} />
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981" }} />
             <span style={{
-              fontSize:      11,
+              fontSize:      12,
               color:         "rgba(255,255,255,0.4)",
               marginLeft:    10,
               letterSpacing: 0.5,
