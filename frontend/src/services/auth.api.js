@@ -8,12 +8,12 @@ function unwrapApiData(res) {
 }
 
 export async function apiSignup({ username, email, password }) {
-  const res = await api.post("/auth/signup", { username, email, password });
+  const res = await api.post("/auth/signup", { username, email, password }, { timeout: 45000 });
   return unwrapApiData(res); // { pendingSignup }
 }
 
 export async function apiLogin({ identifier, password }) {
-  const res = await api.post("/auth/login", { identifier, password });
+  const res = await api.post("/auth/login", { identifier, password }, { timeout: 45000 });
   const data = unwrapApiData(res);
   return data.user;
 }
@@ -29,13 +29,13 @@ export async function apiGetMe(signal) {
 }
 
 export async function apiVerifyOTP(userId, otp) {
-  const res = await api.post("/auth/verify-otp", { userId, otp });
+  const res = await api.post("/auth/verify-otp", { userId, otp }, { timeout: 45000 });
   const data = unwrapApiData(res);
   return data.user;
 }
 
 export async function apiResendOTP(userId) {
-  await api.post("/auth/resend-otp", { userId });
+  await api.post("/auth/resend-otp", { userId }, { timeout: 45000 });
 }
 
 export async function apiForgotPassword(email) {

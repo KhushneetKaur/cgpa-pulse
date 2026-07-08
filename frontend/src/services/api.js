@@ -6,7 +6,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL:         import.meta.env.VITE_API_URL || "http://localhost:5000/api",
   withCredentials: true,   // send httpOnly cookie on every request
-  timeout:         10000,  // 10 second timeout
+  timeout:         30000,  // Render cold starts can take longer than 10 seconds
   headers: {
     "Content-Type": "application/json",
   },
@@ -74,7 +74,11 @@ api.interceptors.response.use(
   (response) => response.data,
   async (error) => {
     const status  = error.response?.status;
-    const message = error.response?.data?.message || error.message || "Something went wrong";
+    const rawMessage = error.response?.data?.message || error.message || "Something went wrong";
+    const isTimeout = error.code === "ECONNABORTED" || rawMessage.toLowerCase().includes("timeout");
+    const message = isTimeout
+      ? "Server is waking up. Please try again in a few seconds."
+      : rawMessage;
     const url     = error.config?.url || "";
 
     // ── Token refresh on 401 ─────────────────────────────────────────────────
