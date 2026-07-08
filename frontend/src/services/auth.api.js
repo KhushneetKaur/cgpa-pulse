@@ -9,7 +9,7 @@ function unwrapApiData(res) {
 
 export async function apiSignup({ username, email, password }) {
   const res = await api.post("/auth/signup", { username, email, password });
-  return unwrapApiData(res); // { user }
+  return unwrapApiData(res); // { pendingSignup }
 }
 
 export async function apiLogin({ identifier, password }) {

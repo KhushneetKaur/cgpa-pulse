@@ -20,13 +20,9 @@ export function errorMiddleware(err, req, res, next) {
 
     // Mongoose duplicate key error (e.g. username already taken)
     else if (err.code === 11000) {
-      const field   = Object.keys(err.keyValue)[0];
-      const isSensitiveField = ["email", "username"].includes(field);
-      error = ApiError.conflict(
-        isSensitiveField
-          ? "An account with these details already exists"
-          : `${field.charAt(0).toUpperCase() + field.slice(1)} is already taken`
-      );
+      const field = Object.keys(err.keyValue || {})[0] || "Field";
+      const label = field.charAt(0).toUpperCase() + field.slice(1);
+      error = ApiError.conflict(`${label} is already taken`);
     }
 
     // Mongoose bad ObjectId

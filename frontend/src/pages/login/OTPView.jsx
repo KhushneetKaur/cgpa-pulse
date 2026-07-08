@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export default function OTPView({
   dark, email, userId,
   verifyOTP, resendOTP,
-  onVerified, otpResent, setOtpResent,
+  onVerified, onExpired, otpResent, setOtpResent,
 }) {
   const [otp,     setOtp]     = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,17 @@ export default function OTPView({
       onVerified();
     } catch (e) {
       const msg = e.message || "Invalid OTP";
+      const isExpired = msg.toLowerCase().includes("otp expired") ||
+        msg.toLowerCase().includes("signup request expired");
+
+      if (isExpired) {
+        const expiredMsg = "Account not created. Enter details again to create an account.";
+        setErr(expiredMsg);
+        toast.error(expiredMsg, { duration: 5000 });
+        onExpired?.();
+        return;
+      }
+
       setErr(msg);
       toast.error(msg);
     } finally {
@@ -64,6 +75,8 @@ export default function OTPView({
           <strong style={{ color: dark ? "#a78bfa" : "#7c3aed" }}>
             {email}
           </strong>
+          <br />
+          This code expires in 5 minutes.
         </p>
       </div>
 

@@ -1,5 +1,7 @@
 import jwt  from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import User from "../models/User.js";
+import PendingSignup from "../models/PendingSignup.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 import { logger } from "../config/logger.js";
@@ -38,35 +40,56 @@ export function clearTokenCookie(res) {
 // ── Signup ───────────────────────────────────────────────────────────
 
 export async function registerUser({ username, email, password }) {
-  const existingUsername = await User.findOne({ username: username.trim() });
-  if (existingUsername) throw ApiError.conflict("Username is already taken");
+  const cleanUsername = username.trim();
+  const cleanEmail = email.toLowerCase().trim();
 
-  const existingEmail = await User.findOne({ email: email.toLowerCase().trim() });
-  if (existingEmail) throw ApiError.conflict("An account with this email already exists");
-
-  const user = await User.create({
-    username:     username.trim(),
-    email:        email.toLowerCase().trim(),
-    passwordHash: password,
-    role:         "student",
+  const existingUser = await User.findOne({
+    $or: [
+      { username: cleanUsername },
+      { email: cleanEmail },
+    ],
   });
 
-  // Send OTP — if email fails, user is still created
-  // Frontend will show OTP screen, user can resend from there
-  try {
-    await sendOTP(user._id);
-  } catch (emailErr) {
-    console.error("OTP email failed — user created but email not sent:", emailErr.message);
-    // Don't throw — user was created successfully
-    // They can use "Resend OTP" on the verification screen
+  if (existingUser) {
+    if (!existingUser.isEmailVerified) {
+      await User.deleteOne({ _id: existingUser._id });
+    } else if (existingUser.username === cleanUsername) {
+      throw ApiError.conflict("Username is already taken");
+    } else {
+      throw ApiError.conflict("An account with this email already exists");
+    }
   }
 
-  const accessToken  = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
+  const conflictingPending = await PendingSignup.findOne({
+    $or: [
+      { username: cleanUsername },
+      { email: cleanEmail },
+    ],
+  });
 
-  return { user: user.toPublicJSON(), accessToken, refreshToken };
+  if (conflictingPending) {
+    await PendingSignup.deleteOne({ _id: conflictingPending._id });
+  }
+
+  const otp = generateOTP();
+  const pendingSignup = await PendingSignup.create({
+    username: cleanUsername,
+    email: cleanEmail,
+    passwordHash: password,
+    emailOTP: await hashOTP(otp),
+    emailOTPExpiry: new Date(Date.now() + 5 * 60 * 1000),
+  });
+
+  try {
+    await sendVerificationOTP(cleanEmail, cleanUsername, otp);
+  } catch (emailErr) {
+    await PendingSignup.deleteOne({ _id: pendingSignup._id });
+    logger.error("Failed to send signup OTP:", emailErr.message);
+    throw ApiError.internal("Failed to send verification email. Please try again.");
+  }
+
+  return { pendingSignup: pendingSignup.toPublicJSON() };
 }
-
 
 // ── Login ────────────────────────────────────────────────────────────
 
@@ -128,16 +151,33 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+async function hashOTP(otp) {
+  return bcrypt.hash(otp, 12);
+}
+
 // ── Send OTP after signup ─────────────────────────────────────────────────────
 export async function sendOTP(userId) {
+  const pendingSignup = await PendingSignup.findById(userId)
+    .select("+emailOTP +emailOTPExpiry");
+
+  if (pendingSignup) {
+    const otp = generateOTP();
+    pendingSignup.emailOTP = await hashOTP(otp);
+    pendingSignup.emailOTPExpiry = new Date(Date.now() + 5 * 60 * 1000);
+    await pendingSignup.save({ validateBeforeSave: false });
+
+    await sendVerificationOTP(pendingSignup.email, pendingSignup.username, otp);
+    return;
+  }
+
   const user = await User.findById(userId);
-  if (!user) throw ApiError.notFound("User not found");
+  if (!user) throw ApiError.notFound("Signup request expired. Please enter details again to create an account.");
   if (user.isEmailVerified) throw ApiError.badRequest("Email already verified");
 
-  const otp    = generateOTP();
-  const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const otp = generateOTP();
+  const expiry = new Date(Date.now() + 5 * 60 * 1000);
 
-  user.emailOTP       = otp;
+  user.emailOTP = await hashOTP(otp);
   user.emailOTPExpiry = expiry;
   await user.save({ validateBeforeSave: false });
 
@@ -145,28 +185,45 @@ export async function sendOTP(userId) {
 }
 
 // ── Verify OTP ──────────────────────────────────────────────────────────
-export async function verifyOTP(userId, otp) {
-  const user = await User.findById(userId).select("+emailOTP +emailOTPExpiry");
-  if (!user) throw ApiError.notFound("User not found");
+export async function verifyOTP(pendingSignupId, otp) {
+  const pendingSignup = await PendingSignup.findById(pendingSignupId)
+    .select("+emailOTP +emailOTPExpiry +passwordHash");
 
-  if (user.isEmailVerified) {
-    throw ApiError.badRequest("Email already verified");
+  if (!pendingSignup) {
+    throw ApiError.badRequest("OTP expired. Account not created. Enter details again to create an account.");
   }
-  if (!user.emailOTP || !user.emailOTPExpiry) {
-    throw ApiError.badRequest("No OTP found — request a new one");
+
+  if (new Date() > pendingSignup.emailOTPExpiry) {
+    await PendingSignup.deleteOne({ _id: pendingSignup._id });
+    throw ApiError.badRequest("OTP expired. Account not created. Enter details again to create an account.");
   }
-  if (new Date() > user.emailOTPExpiry) {
-    throw ApiError.badRequest("OTP expired — request a new one");
-  }
-  if (user.emailOTP !== otp.trim()) {
+
+  const otpMatch = await pendingSignup.compareOTP(otp.trim());
+  if (!otpMatch) {
     throw ApiError.badRequest("Incorrect OTP");
   }
 
-  user.isEmailVerified = true;
-  user.emailOTP        = null;
-  user.emailOTPExpiry  = null;
-  await user.save({ validateBeforeSave: false });
+  const existingUser = await User.findOne({
+    $or: [
+      { username: pendingSignup.username },
+      { email: pendingSignup.email },
+    ],
+  });
 
+  if (existingUser) {
+    await PendingSignup.deleteOne({ _id: pendingSignup._id });
+    throw ApiError.conflict("Account already exists. Please log in.");
+  }
+
+  const user = await User.create({
+    username: pendingSignup.username,
+    email: pendingSignup.email,
+    passwordHash: pendingSignup.passwordHash,
+    role: "student",
+    isEmailVerified: true,
+  });
+
+  await PendingSignup.deleteOne({ _id: pendingSignup._id });
   return user.toPublicJSON();
 }
 
@@ -276,3 +333,5 @@ export async function refreshAccessToken(refreshToken) {
 
   return { user: user.toPublicJSON(), accessToken: newAccessToken, refreshToken: newRefreshToken };
 }
+
+

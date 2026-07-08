@@ -296,6 +296,7 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
   toast.success("Welcome back! 🎉");
 }
     } catch (err) {
+      console.error("Auth submit failed:", err);
       if (err?.status === 403) {
         setAuthErr("This account isn't verified yet. Please sign up again to receive a new OTP.");
         setTouched(prev => ({ ...prev, uname: true }));
@@ -307,6 +308,8 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
         } else if (err?.message?.toLowerCase().includes("username")) {
           setFieldErrors({ uname: err.message });
           setTouched(prev => ({ ...prev, uname: true }));
+        } else {
+          setAuthErr(err?.message || "An account with these details already exists");
         }
       } else {
         toast.error(err?.message || "Something went wrong");

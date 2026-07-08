@@ -74,7 +74,7 @@ api.interceptors.response.use(
   (response) => response.data,
   async (error) => {
     const status  = error.response?.status;
-    const message = error.response?.data?.message || "Something went wrong";
+    const message = error.response?.data?.message || error.message || "Something went wrong";
     const url     = error.config?.url || "";
 
     // ── Token refresh on 401 ─────────────────────────────────────────────────

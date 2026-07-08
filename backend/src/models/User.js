@@ -94,8 +94,15 @@ userSchema.index({ createdAt: -1 });
 
 // ── Hash password before saving ───────────────────────────────────────────────
 userSchema.pre("save", async function (next) {
-  // Only hash if password was actually modified
+  // Only hash plain passwords. PendingSignup already stores a bcrypt hash.
   if (!this.isModified("passwordHash")) return next();
+  if (
+    this.passwordHash.startsWith("$2a$") ||
+    this.passwordHash.startsWith("$2b$") ||
+    this.passwordHash.startsWith("$2y$")
+  ) {
+    return next();
+  }
   this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   next();
 });
@@ -133,3 +140,4 @@ userSchema.index(
   }
 );
 export default mongoose.model("User", userSchema);
+

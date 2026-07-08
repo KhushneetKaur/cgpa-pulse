@@ -80,9 +80,16 @@ export default function LoginPage() {
     setSignupSuccess(true);
   }
 
+  function handleOTPExpired() {
+    setPendingUserId(null);
+    setPendingEmail("");
+    setOtpResent(false);
+    setSignupSuccess(false);
+    setModalView("auth");
+  }
   function handleClose() {
     if (modalView === "otp") {
-      toast("Account not verified — sign in to resend your OTP", { 
+      toast("Account not created yet - verify OTP within 5 minutes or sign up again", { 
         icon: "⚠️",
         duration: 5000,
       });
@@ -148,6 +155,7 @@ export default function LoginPage() {
           setOtpResent={setOtpResent}
           onSignupSuccess={handleSignupSuccess}
           onOTPVerified={handleOTPVerified}
+          onOTPExpired={handleOTPExpired}
           onClose={handleClose}
           isFlipped={isFlipped}
           setIsFlipped={setIsFlipped}
@@ -170,7 +178,7 @@ function FormModal({
   pendingUserId, pendingEmail,
   forgotEmail, setForgotEmail,
   signupSuccess, otpResent, setOtpResent,
-  onSignupSuccess, onOTPVerified, onClose,
+  onSignupSuccess, onOTPVerified, onOTPExpired, onClose,
   isFlipped, setIsFlipped, isMobile
 }) {
   const { setIsSignup, verifyOTP, resendOTP, forgotPassword, authErr, setAuthErr } = useAppData();
@@ -231,6 +239,7 @@ function FormModal({
               verifyOTP={verifyOTP}
               resendOTP={resendOTP}
               onVerified={onOTPVerified}
+              onExpired={onOTPExpired}
               otpResent={otpResent}
               setOtpResent={setOtpResent}
             />
@@ -412,3 +421,4 @@ function ForgotSentView({ dark, forgotEmail, onBack }) {
     </div>
   );
 }
+

@@ -19,12 +19,17 @@ import { sendResponse } from "../utils/ApiResponse.js";
 export async function signup(req, res, next) {
   try {
     const { username, email, password } = req.body;
-    const { user, accessToken, refreshToken } = await registerUser({
+    const { pendingSignup } = await registerUser({
       username, email, password,
     });
-    sendResponse(res, 201, { user }, "Account created — check your email for OTP");
+
+    sendResponse(
+      res,
+      201,
+      { pendingSignup },
+      "OTP sent. Verify within 5 minutes to create your account"
+    );
   } catch (err) {
-    console.error("=== SIGNUP ERROR ===", err.message, err.stack);
     next(err);
   }
 }

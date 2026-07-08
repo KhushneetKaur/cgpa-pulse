@@ -87,7 +87,15 @@ export function AuthProvider({ children }) {
         email:    email.trim(),
         password: pwd,
       });
-      return { userId: data.user.id, email: email.trim() };
+      const pendingSignup = data.pendingSignup;
+      if (!pendingSignup?.id) {
+        throw new Error("Signup started but OTP verification data was missing");
+      }
+      return {
+        userId: pendingSignup.id,
+        email: pendingSignup.email || email.trim(),
+        expiresAt: pendingSignup.expiresAt,
+      };
     } catch (err) {
       setAuthErr(err.message || "Signup failed");
       throw err;
@@ -204,3 +212,4 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
+
