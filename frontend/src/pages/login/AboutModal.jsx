@@ -174,7 +174,7 @@ export default function AboutModal({ onClose, dark }) {
                 </p>
                 <p style={{
                   margin:        "3px 0 0",
-                  fontSize:      9,
+                  fontSize:      10,
                   color:         "rgba(255,255,255,0.35)",
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
