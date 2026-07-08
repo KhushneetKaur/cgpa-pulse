@@ -256,10 +256,17 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
   }
 
   function handleBlur(field) {
-    setTouched(prev => ({ ...prev, [field]: true }));
-    setFieldErrors(validate());
-  }
+  // Don't show error on blur if field is empty — user may just be tabbing
+  const fieldValues = { email, uname, pwd };
+  const val = fieldValues[field];
+  if (!val || String(val).trim() === "") return;
 
+  setTouched(prev => ({ ...prev, [field]: true }));
+  setFieldErrors(prev => ({
+    ...prev,
+    ...validate(),
+  }));
+}
   // ── Authentication Submission ──────────────────────────────
   async function handleAuth() {
     setAuthErr("");
@@ -293,6 +300,7 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
         setAuthErr("This account isn't verified yet. Please sign up again to receive a new OTP.");
         setTouched(prev => ({ ...prev, uname: true }));
       } else if (err?.status === 409) {
+        setAuthErr(""); 
         if (err?.message?.toLowerCase().includes("email")) {
           setFieldErrors({ email: err.message });
           setTouched(prev => ({ ...prev, email: true }));
@@ -492,6 +500,9 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
                 type={showPwd ? "text" : "password"}
                 autoComplete={isSignup ? "new-password" : "current-password"}
                 value={pwd}
+                  data-lpignore="true"
+                 data-form-type="other"
+                name={isSignup ? `pwd-${Math.random()}` : "password"}
                 onChange={e => setPwd(e.target.value)}
                 onBlur={() => handleBlur("pwd")}
                 onKeyDown={e => e.key === "Enter" && handleAuth()}
@@ -618,7 +629,6 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
                 background:   dark ? "rgba(252,107,107,0.1)" : "rgba(220,38,38,0.06)",
                 border: `1px solid ${dark ? "rgba(252,107,107,0.2)" : "rgba(220,38,38,0.15)"}`,
               }}>
-                <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>⚠</span>
                 <span style={{ fontSize: 12, color: dark ? "#fc6b6b" : "#dc2626", fontWeight: 500, lineHeight: 1.5 }}>
                   {fieldErrors.pwd}
                 </span>
@@ -648,7 +658,7 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
           )}
 
           {/* Status Display Alert Block */}
-          {authErr && (
+          {authErr && !(isSignup && (fieldErrors.email || fieldErrors.uname)) && (
             <div style={{
               display:      "flex",
               alignItems:   "flex-start",
@@ -659,7 +669,6 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
               background:   dark ? "rgba(252,107,107,0.1)" : "rgba(220,38,38,0.06)",
               border: `1px solid ${dark ? "rgba(252,107,107,0.25)" : "rgba(220,38,38,0.2)"}`,
             }}>
-              <span style={{ flexShrink: 0, marginTop: 1 }}>⚠</span>
               <span style={{ fontSize: 13, color: dark ? "#fc6b6b" : "#dc2626", fontWeight: 500, lineHeight: 1.5 }}>
                 {authErr}
               </span>
