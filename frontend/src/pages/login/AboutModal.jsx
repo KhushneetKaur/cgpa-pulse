@@ -10,7 +10,7 @@ const TECH_STACK = [
 ];
 
 const SYSTEM_STATS = [
-  { label: "Branches Supported", value: "6" },
+  { label: "Branches Supported", value: "7" },
   { label: "Semesters Tracked",  value: "8" },
   { label: "Core Modules",       value: "7+" },
 ];
