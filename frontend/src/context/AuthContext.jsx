@@ -12,19 +12,8 @@ import {
   apiGetMe,
   apiForgotPassword,
   apiResetPassword,
+  apiGoogleSignIn, // Merged import cleanly
 } from "../services/auth.api.js";
-import { apiGoogleSignIn } from "../services/auth.api.js";
-
-const googleLogin = useCallback(async (credential) => {
-  setAuthErr("");
-  try {
-    const user = await apiGoogleSignIn(credential);
-    setUser(user);
-  } catch (err) {
-    setAuthErr(err.message || "Google sign-in failed");
-    throw err;
-  }
-}, []);
 
 const AuthContext = createContext(null);
 
@@ -37,55 +26,59 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user,        setUser]        = useState(null);
   const [authErr,     setAuthErr]     = useState("");
-  const [authLoading, setAuthLoading] = useState(true); // true on mount
+  const [authLoading, setAuthLoading] = useState(true);
   const [isSignup,    setIsSignup]    = useState(false);
   const [uname,       setUname]       = useState("");
   const [pwd,         setPwd]         = useState("");
 
   // ── Restore session on app load ───────────────────────────────────────────
-  // Hits /api/auth/me — if cookie is valid, returns user and we skip login
- useEffect(() => {
-  // Wake Render from cold start — fire and forget, never throws
-  const backendUrl = (import.meta.env.VITE_API_URL || "")
-    .replace("/api", "");
-  if (backendUrl && backendUrl.includes("onrender")) {
-    fetch(`${backendUrl}/health`)
-      .catch(() => {});
-  }
+  useEffect(() => {
+    const backendUrl = (import.meta.env.VITE_API_URL || "").replace("/api", "");
+    if (backendUrl && backendUrl.includes("onrender")) {
+      fetch(`${backendUrl}/health`).catch(() => {});
+    }
 
     async function restoreSession() {
-  try {
-    const controller = new AbortController();
-    const timeout    = setTimeout(() => controller.abort(), 5000);
+      try {
+        const controller = new AbortController();
+        const timeout    = setTimeout(() => controller.abort(), 5000);
 
-    const user = await apiGetMe(controller.signal);
-    clearTimeout(timeout);
-    setUser(user);
-  } catch (err) {
-    // Timed out or no session — show login immediately
-    setUser(null);
-  } finally {
-    setAuthLoading(false);
-  }
-}
+        const user = await apiGetMe(controller.signal);
+        clearTimeout(timeout);
+        setUser(user);
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
     restoreSession();
   }, []);
 
   // ── Listen for 401 from API interceptor ──────────────────────────────────
-  // When token expires mid-session, force back to login
   useEffect(() => {
     function handleUnauthorized() {
       setUser(prev => {
         if (prev !== null) {
-          // Was logged in — session expired mid-session
           setAuthErr("Session expired — please log in again");
         }
         return null;
       });
     }
     window.addEventListener("auth:unauthorized", handleUnauthorized);
-    return () =>
-      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
+  }, []);
+
+  // ── Google OAuth Login (MOVED SAFELY INSIDE THE PROVIDER COMPONENT) ───────
+  const googleLogin = useCallback(async (credential) => {
+    setAuthErr("");
+    try {
+      const user = await apiGoogleSignIn(credential);
+      setUser(user);
+    } catch (err) {
+      setAuthErr(err.message || "Google sign-in failed");
+      throw err;
+    }
   }, []);
 
   // ── Signup ───────────────────────────────────────────────────────────
@@ -116,7 +109,6 @@ export function AuthProvider({ children }) {
   const login = useCallback(async () => {
     setAuthErr("");
     try {
-      // identifier = username or email — we send uname field
       const user = await apiLogin({
         identifier: uname.trim(),
         password:   pwd,
@@ -134,7 +126,7 @@ export function AuthProvider({ children }) {
     try {
       await apiLogout();
     } catch {
-      // Even if API call fails, clear local state
+      // Clear local state regardless
     } finally {
       setUser(null);
       setUname("");
@@ -198,4 +190,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
