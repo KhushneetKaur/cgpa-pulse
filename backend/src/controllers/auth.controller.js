@@ -10,7 +10,21 @@ import {
   refreshAccessToken,
 } from "../services/auth.service.js";
 import { sendResponse } from "../utils/ApiResponse.js";
+import { googleAuth } from "../services/auth.service.js";
 
+export async function googleSignIn(req, res, next) {
+  try {
+    const { credential } = req.body;
+    if (!credential) throw ApiError.badRequest("No Google credential provided");
+
+    const { user, accessToken, refreshToken } = await googleAuth(credential);
+    setTokenCookie(res, accessToken);
+    setRefreshTokenCookie(res, refreshToken);
+    sendResponse(res, 200, { user }, "Google sign-in successful");
+  } catch (err) {
+    next(err);
+  }
+}
 
 // ── POST /api/auth/signup ─────────────────────────────────────────────────────
 

@@ -865,7 +865,7 @@ const value = useMemo(
     setPwd,
     authLoading,
     forgotPassword,
-    clearForm,
+    clearForm,googleLogin,
 
     // --- custom subjects
     bCustomSubjects,
@@ -894,7 +894,7 @@ const value = useMemo(
     uname, setUname,
     pwd, setPwd,
     authLoading,
-    forgotPassword, clearForm,
+    forgotPassword, clearForm,googleLogin,
 
     // theme
     dark, scoreClr, toggleDark,

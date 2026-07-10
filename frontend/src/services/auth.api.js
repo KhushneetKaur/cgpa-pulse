@@ -7,6 +7,11 @@ function unwrapApiData(res) {
   return res;
 }
 
+export async function apiGoogleSignIn(credential) {
+  const res = await api.post("/auth/google", { credential });
+  return res.data.user;
+}
+
 export async function apiSignup({ username, email, password }) {
   const res = await api.post("/auth/signup", { username, email, password }, { timeout: 45000 });
   return unwrapApiData(res); // { pendingSignup }

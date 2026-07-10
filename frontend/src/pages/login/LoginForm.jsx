@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
 
 function isValidEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
@@ -224,7 +225,7 @@ export default function LoginForm({ mounted, signupSuccess, onForgot, onClose })
     pwd,      setPwd,
     authErr,  setAuthErr,
     login,    signup,
-    dark,
+    dark, googleLogin,
   } = useAppData();
 
   // ── Local State ────────────────────────────────────────────
@@ -627,26 +628,6 @@ export default function LoginForm({ mounted, signupSuccess, onForgot, onClose })
             )}
           </div>
 
-          {/* Options Layer: Forgot Password Link */}
-          {!isSignup && (
-            <div style={{ textAlign: "right", marginTop: -12, marginBottom: 16 }}>
-              <button
-                type="button"
-                onClick={onForgot}
-                style={{
-                  background: "transparent",
-                  border:     "none",
-                  color:      dark ? "rgba(167,139,250,0.7)" : "#7c3aed",
-                  fontSize:   12,
-                  cursor:     "pointer",
-                  fontFamily: "inherit",
-                  padding:    0,
-                }}
-              >
-                Forgot password?
-              </button>
-            </div>
-          )}
 
           {/* Status Display Alert Block */}
           {authErr && !(isSignup && (fieldErrors.email || fieldErrors.uname)) && (
@@ -709,6 +690,54 @@ export default function LoginForm({ mounted, signupSuccess, onForgot, onClose })
               isSignup ? "Create Account →" : "Login →"
             )}
           </button>
+
+          {/* Divider */}
+<div style={{
+  display:    "flex",
+  alignItems: "center",
+  gap:        10,
+  margin:     "14px 0",
+}}>
+  <div style={{
+    flex:       1,
+    height:     1,
+    background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+  }} />
+  <span style={{
+    fontSize: 11,
+    color:    dark ? "rgba(255,255,255,0.3)" : "#a09bbf",
+  }}>
+    or continue with
+  </span>
+  <div style={{
+    flex:       1,
+    height:     1,
+    background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+  }} />
+</div>
+
+{/* Google Sign In */}
+<div style={{
+  display:        "flex",
+  justifyContent: "center",
+}}>
+  <GoogleLogin
+    onSuccess={async (credentialResponse) => {
+      try {
+        await googleLogin(credentialResponse.credential);
+        toast.success("Signed in with Google! 🎉");
+      } catch {
+        toast.error("Google sign-in failed");
+      }
+    }}
+    onError={() => toast.error("Google sign-in failed")}
+    theme={dark ? "filled_black" : "outline"}
+    shape="rectangular"
+    size="large"
+    text={isSignup ? "signup_with" : "signin_with"}
+    width="100%"
+  />
+</div>
 
           {/* Layout Redirection Bottom Anchors */}
           <p style={{ textAlign: "center", fontSize: 12, color: dark ? "rgba(255,255,255,0.5)" : "#3a3560", margin: "14px 0 0" }}>

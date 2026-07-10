@@ -13,6 +13,18 @@ import {
   apiForgotPassword,
   apiResetPassword,
 } from "../services/auth.api.js";
+import { apiGoogleSignIn } from "../services/auth.api.js";
+
+const googleLogin = useCallback(async (credential) => {
+  setAuthErr("");
+  try {
+    const user = await apiGoogleSignIn(credential);
+    setUser(user);
+  } catch (err) {
+    setAuthErr(err.message || "Google sign-in failed");
+    throw err;
+  }
+}, []);
 
 const AuthContext = createContext(null);
 
@@ -177,6 +189,7 @@ export function AuthProvider({ children }) {
     forgotPassword,
     resetPassword,
     clearForm,
+    googleLogin,
   };
 
   return (

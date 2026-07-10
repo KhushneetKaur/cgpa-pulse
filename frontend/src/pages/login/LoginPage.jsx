@@ -4,7 +4,6 @@ import LoginBackground   from "./LoginBackground";
 import LoginHero         from "./LoginHero";
 import LoginForm         from "./LoginForm";
 import AboutModal        from "./AboutModal";
-import ForgotView        from "./ForgotView";
 import DisclaimerModal from "../../components/DisclaimerModal";
 import toast from "react-hot-toast"
 
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [mounted,       setMounted]       = useState(false);
   // ── Lifted OTP/view state — survives LoginForm re-renders ──
   const [modalView,     setModalView]     = useState("auth");
-  const [forgotEmail,   setForgotEmail]   = useState("");
   const [signupSuccess, setSignupSuccess] = useState(false);
 
   // Track if we are on a phone screen size
@@ -181,55 +179,13 @@ function FormModal({
           width: "100%",
         }}>
 
-          {modalView === "forgot" && (
-            <ForgotView
-              dark={dark}
-              forgotEmail={forgotEmail}
-              setForgotEmail={setForgotEmail}
-              forgotPassword={forgotPassword}
-              onSent={() => setModalView("forgotSent")}
-              onBack={() => { setModalView("auth"); setAuthErr(""); }}
-            />
-          )}
-
-          {modalView === "forgotSent" && (
-            <ForgotSentView
-              dark={dark}
-              forgotEmail={forgotEmail}
-              onBack={() => { setModalView("auth"); setAuthErr(""); }}
-            />
-          )}
-
           {modalView === "auth" && (
             <div style={{ position: "relative" }}>
               <LoginForm
                 mounted={true}
                 signupSuccess={signupSuccess}
-                onForgot={() => { setModalView("forgot"); setAuthErr(""); }}
                 onClose={onClose}
               />
-              {/* Only render this quick flip info switch button on phones */}
-              {isMobile && (
-                <button
-                  type="button"
-                  onClick={() => setIsFlipped(true)}
-                  style={{
-                    position: "absolute",
-                    bottom: 14,
-                    right: 24,
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: dark ? "rgba(255,255,255,0.3)" : "#7c3aed",
-                    opacity: 0.8,
-                    fontFamily: "inherit",
-                  }}
-                >
-                  About Dev ⓘ
-                </button>
-              )}
             </div>
           )}
         </div>

@@ -17,6 +17,7 @@ import {
   loginSchema,
 } from "../utils/validators.js";
 import { issueCsrfToken } from "../middleware/csrf.middleware.js";
+import { googleSignIn } from "../controllers/auth.controller.js";
 
 const router = Router();
 
@@ -53,5 +54,6 @@ router.get("/me", protect, getMe);
 router.post("/forgot-password", authLimiter, forgotPasswordHandler);
 router.post("/reset-password",  authLimiter, resetPasswordHandler);
 router.post("/refresh",         refresh);
+router.post("/google", authLimiter, googleSignIn);
 
 export default router;

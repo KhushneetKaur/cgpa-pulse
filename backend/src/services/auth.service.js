@@ -6,6 +6,64 @@ import { logger } from "../config/logger.js";
 import {
   sendPasswordResetEmail,
 } from "./email.service.js";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export async function googleAuth(credential) {
+  // Verify Google token
+  const ticket = await googleClient.verifyIdToken({
+    idToken:  credential,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const { sub: googleId, email, name, picture } = payload;
+
+  // Find existing user by googleId or email
+  let user = await User.findOne({
+    $or: [{ googleId }, { email: email.toLowerCase() }],
+  });
+
+  if (user) {
+    // Update googleId if they previously signed up with email
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save({ validateBeforeSave: false });
+    }
+  } else {
+    // Create new user — generate username from name
+    const baseUsername = name
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 28);
+
+    // Ensure unique username
+    let username    = baseUsername;
+    let counter     = 1;
+    while (await User.findOne({ username })) {
+      username = `${baseUsername}${counter++}`;
+    }
+
+    user = await User.create({
+      username,
+      email:           email.toLowerCase(),
+      googleId,
+      passwordHash:    crypto.randomBytes(32).toString("hex"), // random unhackable pwd
+      isEmailVerified: true,
+      role:            "student",
+    });
+  }
+
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
+  const accessToken  = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  return { user: user.toPublicJSON(), accessToken, refreshToken };
+}
 
 
 // ── Set JWT as httpOnly cookie ────────────────────────────────────────────────
