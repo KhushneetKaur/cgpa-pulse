@@ -4,11 +4,10 @@ import LoginBackground   from "./LoginBackground";
 import LoginHero         from "./LoginHero";
 import LoginForm         from "./LoginForm";
 import AboutModal        from "./AboutModal";
-import DisclaimerModal from "../../components/DisclaimerModal";
-import toast from "react-hot-toast"
+import DisclaimerModal   from "../../components/DisclaimerModal";
 
 export default function LoginPage() {
-  const { dark, toggleDark , setUname, setPwd, setAuthErr, clearForm, setShowDisclaimer } = useAppData();
+  const { dark, toggleDark, clearForm, setShowDisclaimer } = useAppData();
 
   const [showAbout,     setShowAbout]     = useState(false);
   const [showForm,      setShowForm]      = useState(false);
@@ -17,45 +16,30 @@ export default function LoginPage() {
   const [modalView,     setModalView]     = useState("auth");
   const [signupSuccess, setSignupSuccess] = useState(false);
 
-  // Track if we are on a phone screen size
-  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 480);
-  const [isFlipped, setIsFlipped] = useState(false);
-
   useEffect(() => {
     clearForm();
     const t = setTimeout(() => setMounted(true), 80);
-    
-    const handleResize = () => setIsMobile(window.innerWidth < 480);
-    window.addEventListener("resize", handleResize);
-    
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => clearTimeout(t);
   }, []);
 
   function handleAuth(mode) {
     clearForm();
     setFormMode(mode);
     setModalView("auth");
-    setIsFlipped(false);
     setShowForm(true);
   }
 
-  // Handle "About" click based on device viewport
   function handleAboutClick() {
-      setShowAbout(true); // Open classic modal popup on laptop
-    }
+    setShowAbout(true);
+  }
 
-  // Handle "Disclaimer" click based on device viewport
   function handleDisclaimerClick() {
-      setShowDisclaimer(true); // Open classic modal popup on laptop
-    }
+    setShowDisclaimer(true);
+  }
 
   function handleClose() {
     setShowForm(false);
     setModalView("auth");
-    setIsFlipped(false);
   }
 
   return (
@@ -101,15 +85,12 @@ export default function LoginPage() {
 
       {showForm && (
         <FormModal
-  dark={dark}
-  formMode={formMode}
-  modalView={modalView}
-  setModalView={setModalView}
-  forgotEmail={forgotEmail}
-  setForgotEmail={setForgotEmail}
-  signupSuccess={signupSuccess}
-  onClose={handleClose}
-/>
+          dark={dark}
+          formMode={formMode}
+          modalView={modalView}
+          signupSuccess={signupSuccess}
+          onClose={handleClose}
+        />
       )}
 
       {showAbout && (
@@ -121,13 +102,11 @@ export default function LoginPage() {
   );
 }
 
-// ── Form Modal with Isolated Conditional 3D Engine ─────────────────────────────
+// ── Standard Core Form Modal ──
 function FormModal({
-  dark, formMode, modalView, setModalView,
-  forgotEmail, setForgotEmail,
-  signupSuccess, onClose,
+  dark, formMode, modalView, signupSuccess, onClose
 }) {
-  const { setIsSignup, forgotPassword, authErr, setAuthErr } = useAppData();
+  const { setIsSignup } = useAppData();
 
   useEffect(() => {
     setIsSignup(formMode === "signup");
@@ -154,84 +133,27 @@ function FormModal({
         justifyContent:       "center",
         padding:              "1rem",
         overflowY:            "auto",
-        perspective:          isMobile ? 1000 : "none", // Only inject 3D perspective context context on mobile viewports
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width:           "100%",
-          maxWidth:        "min(440px, 96vw)",
-          position:        "relative",
-          margin:          "auto",
-          // Apply 3D properties only when mobile view is active
-          transformStyle:  isMobile ? "preserve-3d" : "flat",
-          transition:      isMobile ? "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-          transform:       isMobile && isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          width:     "100%",
+          maxWidth:  "min(440px, 96vw)",
+          position:  "relative",
+          margin:    "auto",
         }}
       >
-        
-        {/* ── FRONT FACE ── */}
-        <div style={{
-          backfaceVisibility: isMobile ? "hidden" : "visible",
-          WebkitBackfaceVisibility: isMobile ? "hidden" : "visible",
-          width: "100%",
-        }}>
-
-          {modalView === "auth" && (
-            <div style={{ position: "relative" }}>
-              <LoginForm
-                mounted={true}
-                signupSuccess={signupSuccess}
-                onClose={onClose}
-              />
-            </div>
-          )}
-        </div>
-
+        {modalView === "auth" && (
+          <div style={{ position: "relative" }}>
+            <LoginForm
+              mounted={true}
+              signupSuccess={signupSuccess}
+              onClose={onClose}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-function ForgotSentView({ dark, forgotEmail, onBack }) {
-  const glassCard = {
-    background:     dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.78)",
-    backdropFilter: "blur(24px)",
-    border:         `1.5px solid ${dark ? "rgba(167,139,250,0.18)" : "rgba(124,58,237,0.12)"}`,
-    borderRadius:   24, padding: "32px 28px",
-    boxShadow:      dark ? "0 12px 60px rgba(0,0,0,0.55)" : "0 12px 60px rgba(124,58,237,0.1)",
-  };
-
-  return (
-    <div style={{ ...glassCard, animation: "scaleIn 0.25s ease both" }}>
-      <div style={{ textAlign: "center", padding: "16px 0" }}>
-        <p style={{ fontSize: 40, margin: "0 0 12px" }}>📧</p>
-        <h3 style={{
-          margin: "0 0 8px", fontSize: 18, fontWeight: 800,
-          color: dark ? "rgba(255,255,255,0.9)" : "#1e1b4b",
-        }}>
-          Check your inbox
-        </h3>
-        <p style={{
-          margin: "0 0 20px", fontSize: 13, lineHeight: 1.6,
-          color: dark ? "rgba(255,255,255,0.5)" : "#5b5687",
-        }}>
-          We sent a reset link to <strong>{forgotEmail}</strong>.
-          Check your spam folder if you don't see it.
-        </p>
-        <button
-          onClick={onBack}
-          style={{
-            background: "transparent", border: "none",
-            color: dark ? "#a78bfa" : "#7c3aed",
-            fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
-          ← Back to login
-        </button>
-      </div>
-    </div>
-  );
-}
-
