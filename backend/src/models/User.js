@@ -73,8 +73,7 @@ lbOptInDate: {
     },
     // Email verification
 isEmailVerified:   { type: Boolean, default: false },
-emailOTP:          { type: String,  select: false, default: null },
-emailOTPExpiry:    { type: Date,    select: false, default: null },
+
 
 // Password reset
 passwordResetToken:  { type: String, select: false, default: null },
@@ -135,7 +134,6 @@ userSchema.index(
     expireAfterSeconds: 0,
     partialFilterExpression: {
       isEmailVerified: false,
-      emailOTPExpiry:  { $exists: true },
     },
   }
 );

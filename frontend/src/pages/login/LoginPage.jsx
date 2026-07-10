@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [showForm,      setShowForm]      = useState(false);
   const [formMode,      setFormMode]      = useState("login");
   const [mounted,       setMounted]       = useState(false);
-  // ── Lifted OTP/view state — survives LoginForm re-renders ──
   const [modalView,     setModalView]     = useState("auth");
   const [signupSuccess, setSignupSuccess] = useState(false);
 

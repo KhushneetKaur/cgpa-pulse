@@ -3,14 +3,14 @@ import {
   signup,
   login,
   logout,
-  getMe, verifyEmailOTP, resendOTP, forgotPasswordHandler, resetPasswordHandler,
+  getMe, forgotPasswordHandler, resetPasswordHandler,
   refresh,
 } from "../controllers/auth.controller.js";
 import { protect }          from "../middleware/auth.middleware.js";
 import { validate }         from "../middleware/validate.middleware.js";
 import {
   authLimiter,
-  authIdentifierLimiter, otpLimiter,
+  authIdentifierLimiter, 
 } from "../middleware/rateLimit.middleware.js";
 import {
   signupSchema,

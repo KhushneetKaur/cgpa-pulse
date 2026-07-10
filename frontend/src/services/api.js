@@ -46,7 +46,6 @@ api.interceptors.request.use(async (config) => {
     const url = config.url || "";
     const isExempt = [
       "/auth/login", "/auth/signup", "/auth/logout",
-      "/auth/verify-otp", "/auth/resend-otp",
       "/auth/forgot-password", "/auth/reset-password",
       "/auth/refresh",
     ].some(u => url.includes(u));

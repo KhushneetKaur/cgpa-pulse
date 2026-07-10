@@ -21,13 +21,6 @@ export function rateLimiter(options = {}) {
   });
 }
 
-// Add this — max 3 OTP requests per hour per IP
-export const otpLimiter = rateLimiter({
-  windowMs: 60 * 60 * 1000,  // 1 hour
-  max:      3,
-  message:  "Too many OTP requests — please wait before trying again",
-});
-
 // ── Pre-configured limiters for specific routes ───────────────────────────────
 
 // Strict: login and signup — 50 attempts per 15 min per IP

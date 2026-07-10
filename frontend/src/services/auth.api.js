@@ -33,15 +33,6 @@ export async function apiGetMe(signal) {
   return data.user;
 }
 
-export async function apiVerifyOTP(userId, otp) {
-  const res = await api.post("/auth/verify-otp", { userId, otp }, { timeout: 45000 });
-  const data = unwrapApiData(res);
-  return data.user;
-}
-
-export async function apiResendOTP(userId) {
-  await api.post("/auth/resend-otp", { userId }, { timeout: 45000 });
-}
 
 export async function apiForgotPassword(email) {
   await api.post("/auth/forgot-password", { email });
