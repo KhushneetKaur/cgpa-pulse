@@ -5,14 +5,10 @@ import App from './App.jsx'
 import "./styles/responsive.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-root.render(
-  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <App />
-  </GoogleOAuthProvider>
-);
-
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <App />
+    </GoogleOAuthProvider>
+  </StrictMode>
 );
