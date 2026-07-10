@@ -50,9 +50,6 @@ router.post("/logout", logout);
 // GET /api/auth/me
 // Called on every app load to restore session from cookie
 router.get("/me", protect, getMe);
-
-router.post("/verify-otp",  authLimiter, verifyEmailOTP);
-router.post("/resend-otp",  otpLimiter,  resendOTP);   // stricter limit on resend
 router.post("/forgot-password", authLimiter, forgotPasswordHandler);
 router.post("/reset-password",  authLimiter, resetPasswordHandler);
 router.post("/refresh",         refresh);

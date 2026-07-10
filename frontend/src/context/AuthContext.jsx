@@ -10,8 +10,6 @@ import {
   apiLogin,
   apiLogout,
   apiGetMe,
-  apiVerifyOTP,
-  apiResendOTP,
   apiForgotPassword,
   apiResetPassword,
 } from "../services/auth.api.js";
@@ -133,29 +131,6 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const verifyOTP = useCallback(async (userId, otp) => {
-    setAuthErr("");
-    try {
-      const user = await apiVerifyOTP(userId, otp);
-      // After verification — don't auto-login, switch to login mode
-      setIsSignup(false);
-      return "verified";
-    } catch (err) {
-      setAuthErr(err.message || "OTP verification failed");
-      throw err;
-    }
-  }, []);
-
-  const resendOTP = useCallback(async (userId) => {
-    setAuthErr("");
-    try {
-      await apiResendOTP(userId);
-    } catch (err) {
-      setAuthErr(err.message || "Failed to resend OTP");
-      throw err;
-    }
-  }, []);
-
   const forgotPassword = useCallback(async (email) => {
     setAuthErr("");
     try {
@@ -199,8 +174,6 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
-    verifyOTP,
-    resendOTP,
     forgotPassword,
     resetPassword,
     clearForm,

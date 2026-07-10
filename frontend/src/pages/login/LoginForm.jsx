@@ -217,7 +217,7 @@ function FieldInput({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onForgot, onClose }) {
+export default function LoginForm({ mounted, signupSuccess, onForgot, onClose }) {
   const {
     isSignup, setIsSignup,
     uname,    setUname,
@@ -280,41 +280,29 @@ export default function LoginForm({ mounted, signupSuccess, onSignupSuccess, onF
 
     try {
      if (isSignup) {
-  const result = await signup(email);
-
-  if (!result?.userId) {
-    toast.error("Signup failed — please try again");
-    return;
-  }
-
+  await signup(email);
   setFieldErrors({});
   setTouched({});
-  toast.success("Account created! Check your email for the OTP ✅");
-  onSignupSuccess?.(result.userId, result.email);
+  toast.success("Account created! You can now log in ✅");
+  setIsSignup(false);   // ← switch to login mode directly
 } else {
   await login();
   toast.success("Welcome back! 🎉");
 }
     } catch (err) {
-      console.error("Auth submit failed:", err);
-      if (err?.status === 403) {
-        setAuthErr("This account isn't verified yet. Please sign up again to receive a new OTP.");
-        setTouched(prev => ({ ...prev, uname: true }));
-      } else if (err?.status === 409) {
-        setAuthErr(""); 
-        if (err?.message?.toLowerCase().includes("email")) {
-          setFieldErrors({ email: err.message });
-          setTouched(prev => ({ ...prev, email: true }));
-        } else if (err?.message?.toLowerCase().includes("username")) {
-          setFieldErrors({ uname: err.message });
-          setTouched(prev => ({ ...prev, uname: true }));
-        } else {
-          setAuthErr(err?.message || "An account with these details already exists");
-        }
-      } else {
-        toast.error(err?.message || "Something went wrong");
-      }
-    } finally {
+  if (err?.status === 409) {
+    setAuthErr("");
+    if (err?.message?.toLowerCase().includes("email")) {
+      setFieldErrors({ email: err.message });
+      setTouched(prev => ({ ...prev, email: true }));
+    } else if (err?.message?.toLowerCase().includes("username")) {
+      setFieldErrors({ uname: err.message });
+      setTouched(prev => ({ ...prev, uname: true }));
+    }
+  } else {
+    toast.error(err?.message || "Something went wrong");
+  }
+} finally {
       setIsSubmitting(false);
     }
   }

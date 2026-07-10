@@ -4,7 +4,6 @@ import LoginBackground   from "./LoginBackground";
 import LoginHero         from "./LoginHero";
 import LoginForm         from "./LoginForm";
 import AboutModal        from "./AboutModal";
-import OTPView           from "./OTPView";
 import ForgotView        from "./ForgotView";
 import DisclaimerModal from "../../components/DisclaimerModal";
 import toast from "react-hot-toast"
@@ -18,11 +17,8 @@ export default function LoginPage() {
   const [mounted,       setMounted]       = useState(false);
   // ── Lifted OTP/view state — survives LoginForm re-renders ──
   const [modalView,     setModalView]     = useState("auth");
-  const [pendingUserId, setPendingUserId] = useState(null);
-  const [pendingEmail,  setPendingEmail]  = useState("");
   const [forgotEmail,   setForgotEmail]   = useState("");
   const [signupSuccess, setSignupSuccess] = useState(false);
-  const [otpResent,     setOtpResent]     = useState(false);
 
   // Track if we are on a phone screen size
   const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 480);
@@ -51,49 +47,15 @@ export default function LoginPage() {
 
   // Handle "About" click based on device viewport
   function handleAboutClick() {
-    if (isMobile) {
-      handleAuth(formMode);
-      setIsFlipped(true); // Flip card on phone
-    } else {
       setShowAbout(true); // Open classic modal popup on laptop
     }
-  }
 
   // Handle "Disclaimer" click based on device viewport
   function handleDisclaimerClick() {
-    if (isMobile) {
-      handleAuth(formMode);
-      setIsFlipped(true); // Flip card on phone
-    } else {
       setShowDisclaimer(true); // Open classic modal popup on laptop
     }
-  }
 
-  function handleSignupSuccess(userId, email) {
-    setPendingUserId(userId);
-    setPendingEmail(email);
-    setModalView("otp");
-  }
-
-  function handleOTPVerified() {
-    setModalView("auth");
-    setSignupSuccess(true);
-  }
-
-  function handleOTPExpired() {
-    setPendingUserId(null);
-    setPendingEmail("");
-    setOtpResent(false);
-    setSignupSuccess(false);
-    setModalView("auth");
-  }
   function handleClose() {
-    if (modalView === "otp") {
-      toast("Account not created yet - verify OTP within 5 minutes or sign up again", { 
-        icon: "⚠️",
-        duration: 5000,
-      });
-    }
     setShowForm(false);
     setModalView("auth");
     setIsFlipped(false);
@@ -142,25 +104,15 @@ export default function LoginPage() {
 
       {showForm && (
         <FormModal
-          dark={dark}
-          formMode={formMode}
-          modalView={modalView}
-          setModalView={setModalView}
-          pendingUserId={pendingUserId}
-          pendingEmail={pendingEmail}
-          forgotEmail={forgotEmail}
-          setForgotEmail={setForgotEmail}
-          signupSuccess={signupSuccess}
-          otpResent={otpResent}
-          setOtpResent={setOtpResent}
-          onSignupSuccess={handleSignupSuccess}
-          onOTPVerified={handleOTPVerified}
-          onOTPExpired={handleOTPExpired}
-          onClose={handleClose}
-          isFlipped={isFlipped}
-          setIsFlipped={setIsFlipped}
-          isMobile={isMobile}
-        />
+  dark={dark}
+  formMode={formMode}
+  modalView={modalView}
+  setModalView={setModalView}
+  forgotEmail={forgotEmail}
+  setForgotEmail={setForgotEmail}
+  signupSuccess={signupSuccess}
+  onClose={handleClose}
+/>
       )}
 
       {showAbout && (
@@ -175,13 +127,10 @@ export default function LoginPage() {
 // ── Form Modal with Isolated Conditional 3D Engine ─────────────────────────────
 function FormModal({
   dark, formMode, modalView, setModalView,
-  pendingUserId, pendingEmail,
   forgotEmail, setForgotEmail,
-  signupSuccess, otpResent, setOtpResent,
-  onSignupSuccess, onOTPVerified, onOTPExpired, onClose,
-  isFlipped, setIsFlipped, isMobile
+  signupSuccess, onClose,
 }) {
-  const { setIsSignup, verifyOTP, resendOTP, forgotPassword, authErr, setAuthErr } = useAppData();
+  const { setIsSignup, forgotPassword, authErr, setAuthErr } = useAppData();
 
   useEffect(() => {
     setIsSignup(formMode === "signup");
@@ -231,19 +180,6 @@ function FormModal({
           WebkitBackfaceVisibility: isMobile ? "hidden" : "visible",
           width: "100%",
         }}>
-          {modalView === "otp" && (
-            <OTPView
-              dark={dark}
-              email={pendingEmail}
-              userId={pendingUserId}
-              verifyOTP={verifyOTP}
-              resendOTP={resendOTP}
-              onVerified={onOTPVerified}
-              onExpired={onOTPExpired}
-              otpResent={otpResent}
-              setOtpResent={setOtpResent}
-            />
-          )}
 
           {modalView === "forgot" && (
             <ForgotView
@@ -269,7 +205,6 @@ function FormModal({
               <LoginForm
                 mounted={true}
                 signupSuccess={signupSuccess}
-                onSignupSuccess={onSignupSuccess}
                 onForgot={() => { setModalView("forgot"); setAuthErr(""); }}
                 onClose={onClose}
               />
@@ -298,83 +233,6 @@ function FormModal({
             </div>
           )}
         </div>
-
-        {/* ── BACK FACE (Only displays on phone flips) ── */}
-        {isMobile && (
-          <div style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            transform: "rotateY(180deg)",
-          }}>
-            <div style={{
-              background:     dark ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.82)",
-              backdropFilter: "blur(24px)",
-              border:         `1.5px solid ${dark ? "rgba(167,139,250,0.18)" : "rgba(124,58,237,0.12)"}`,
-              borderRadius:   24,
-              padding:        "24px 20px",
-              boxShadow:      dark ? "0 12px 60px rgba(0,0,0,0.55)" : "0 12px 60px rgba(124,58,237,0.1)",
-              color:          dark ? "rgba(255,255,255,0.85)" : "#1e1b4b",
-              display:        "flex",
-              flexDirection:  "column",
-              height:         "100%",
-              boxSizing:      "border-box"
-            }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: 18, fontWeight: 800 }}>
-                About the Project
-              </h3>
-              
-              <div style={{ 
-                flex: 1, 
-                fontSize: 13, 
-                lineHeight: 1.6, 
-                color: dark ? "rgba(255,255,255,0.65)" : "#4b5563",
-                overflowY: "auto",
-                marginBottom: 20
-              }}>
-                <p style={{ marginTop: 0 }}>
-                  Hey there! This authentication application represents a secure client-side portal engineered using React and architecture hooks context containers.
-                </p>
-                <p>
-                  <strong>Key Details:</strong> State boundaries validation metrics checking sequences, asynchronous request verification configurations, and automated layout transitions.
-                </p>
-                
-                <hr style={{ border: "none", borderTop: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`, margin: "16px 0" }} />
-                
-                <h4 style={{ margin: "0 0 6px", fontSize: 14, fontWeight: 700, color: dark ? "#c4b5fd" : "#7c3aed" }}>
-                  Disclaimer
-                </h4>
-                <p style={{ fontSize: 12, margin: 0, lineHeight: 1.5 }}>
-                  This is a secure application prototype interface loop. Content configurations, testing data records, and account structures conform directly to secure hashing token protocols. Unauthorized trace mapping logs are discarded.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsFlipped(false)}
-                style={{
-                  width:         "100%",
-                  padding:       "12px",
-                  fontSize:      13,
-                  fontWeight:    700,
-                  borderRadius:  12,
-                  border:        "none",
-                  cursor:        "pointer",
-                  fontFamily:    "inherit",
-                  background:    dark ? "rgba(255,255,255,0.1)" : "rgba(124,58,237,0.08)",
-                  color:         dark ? "#c4b5fd" : "#7c3aed",
-                  transition:    "all 0.2s",
-                }}
-              >
-                ← Back to Verification Form
-              </button>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>

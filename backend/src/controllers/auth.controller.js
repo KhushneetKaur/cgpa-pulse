@@ -5,8 +5,6 @@ import {
   setTokenCookie,
   setRefreshTokenCookie,
   clearTokenCookie,
-  sendOTP,
-  verifyOTP,
   forgotPassword,
   resetPassword,
   refreshAccessToken,
@@ -83,22 +81,6 @@ export async function getMe(req, res, next) {
   } catch (err) {
     next(err);
   }
-}
-// POST /api/auth/verify-otp
-export async function verifyEmailOTP(req, res, next) {
-  try {
-    const { userId, otp } = req.body;
-    const user = await verifyOTP(userId, otp);
-    sendResponse(res, 200, { user }, "Email verified successfully");
-  } catch (err) { next(err); }
-}
-// POST /api/auth/resend-otp
-export async function resendOTP(req, res, next) {
-  try {
-    const { userId } = req.body;
-    await sendOTP(userId);
-    sendResponse(res, 200, null, "OTP sent");
-  } catch (err) { next(err); }
 }
 
 // POST /api/auth/forgot-password
