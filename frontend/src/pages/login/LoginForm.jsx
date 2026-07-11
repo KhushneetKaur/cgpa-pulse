@@ -239,6 +239,7 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
   const emailRef = useRef(null);
   const unameRef = useRef(null);
   const pwdRef   = useRef(null);
+
 const handleGoogleLogin = useGoogleLogin({
   onSuccess: async (tokenResponse) => {
     try {
@@ -248,7 +249,12 @@ const handleGoogleLogin = useGoogleLogin({
       toast.error("Google sign-in failed");
     }
   },
-  onError: () => toast.error("Google sign-in failed"),
+  onError: () => {
+    toast("Allow popups for this site then try again", {
+      icon: "🔔",
+      duration: 5000,
+    });
+  },
   flow: "implicit",
 });
   // ── Internal Validation Logic ──────────────────────────────
@@ -743,7 +749,10 @@ const handleGoogleLogin = useGoogleLogin({
 {/* Google button */}
 <button
   type="button"
-  onClick={handleGoogleLogin}
+  onClick={() => {
+    console.log("Google button clicked");
+    handleGoogleLogin();
+  }}
   style={{
     width:          "100%",
     padding:        "11px 16px",
@@ -777,6 +786,16 @@ const handleGoogleLogin = useGoogleLogin({
   </svg>
   {isSignup ? "Sign up with Google" : "Continue with Google"}
 </button>
+
+<p style={{
+  textAlign:  "center",
+  fontSize:   10,
+  color:      dark ? "rgba(255,255,255,0.25)" : "#a09bbf",
+  margin:     "6px 0 0",
+  lineHeight: 1.5,
+}}>
+  If nothing happens, allow popups for this site in your browser
+</p>
 
           {/* Layout Redirection Bottom Anchors */}
           <p style={{ textAlign: "center", fontSize: 12, color: dark ? "rgba(255,255,255,0.5)" : "#3a3560", margin: "14px 0 0" }}>
