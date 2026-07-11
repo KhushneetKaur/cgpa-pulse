@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import toast from "react-hot-toast";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 
 function isValidEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
@@ -239,6 +239,20 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
   const emailRef = useRef(null);
   const unameRef = useRef(null);
   const pwdRef   = useRef(null);
+
+const handleGoogleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      await googleLogin(tokenResponse.access_token);
+      toast.success("Signed in with Google! 🎉");
+    } catch {
+      toast.error("Google sign-in failed");
+    }
+  },
+  onError: () => toast.error("Google sign-in failed"),
+  flow:    "implicit",
+  ux_mode: "redirect",   // ← full page redirect, never blocked
+});
 
   // ── Internal Validation Logic ──────────────────────────────
   function validate() {
