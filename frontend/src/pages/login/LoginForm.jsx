@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import toast from "react-hot-toast";
-import { useGoogleLogin } from "@react-oauth/google";
 
 function isValidEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
@@ -218,7 +217,7 @@ function FieldInput({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function LoginForm({ mounted, signupSuccess, onClose }) {
+export default function LoginForm({ mounted, signupSuccess, onClose, handleGoogleLogin }) {
   const {
     isSignup, setIsSignup,
     uname,    setUname,
@@ -239,21 +238,6 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
   const emailRef = useRef(null);
   const unameRef = useRef(null);
   const pwdRef   = useRef(null);
-
-const handleGoogleLogin = useGoogleLogin({
-  onSuccess: async (codeResponse) => {
-  try {
-    await googleLogin(codeResponse.code);
-    toast.success("Signed in with Google! 🎉");
-  } catch {
-    toast.error("Google sign-in failed");
-  }
-},
-  onError: () => toast.error("Google sign-in failed"),
-  flow:    "auth-code",   // ← change from "implicit" to "auth-code"
-  ux_mode: "redirect",
-  redirect_uri: "https://cgpa-pulse.vercel.app",
-});
 
   // ── Internal Validation Logic ──────────────────────────────
   function validate() {

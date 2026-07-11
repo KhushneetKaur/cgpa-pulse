@@ -5,9 +5,28 @@ import LoginHero         from "./LoginHero";
 import LoginForm         from "./LoginForm";
 import AboutModal        from "./AboutModal";
 import DisclaimerModal   from "../../components/DisclaimerModal";
+import { useGoogleLogin } from "@react-oauth/google";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
-  const { dark, toggleDark, clearForm, setShowDisclaimer } = useAppData();
+  const { dark, toggleDark, clearForm, setShowDisclaimer, googleLogin} = useAppData();
+
+    const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      try {
+        await googleLogin(codeResponse.code);
+        toast.success("Signed in with Google! 🎉");
+      } catch {
+        toast.error("Google sign-in failed");
+      }
+    },
+    onError: () => toast.error("Google sign-in failed"),
+    flow:         "auth-code",
+    ux_mode:      "redirect",
+    redirect_uri: import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace("/api", "")
+      : "http://localhost:5173",
+  });
 
   const [showAbout,     setShowAbout]     = useState(false);
   const [showForm,      setShowForm]      = useState(false);
@@ -86,6 +105,7 @@ export default function LoginPage() {
           formMode={formMode}
           signupSuccess={signupSuccess}
           onClose={handleClose}
+          handleGoogleLogin={handleGoogleLogin}
         />
       )}
 
@@ -144,6 +164,7 @@ function FormModal({
               mounted={true}
               signupSuccess={signupSuccess}
               onClose={onClose}
+              handleGoogleLogin={handleGoogleLogin} 
             />
       </div>
     </div>
