@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [showForm,      setShowForm]      = useState(false);
   const [formMode,      setFormMode]      = useState("login");
   const [mounted,       setMounted]       = useState(false);
-  const [modalView,     setModalView]     = useState("auth");
   const [signupSuccess, setSignupSuccess] = useState(false);
 
   useEffect(() => {
@@ -25,7 +24,6 @@ export default function LoginPage() {
   function handleAuth(mode) {
     clearForm();
     setFormMode(mode);
-    setModalView("auth");
     setShowForm(true);
   }
 
@@ -39,7 +37,6 @@ export default function LoginPage() {
 
   function handleClose() {
     setShowForm(false);
-    setModalView("auth");
   }
 
   return (
@@ -87,7 +84,6 @@ export default function LoginPage() {
         <FormModal
           dark={dark}
           formMode={formMode}
-          modalView={modalView}
           signupSuccess={signupSuccess}
           onClose={handleClose}
         />
@@ -144,15 +140,11 @@ function FormModal({
           margin:    "auto",
         }}
       >
-        {modalView === "auth" && (
-          <div style={{ position: "relative" }}>
             <LoginForm
               mounted={true}
               signupSuccess={signupSuccess}
               onClose={onClose}
             />
-          </div>
-        )}
       </div>
     </div>
   );

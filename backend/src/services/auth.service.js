@@ -168,59 +168,6 @@ export async function getCurrentUser(userId) {
   return user.toPublicJSON();
 }
 
-// ── Forgot password ────────────────────────────────────────────────────────
-export async function forgotPassword(email) {
-  const user = await User.findOne({ email: email.toLowerCase().trim() });
-
-  // Don't reveal whether email exists — always return success message
-  if (!user) return;
-
-  const resetToken  = crypto.randomBytes(32).toString("hex");
-  const tokenHash   = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-  const expiry      = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-  user.passwordResetToken  = tokenHash;
-  user.passwordResetExpiry = expiry;
-  await user.save({ validateBeforeSave: false });
-
-  try {
-    await sendPasswordResetEmail(user.email, user.username, resetToken);
-  } catch (err) {
-    logger.error("Failed to send password reset email:", err.message);
-    // Clear the reset token since we couldn't send the email
-    user.passwordResetToken  = null;
-    user.passwordResetExpiry = null;
-    await user.save({ validateBeforeSave: false });
-    throw ApiError.internal("Failed to send reset email. Please try again.");
-  }
-}
-
-// ── Reset password ────────────────────────────────────────────────────────
-export async function resetPassword(resetToken, newPassword) {
-  const tokenHash = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-
-  const user = await User.findOne({
-    passwordResetToken:  tokenHash,
-    passwordResetExpiry: { $gt: new Date() },
-  }).select("+passwordResetToken +passwordResetExpiry");
-
-  if (!user) {
-    throw ApiError.badRequest("Reset link is invalid or has expired");
-  }
-
-  user.passwordHash        = newPassword; // pre-save hook hashes it
-  user.passwordResetToken  = null;
-  user.passwordResetExpiry = null;
-  await user.save();
-
-  return user.toPublicJSON();
-}
 
 // ── Refresh token ─────────────────────────────────────────────────────────
 export function generateAccessToken(userId) {

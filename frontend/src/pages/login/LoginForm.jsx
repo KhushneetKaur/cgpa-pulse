@@ -218,7 +218,7 @@ function FieldInput({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function LoginForm({ mounted, signupSuccess, onForgot, onClose }) {
+export default function LoginForm({ mounted, signupSuccess, onClose }) {
   const {
     isSignup, setIsSignup,
     uname,    setUname,
@@ -408,12 +408,12 @@ export default function LoginForm({ mounted, signupSuccess, onForgot, onClose })
             }}>
               <span style={{ fontSize: 18 }}>✅</span>
               <div>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: dark ? "#34d399" : "#059669" }}>
-                  Email verified! Account ready.
-                </p>
-                <p style={{ margin: 0, fontSize: 11, marginTop: 2, color: dark ? "rgba(52,211,153,0.7)" : "#059669" }}>
-                  Log in below with your credentials
-                </p>
+               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: dark ? "#34d399" : "#059669" }}>
+  Account created successfully! ✅
+</p>
+<p style={{ margin: 0, fontSize: 11, marginTop: 2, color: dark ? "rgba(52,211,153,0.7)" : "#059669" }}>
+  Log in below with your credentials
+</p>
               </div>
             </div>
           )}

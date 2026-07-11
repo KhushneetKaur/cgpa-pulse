@@ -97,24 +97,6 @@ export async function getMe(req, res, next) {
   }
 }
 
-// POST /api/auth/forgot-password
-export async function forgotPasswordHandler(req, res, next) {
-  try {
-    await forgotPassword(req.body.email);
-    // Always return success — don't reveal if email exists
-    sendResponse(res, 200, null,
-      "If that email is registered, a reset link has been sent"
-    );
-  } catch (err) { next(err); }
-}
-// POST /api/auth/reset-password
-export async function resetPasswordHandler(req, res, next) {
-  try {
-    const { token, password } = req.body;
-    const user = await resetPassword(token, password);
-    sendResponse(res, 200, { user }, "Password reset successfully");
-  } catch (err) { next(err); }
-}
 // POST /api/auth/refresh
 export async function refresh(req, res, next) {
   try {

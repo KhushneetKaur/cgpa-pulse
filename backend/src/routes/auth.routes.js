@@ -51,8 +51,6 @@ router.post("/logout", logout);
 // GET /api/auth/me
 // Called on every app load to restore session from cookie
 router.get("/me", protect, getMe);
-router.post("/forgot-password", authLimiter, forgotPasswordHandler);
-router.post("/reset-password",  authLimiter, resetPasswordHandler);
 router.post("/refresh",         refresh);
 router.post("/google", authLimiter, googleSignIn);
 
