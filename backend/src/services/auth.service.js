@@ -3,9 +3,6 @@ import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 import { logger } from "../config/logger.js";
-import {
-  sendPasswordResetEmail,
-} from "./email.service.js";
 import { OAuth2Client } from "google-auth-library";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
