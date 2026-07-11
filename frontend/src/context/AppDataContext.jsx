@@ -33,7 +33,7 @@ export function AppDataProvider({ children }) {
   user, authLoading, login, signup, logout,
   authErr, setAuthErr, isSignup, setIsSignup,
   uname, setUname, pwd, setPwd,
-   forgotPassword, clearForm,
+    clearForm, googleLogin,
 } = auth;
   const { dark, toggleDark } = useTheme();
 
@@ -864,7 +864,6 @@ const value = useMemo(
     pwd,
     setPwd,
     authLoading,
-    forgotPassword,
     clearForm,googleLogin,
 
     // --- custom subjects
@@ -894,7 +893,7 @@ const value = useMemo(
     uname, setUname,
     pwd, setPwd,
     authLoading,
-    forgotPassword, clearForm,googleLogin,
+     clearForm,googleLogin,
 
     // theme
     dark, scoreClr, toggleDark,

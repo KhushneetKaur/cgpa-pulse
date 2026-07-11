@@ -10,9 +10,7 @@ import {
   apiLogin,
   apiLogout,
   apiGetMe,
-  apiForgotPassword,
-  apiResetPassword,
-  apiGoogleSignIn, // Merged import cleanly
+  apiGoogleSignIn,
 } from "../services/auth.api.js";
 
 const AuthContext = createContext(null);
@@ -25,13 +23,13 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user,        setUser]        = useState(null);
-  const [authErr,     setAuthErr]     = useState("");
   const [authLoading, setAuthLoading] = useState(true);
+  const [authErr,     setAuthErr]     = useState("");
   const [isSignup,    setIsSignup]    = useState(false);
   const [uname,       setUname]       = useState("");
   const [pwd,         setPwd]         = useState("");
 
-  // ── Restore session on app load ───────────────────────────────────────────
+  // ── Wake Render + restore session ──────────────────────────
   useEffect(() => {
     const backendUrl = (import.meta.env.VITE_API_URL || "").replace("/api", "");
     if (backendUrl && backendUrl.includes("onrender")) {
@@ -42,11 +40,10 @@ export function AuthProvider({ children }) {
       try {
         const controller = new AbortController();
         const timeout    = setTimeout(() => controller.abort(), 5000);
-
-        const user = await apiGetMe(controller.signal);
+        const user       = await apiGetMe(controller.signal);
         clearTimeout(timeout);
         setUser(user);
-      } catch (err) {
+      } catch {
         setUser(null);
       } finally {
         setAuthLoading(false);
@@ -55,7 +52,7 @@ export function AuthProvider({ children }) {
     restoreSession();
   }, []);
 
-  // ── Listen for 401 from API interceptor ──────────────────────────────────
+  // ── Listen for 401 from API interceptor ─────────────────────
   useEffect(() => {
     function handleUnauthorized() {
       setUser(prev => {
@@ -69,7 +66,7 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
-  // ── Google OAuth Login (MOVED SAFELY INSIDE THE PROVIDER COMPONENT) ───────
+  // ── Google login ─────────────────────────────────────────────
   const googleLogin = useCallback(async (credential) => {
     setAuthErr("");
     try {
@@ -81,31 +78,23 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // ── Signup ───────────────────────────────────────────────────────────
+  // ── Signup ───────────────────────────────────────────────────
   const signup = useCallback(async (email) => {
     setAuthErr("");
     try {
-      const data = await apiSignup({
+      const user = await apiSignup({
         username: uname.trim(),
         email:    email.trim(),
         password: pwd,
       });
-      const pendingSignup = data.pendingSignup;
-      if (!pendingSignup?.id) {
-        throw new Error("Signup started but OTP verification data was missing");
-      }
-      return {
-        userId: pendingSignup.id,
-        email: pendingSignup.email || email.trim(),
-        expiresAt: pendingSignup.expiresAt,
-      };
+      return user;
     } catch (err) {
       setAuthErr(err.message || "Signup failed");
       throw err;
     }
   }, [uname, pwd]);
 
-  // ── Login ───────────────────────────────────────────────────────────
+  // ── Login ────────────────────────────────────────────────────
   const login = useCallback(async () => {
     setAuthErr("");
     try {
@@ -121,7 +110,7 @@ export function AuthProvider({ children }) {
     }
   }, [uname, pwd]);
 
-  // ── Logout ──────────────────────────────────────────────────────────
+  // ── Logout ───────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try {
       await apiLogout();
@@ -135,29 +124,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const forgotPassword = useCallback(async (email) => {
-    setAuthErr("");
-    try {
-      await apiForgotPassword(email);
-      return "sent";
-    } catch (err) {
-      setAuthErr(err.message || "Failed to send reset email");
-      throw err;
-    }
-  }, []);
-
-  const resetPassword = useCallback(async (token, password) => {
-    setAuthErr("");
-    try {
-      await apiResetPassword(token, password);
-      setIsSignup(false);
-      return "reset";
-    } catch (err) {
-      setAuthErr(err.message || "Password reset failed");
-      throw err;
-    }
-  }, []);
-
+  // ── Clear form ───────────────────────────────────────────────
   const clearForm = useCallback(() => {
     setUname("");
     setPwd("");
@@ -178,8 +145,6 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
-    forgotPassword,
-    resetPassword,
     clearForm,
     googleLogin,
   };

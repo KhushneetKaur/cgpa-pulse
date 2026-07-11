@@ -3,7 +3,7 @@ import {
   signup,
   login,
   logout,
-  getMe, forgotPasswordHandler, resetPasswordHandler,
+  getMe, 
   refresh,
 } from "../controllers/auth.controller.js";
 import { protect }          from "../middleware/auth.middleware.js";

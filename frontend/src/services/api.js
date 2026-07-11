@@ -31,24 +31,15 @@ async function ensureCsrfToken() {
 }
 
 // ── Request interceptor ───────────────────────────────────────────────────────
-// Runs before every request — good place to attach tokens if needed
-
-const CSRF_SKIP_URLS = [
-  "/auth/login",
-  "/auth/signup",
-  "/auth/logout",
-  "/auth/csrf",
-];
 
 api.interceptors.request.use(async (config) => {
   const method = config.method?.toUpperCase();
   if (["POST","PUT","PATCH","DELETE"].includes(method)) {
     const url = config.url || "";
     const isExempt = [
-      "/auth/login", "/auth/signup", "/auth/logout",
-      "/auth/forgot-password", "/auth/reset-password",
-      "/auth/refresh",
-    ].some(u => url.includes(u));
+  "/auth/login", "/auth/signup", "/auth/logout",
+  "/auth/refresh", "/auth/google",
+].some(u => url.includes(u));
 
     if (!isExempt) {
       try {
