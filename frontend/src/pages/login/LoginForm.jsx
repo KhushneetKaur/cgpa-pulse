@@ -241,17 +241,18 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
   const pwdRef   = useRef(null);
 
 const handleGoogleLogin = useGoogleLogin({
-  onSuccess: async (tokenResponse) => {
-    try {
-      await googleLogin(tokenResponse.access_token);
-      toast.success("Signed in with Google! 🎉");
-    } catch {
-      toast.error("Google sign-in failed");
-    }
-  },
+  onSuccess: async (codeResponse) => {
+  try {
+    await googleLogin(codeResponse.code);
+    toast.success("Signed in with Google! 🎉");
+  } catch {
+    toast.error("Google sign-in failed");
+  }
+},
   onError: () => toast.error("Google sign-in failed"),
-  flow:    "implicit",
-  ux_mode: "redirect",   // ← full page redirect, never blocked
+  flow:    "auth-code",   // ← change from "implicit" to "auth-code"
+  ux_mode: "redirect",
+  redirect_uri: "https://cgpa-pulse.vercel.app",
 });
 
   // ── Internal Validation Logic ──────────────────────────────

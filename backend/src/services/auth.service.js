@@ -4,21 +4,31 @@ import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 import { logger } from "../config/logger.js";
 
-export async function googleAuth(credential) {
-  // Verify the ID token using Google's tokeninfo endpoint
-  const response = await fetch(
-    `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
-  );
+export async function googleAuth(code) {
+  // Exchange auth code for tokens
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id:     process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri:  process.env.CLIENT_URL,
+      grant_type:    "authorization_code",
+    }),
+  });
 
-  if (!response.ok) throw ApiError.unauthorized("Invalid Google token");
+  const tokens = await tokenResponse.json();
+  if (!tokenResponse.ok) throw ApiError.unauthorized("Google token exchange failed");
 
-  const payload = await response.json();
+  // Get user info using access token
+  const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
 
-  if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
-    throw ApiError.unauthorized("Google token audience mismatch");
-  }
+  if (!userInfoRes.ok) throw ApiError.unauthorized("Failed to fetch Google user info");
 
-  const { sub: googleId, email, name } = payload;
+  const { id: googleId, email, name } = await userInfoRes.json();
 
   let user = await User.findOne({
     $or: [{ googleId }, { email: email.toLowerCase() }],
@@ -60,7 +70,6 @@ export async function googleAuth(credential) {
 
   return { user: user.toPublicJSON(), accessToken, refreshToken };
 }
-
 
 // ── Set JWT as httpOnly cookie ────────────────────────────────────────────────
 // httpOnly = JS cannot read it = safe from XSS attacks
