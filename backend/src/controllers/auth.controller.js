@@ -5,12 +5,12 @@ import {
   setTokenCookie,
   setRefreshTokenCookie,
   clearTokenCookie,
-  forgotPassword,
-  resetPassword,
   refreshAccessToken,
+  googleAuth,
 } from "../services/auth.service.js";
 import { sendResponse } from "../utils/ApiResponse.js";
-import { googleAuth } from "../services/auth.service.js";
+import ApiError from "../utils/ApiError.js";
+
 
 export async function googleSignIn(req, res, next) {
   try {
@@ -31,16 +31,12 @@ export async function googleSignIn(req, res, next) {
 export async function signup(req, res, next) {
   try {
     const { username, email, password } = req.body;
-    const { pendingSignup } = await registerUser({
+    const { user, accessToken, refreshToken } = await registerUser({
       username, email, password,
     });
-
-    sendResponse(
-      res,
-      201,
-      { pendingSignup },
-      "OTP sent. Verify within 5 minutes to create your account"
-    );
+    setTokenCookie(res, accessToken);
+    setRefreshTokenCookie(res, refreshToken);
+    sendResponse(res, 201, { user }, "Account created successfully");
   } catch (err) {
     next(err);
   }
@@ -50,24 +46,13 @@ export async function signup(req, res, next) {
 // ── POST /api/auth/login ──────────────────────────────────────────────────────
 
 export async function login(req, res, next) {
-  
   try {
     const { identifier, password } = req.body;
-
     const { user, accessToken, refreshToken } = await loginUser({ identifier, password });
-
     setTokenCookie(res, accessToken);
-    setRefreshTokenCookie(res,refreshToken);
+    setRefreshTokenCookie(res, refreshToken);
     sendResponse(res, 200, { user }, "Login successful");
-
   } catch (err) {
-    if (err.message === "EMAIL_NOT_VERIFIED" || err.message === "ACCOUNT_NOT_VERIFIED") {
-      return res.status(403).json({
-        success: false,
-        message: "ACCOUNT_NOT_VERIFIED",
-        code:    "ACCOUNT_NOT_VERIFIED",
-      });
-    }
     next(err);
   }
 }
