@@ -720,8 +720,8 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
 <div style={{
   display:        "flex",
   justifyContent: "center",
+  width: "100%" 
 }}>
-  <div style={{ width: "100%" }}>
   <GoogleLogin
     onSuccess={async (credentialResponse) => {
       try {
@@ -738,7 +738,6 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
     text={isSignup ? "signup_with" : "signin_with"}
     useOneTap={false}
   />
-</div>
 </div>
 
           {/* Layout Redirection Bottom Anchors */}
