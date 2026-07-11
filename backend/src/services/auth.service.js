@@ -7,38 +7,35 @@ import { OAuth2Client } from "google-auth-library";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-export async function googleAuth(credential) {
-  // Verify Google token
-  const ticket = await googleClient.verifyIdToken({
-    idToken:  credential,
-    audience: process.env.GOOGLE_CLIENT_ID,
+
+export async function googleAuth(accessToken) {
+  // Fetch user info using access token
+  const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  const payload = ticket.getPayload();
-  const { sub: googleId, email, name, picture } = payload;
+  if (!response.ok) throw ApiError.unauthorized("Invalid Google token");
 
-  // Find existing user by googleId or email
+  const { id: googleId, email, name } = await response.json();
+
   let user = await User.findOne({
     $or: [{ googleId }, { email: email.toLowerCase() }],
   });
 
   if (user) {
-    // Update googleId if they previously signed up with email
     if (!user.googleId) {
       user.googleId = googleId;
       await user.save({ validateBeforeSave: false });
     }
   } else {
-    // Create new user — generate username from name
     const baseUsername = name
       .toLowerCase()
       .replace(/\s+/g, "_")
       .replace(/[^a-z0-9_]/g, "")
-      .slice(0, 28);
+      .slice(0, 25);
 
-    // Ensure unique username
-    let username    = baseUsername;
-    let counter     = 1;
+    let username = baseUsername;
+    let counter  = 1;
     while (await User.findOne({ username })) {
       username = `${baseUsername}${counter++}`;
     }
@@ -47,7 +44,7 @@ export async function googleAuth(credential) {
       username,
       email:           email.toLowerCase(),
       googleId,
-      passwordHash:    crypto.randomBytes(32).toString("hex"), // random unhackable pwd
+      passwordHash:    crypto.randomBytes(32).toString("hex"),
       isEmailVerified: true,
       role:            "student",
     });
@@ -56,10 +53,10 @@ export async function googleAuth(credential) {
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
-  const accessToken  = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
+  const accessTokenJWT  = generateAccessToken(user._id);
+  const refreshToken    = generateRefreshToken(user._id);
 
-  return { user: user.toPublicJSON(), accessToken, refreshToken };
+  return { user: user.toPublicJSON(), accessToken: accessTokenJWT, refreshToken };
 }
 
 

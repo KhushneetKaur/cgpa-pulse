@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useAppData } from "../../context/AppDataContext";
 import toast from "react-hot-toast";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 
 function isValidEmail(e) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
@@ -239,7 +239,18 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
   const emailRef = useRef(null);
   const unameRef = useRef(null);
   const pwdRef   = useRef(null);
-
+const handleGoogleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      await googleLogin(tokenResponse.access_token);
+      toast.success("Signed in with Google! 🎉");
+    } catch {
+      toast.error("Google sign-in failed");
+    }
+  },
+  onError: () => toast.error("Google sign-in failed"),
+  flow: "implicit",
+});
   // ── Internal Validation Logic ──────────────────────────────
   function validate() {
     const errs = {};
@@ -717,28 +728,55 @@ export default function LoginForm({ mounted, signupSuccess, onClose }) {
 </div>
 
 {/* Google Sign In */}
+{/* Divider */}
 <div style={{
-  display:        "flex",
-  justifyContent: "center",
-  width: "100%" 
+  display: "flex", alignItems: "center",
+  gap: 10, margin: "14px 0",
 }}>
-  <GoogleLogin
-    onSuccess={async (credentialResponse) => {
-      try {
-        await googleLogin(credentialResponse.credential);
-        toast.success("Signed in with Google! 🎉");
-      } catch {
-        toast.error("Google sign-in failed");
-      }
-    }}
-    onError={() => toast.error("Google sign-in failed")}
-    theme={dark ? "filled_black" : "outline"}
-    shape="rectangular"
-    size="large"
-    text={isSignup ? "signup_with" : "signin_with"}
-    useOneTap={false}
-  />
+  <div style={{ flex: 1, height: 1, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }} />
+  <span style={{ fontSize: 11, color: dark ? "rgba(255,255,255,0.3)" : "#a09bbf" }}>
+    or continue with
+  </span>
+  <div style={{ flex: 1, height: 1, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }} />
 </div>
+
+{/* Google button */}
+<button
+  type="button"
+  onClick={handleGoogleLogin}
+  style={{
+    width:          "100%",
+    padding:        "11px 16px",
+    borderRadius:   12,
+    border:         `1.5px solid ${dark ? "rgba(255,255,255,0.15)" : "#dadce0"}`,
+    background:     dark ? "rgba(255,255,255,0.06)" : "#fff",
+    color:          dark ? "rgba(255,255,255,0.85)" : "#3c4043",
+    fontSize:       14,
+    fontWeight:     500,
+    fontFamily:     "inherit",
+    cursor:         "pointer",
+    display:        "flex",
+    alignItems:     "center",
+    justifyContent: "center",
+    gap:            10,
+    transition:     "all 0.18s",
+  }}
+  onMouseEnter={e => {
+    e.currentTarget.style.background = dark ? "rgba(255,255,255,0.1)" : "#f8f9fa";
+  }}
+  onMouseLeave={e => {
+    e.currentTarget.style.background = dark ? "rgba(255,255,255,0.06)" : "#fff";
+  }}
+>
+  {/* Google SVG icon */}
+  <svg width="18" height="18" viewBox="0 0 48 48">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  </svg>
+  {isSignup ? "Sign up with Google" : "Continue with Google"}
+</button>
 
           {/* Layout Redirection Bottom Anchors */}
           <p style={{ textAlign: "center", fontSize: 12, color: dark ? "rgba(255,255,255,0.5)" : "#3a3560", margin: "14px 0 0" }}>
