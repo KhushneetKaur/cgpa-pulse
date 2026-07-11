@@ -4,15 +4,21 @@ import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 import { logger } from "../config/logger.js";
 
-export async function googleAuth(accessToken) {
-  // Fetch user info using access token
-  const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+export async function googleAuth(credential) {
+  // Verify the ID token using Google's tokeninfo endpoint
+  const response = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`
+  );
 
   if (!response.ok) throw ApiError.unauthorized("Invalid Google token");
 
-  const { id: googleId, email, name } = await response.json();
+  const payload = await response.json();
+
+  if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+    throw ApiError.unauthorized("Google token audience mismatch");
+  }
+
+  const { sub: googleId, email, name } = payload;
 
   let user = await User.findOne({
     $or: [{ googleId }, { email: email.toLowerCase() }],
@@ -24,7 +30,7 @@ export async function googleAuth(accessToken) {
       await user.save({ validateBeforeSave: false });
     }
   } else {
-    const baseUsername = name
+    const baseUsername = (name || email.split("@")[0])
       .toLowerCase()
       .replace(/\s+/g, "_")
       .replace(/[^a-z0-9_]/g, "")
@@ -49,10 +55,10 @@ export async function googleAuth(accessToken) {
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
-  const accessTokenJWT  = generateAccessToken(user._id);
-  const refreshToken    = generateRefreshToken(user._id);
+  const accessToken  = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
 
-  return { user: user.toPublicJSON(), accessToken: accessTokenJWT, refreshToken };
+  return { user: user.toPublicJSON(), accessToken, refreshToken };
 }
 
 
