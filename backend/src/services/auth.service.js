@@ -3,10 +3,6 @@ import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 import { logger } from "../config/logger.js";
-import { OAuth2Client } from "google-auth-library";
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
 
 export async function googleAuth(accessToken) {
   // Fetch user info using access token
