@@ -224,7 +224,7 @@ export default function LoginForm({ mounted, signupSuccess, onClose, handleGoogl
     pwd,      setPwd,
     authErr,  setAuthErr,
     login,    signup,
-    dark, googleLogin,
+    dark, 
   } = useAppData();
 
   // ── Local State ────────────────────────────────────────────
@@ -690,32 +690,6 @@ export default function LoginForm({ mounted, signupSuccess, onClose, handleGoogl
             )}
           </button>
 
-          {/* Divider */}
-<div style={{
-  display:    "flex",
-  alignItems: "center",
-  gap:        10,
-  margin:     "14px 0",
-}}>
-  <div style={{
-    flex:       1,
-    height:     1,
-    background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-  }} />
-  <span style={{
-    fontSize: 11,
-    color:    dark ? "rgba(255,255,255,0.3)" : "#a09bbf",
-  }}>
-    or continue with
-  </span>
-  <div style={{
-    flex:       1,
-    height:     1,
-    background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-  }} />
-</div>
-
-{/* Google button */}
 {/* Divider */}
 <div style={{
   display: "flex", alignItems: "center",
@@ -727,7 +701,7 @@ export default function LoginForm({ mounted, signupSuccess, onClose, handleGoogl
   </span>
   <div style={{ flex: 1, height: 1, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }} />
 </div>
-
+{/* Google button */}
 <button
   type="button"
   onClick={handleGoogleLogin}
