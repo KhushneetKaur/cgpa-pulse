@@ -49,10 +49,10 @@ export async function googleAuth(accessToken) {
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
-  const accessToken  = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
+  const jwtAccess  = generateAccessToken(user._id);
+const jwtRefresh = generateRefreshToken(user._id);
 
-  return { user: user.toPublicJSON(), accessToken, refreshToken };
+return { user: user.toPublicJSON(), accessToken: jwtAccess, refreshToken: jwtRefresh, isNewUser };
 }
 
 // ── Set JWT as httpOnly cookie ────────────────────────────────────────────────
@@ -104,7 +104,7 @@ export async function registerUser({ username, email, password }) {
   const accessToken  = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-  return { user: user.toPublicJSON(), accessToken, refreshToken, isNewUser };
+  return { user: user.toPublicJSON(), accessToken, refreshToken, isNewUser: true};
 }
 
 // ── Login ────────────────────────────────────────────────────────────
