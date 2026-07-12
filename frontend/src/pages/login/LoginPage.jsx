@@ -120,7 +120,7 @@ export default function LoginPage() {
 
 // ── Standard Core Form Modal ──
 function FormModal({
-  dark, formMode, modalView, signupSuccess, onClose
+  dark, formMode, modalView, signupSuccess, onClose, handleGoogleLogin
 }) {
   const { setIsSignup } = useAppData();
 
