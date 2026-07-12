@@ -23,9 +23,7 @@ export default function LoginPage() {
     onError: () => toast.error("Google sign-in failed"),
     flow:         "auth-code",
     ux_mode:      "redirect",
-    redirect_uri: import.meta.env.VITE_API_URL
-      ? import.meta.env.VITE_API_URL.replace("/api", "")
-      : "http://localhost:5173",
+    redirect_uri: window.location.origin,
   });
 
   const [showAbout,     setShowAbout]     = useState(false);
