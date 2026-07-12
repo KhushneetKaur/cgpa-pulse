@@ -11,24 +11,13 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
   const { dark, toggleDark, clearForm, setShowDisclaimer, googleLogin} = useAppData();
 
-    const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse) => {
-  try {
-    const isNewUser = await googleLogin(codeResponse.code);
-    if (isNewUser) {
-      toast.success("Account created! Welcome to CGPA Pulse 🎉");
-    } else {
-      toast.success("Welcome back! 🎉");
-    }
-  } catch {
-    toast.error("Google sign-in failed");
-  }
-},
-    onError: () => toast.error("Google sign-in failed"),
-    flow:         "auth-code",
-    ux_mode:      "redirect",
-    redirect_uri: window.location.origin,
-  });
+   const handleGoogleLogin = useGoogleLogin({
+  onSuccess: async () => {},  // handled in AuthContext now
+  onError: () => toast.error("Google sign-in failed"),
+  flow:         "implicit",   // ← back to implicit — returns access_token in hash
+  ux_mode:      "redirect",
+  redirect_uri: window.location.origin,
+});
 
   const [showAbout,     setShowAbout]     = useState(false);
   const [showForm,      setShowForm]      = useState(false);

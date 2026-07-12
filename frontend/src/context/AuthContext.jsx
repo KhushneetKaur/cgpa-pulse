@@ -12,6 +12,8 @@ import {
   apiGetMe,
   apiGoogleSignIn,
 } from "../services/auth.api.js";
+import toast from "react-hot-toast";
+
 
 const AuthContext = createContext(null);
 
@@ -31,26 +33,45 @@ export function AuthProvider({ children }) {
 
   // ── Wake Render + restore session ──────────────────────────
   useEffect(() => {
-    const backendUrl = (import.meta.env.VITE_API_URL || "").replace("/api", "");
-    if (backendUrl && backendUrl.includes("onrender")) {
-      fetch(`${backendUrl}/health`).catch(() => {});
-    }
+  const backendUrl = (import.meta.env.VITE_API_URL || "").replace("/api", "");
+  if (backendUrl && backendUrl.includes("onrender")) {
+    fetch(`${backendUrl}/health`).catch(() => {});
+  }
 
-    async function restoreSession() {
-      try {
-        const controller = new AbortController();
-        const timeout    = setTimeout(() => controller.abort(), 5000);
-        const user       = await apiGetMe(controller.signal);
-        clearTimeout(timeout);
-        setUser(user);
-      } catch {
-        setUser(null);
-      } finally {
+  async function restoreSession() {
+    try {
+      // Check for Google OAuth redirect response in URL hash
+      const hash = new URLSearchParams(
+        window.location.hash.replace("#", "?")
+      );
+      const accessToken = hash.get("access_token");
+
+      if (accessToken) {
+        // Clean URL immediately
+        window.history.replaceState({}, "", window.location.pathname);
+        const isNewUser = await googleLogin(accessToken);
+        if (isNewUser) {
+          toast.success("Account created! Welcome to CGPA Pulse 🎉");
+        } else {
+          toast.success("Welcome back! 🎉");
+        }
         setAuthLoading(false);
+        return;
       }
+
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), 5000);
+      const user       = await apiGetMe(controller.signal);
+      clearTimeout(timeout);
+      setUser(user);
+    } catch {
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
     }
-    restoreSession();
-  }, []);
+  }
+  restoreSession();
+}, []);
 
   // ── Listen for 401 from API interceptor ─────────────────────
   useEffect(() => {

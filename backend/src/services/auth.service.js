@@ -4,31 +4,14 @@ import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 import { logger } from "../config/logger.js";
 
-export async function googleAuth(code) {
-  // Exchange auth code for tokens
-  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      code,
-      client_id:     process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri:  process.env.CLIENT_URL,
-      grant_type:    "authorization_code",
-    }),
+export async function googleAuth(accessToken) {
+  const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  const tokens = await tokenResponse.json();
-  if (!tokenResponse.ok) throw ApiError.unauthorized("Google token exchange failed");
+  if (!response.ok) throw ApiError.unauthorized("Invalid Google token");
 
-  // Get user info using access token
-  const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-    headers: { Authorization: `Bearer ${tokens.access_token}` },
-  });
-
-  if (!userInfoRes.ok) throw ApiError.unauthorized("Failed to fetch Google user info");
-
-  const { id: googleId, email, name } = await userInfoRes.json();
+  const { id: googleId, email, name } = await response.json();
 
   let user = await User.findOne({
     $or: [{ googleId }, { email: email.toLowerCase() }],
