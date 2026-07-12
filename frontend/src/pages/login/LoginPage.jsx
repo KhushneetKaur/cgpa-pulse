@@ -13,13 +13,17 @@ export default function LoginPage() {
 
     const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (codeResponse) => {
-      try {
-        await googleLogin(codeResponse.code);
-        toast.success("Signed in with Google! 🎉");
-      } catch {
-        toast.error("Google sign-in failed");
-      }
-    },
+  try {
+    const isNewUser = await googleLogin(codeResponse.code);
+    if (isNewUser) {
+      toast.success("Account created! Welcome to CGPA Pulse 🎉");
+    } else {
+      toast.success("Welcome back! 🎉");
+    }
+  } catch {
+    toast.error("Google sign-in failed");
+  }
+},
     onError: () => toast.error("Google sign-in failed"),
     flow:         "auth-code",
     ux_mode:      "redirect",

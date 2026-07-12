@@ -6,7 +6,7 @@ function unwrapApiData(res) {
 
 export async function apiGoogleSignIn(credential) {
   const res = await api.post("/auth/google", { credential });
-  return res.data.user;
+  return res.data;
 }
 
 export async function apiSignup({ username, email, password }) {

@@ -17,10 +17,10 @@ export async function googleSignIn(req, res, next) {
     const { credential } = req.body;
     if (!credential) throw ApiError.badRequest("No Google credential provided");
 
-    const { user, accessToken, refreshToken } = await googleAuth(credential);
+    const { user, accessToken, refreshToken, isNewUser } = await googleAuth(credential);
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    sendResponse(res, 200, { user }, "Google sign-in successful");
+    sendResponse(res, 200, { user, isNewUser }, "Google sign-in successful");
   } catch (err) {
     next(err);
   }

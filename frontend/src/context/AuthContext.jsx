@@ -68,15 +68,16 @@ export function AuthProvider({ children }) {
 
   // ── Google login ─────────────────────────────────────────────
   const googleLogin = useCallback(async (credential) => {
-    setAuthErr("");
-    try {
-      const user = await apiGoogleSignIn(credential);
-      setUser(user);
-    } catch (err) {
-      setAuthErr(err.message || "Google sign-in failed");
-      throw err;
-    }
-  }, []);
+  setAuthErr("");
+  try {
+    const data = await apiGoogleSignIn(credential);
+    setUser(data.user);
+    return data.isNewUser;  // ← return flag to caller
+  } catch (err) {
+    setAuthErr(err.message || "Google sign-in failed");
+    throw err;
+  }
+}, []);
 
   // ── Signup ───────────────────────────────────────────────────
   const signup = useCallback(async (email) => {

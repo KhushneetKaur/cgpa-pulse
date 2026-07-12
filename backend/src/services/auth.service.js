@@ -34,6 +34,7 @@ export async function googleAuth(code) {
     $or: [{ googleId }, { email: email.toLowerCase() }],
   });
 
+  const isNewUser = !user;
   if (user) {
     if (!user.googleId) {
       user.googleId = googleId;
@@ -120,7 +121,7 @@ export async function registerUser({ username, email, password }) {
   const accessToken  = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-  return { user: user.toPublicJSON(), accessToken, refreshToken };
+  return { user: user.toPublicJSON(), accessToken, refreshToken, isNewUser };
 }
 
 // ── Login ────────────────────────────────────────────────────────────
