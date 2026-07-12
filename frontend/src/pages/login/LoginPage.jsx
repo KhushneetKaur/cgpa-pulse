@@ -5,19 +5,21 @@ import LoginHero         from "./LoginHero";
 import LoginForm         from "./LoginForm";
 import AboutModal        from "./AboutModal";
 import DisclaimerModal   from "../../components/DisclaimerModal";
-import { useGoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const { dark, toggleDark, clearForm, setShowDisclaimer, googleLogin} = useAppData();
 
-   const handleGoogleLogin = useGoogleLogin({
-  onSuccess: async () => {},  // handled in AuthContext now
-  onError: () => toast.error("Google sign-in failed"),
-  flow:         "implicit",   // ← back to implicit — returns access_token in hash
-  ux_mode:      "redirect",
-  redirect_uri: window.location.origin,
-});
+function handleGoogleLogin() {
+  const params = new URLSearchParams({
+    client_id:     import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    redirect_uri:  window.location.origin,
+    response_type: "token",
+    scope:         "openid email profile",
+    prompt:        "select_account",
+  });
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
 
   const [showAbout,     setShowAbout]     = useState(false);
   const [showForm,      setShowForm]      = useState(false);

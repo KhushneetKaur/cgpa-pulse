@@ -38,27 +38,25 @@ export function AuthProvider({ children }) {
     fetch(`${backendUrl}/health`).catch(() => {});
   }
 
-  async function restoreSession() {
+ async function restoreSession() {
     try {
-      // Check for Google OAuth redirect response in URL hash
-      const hash = new URLSearchParams(
-        window.location.hash.replace("#", "?")
-      );
-      const accessToken = hash.get("access_token");
+      // ── Check for Google OAuth redirect in URL hash ──
+      const hash        = new URLSearchParams(window.location.hash.slice(1));
+      const googleToken = hash.get("access_token");
 
-      if (accessToken) {
-        // Clean URL immediately
+      if (googleToken) {
+        // Clean URL immediately so token isn't exposed
         window.history.replaceState({}, "", window.location.pathname);
-        const isNewUser = await googleLogin(accessToken);
-        if (isNewUser) {
-          toast.success("Account created! Welcome to CGPA Pulse 🎉");
-        } else {
-          toast.success("Welcome back! 🎉");
-        }
+        const isNew = await googleLogin(googleToken);
+        toast.success(isNew
+          ? "Account created! Welcome to CGPA Pulse 🎉"
+          : "Welcome back! 🎉"
+        );
         setAuthLoading(false);
         return;
       }
 
+      // ── Normal session restore ──
       const controller = new AbortController();
       const timeout    = setTimeout(() => controller.abort(), 5000);
       const user       = await apiGetMe(controller.signal);
