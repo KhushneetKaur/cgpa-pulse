@@ -3,6 +3,7 @@ import {
   getProfile,
   updateBranch,
   updateLbOptIn,
+  updateUsername,
 } from "../controllers/user.controller.js";
 import { protect }      from "../middleware/auth.middleware.js";
 import { validate }     from "../middleware/validate.middleware.js";
@@ -10,6 +11,7 @@ import { readLimiter, saveLimiter } from "../middleware/rateLimit.middleware.js"
 import {
   updateBranchSchema,
   updateLbOptInSchema,
+  updateUsernameSchema,
 } from "../utils/validators.js";
 
 const router = Router();
@@ -39,6 +41,12 @@ router.put(
   validate(updateLbOptInSchema),
   updateLbOptIn
 );
-router.put("/username", saveLimiter, validate(updateUsernameSchema), updateUsername);
+// PUT /api/user/username
+router.put(
+  "/username",
+  saveLimiter,
+  validate(updateUsernameSchema),
+  updateUsername
+);
 
 export default router;
