@@ -66,16 +66,15 @@ function Shell() {
 }
 
 function AppLayout() {
-   const { user, branch, tab, c, dark, inp, btn } = useAppData();
+   const { user, branch, tab, c, dark, inp, btn, setUser } = useAppData();
   const [showUsernameModal, setShowUsernameModal] = useState(false);
-
-  // Show username chooser if Google user hasn't set one yet
-  // Google auto-generates from name — usernameSetAt will be null
-  useEffect(() => {
-    if (user && !user.usernameSetAt) {
-      setShowUsernameModal(true);
-    }
-  }, [user]);
+const [hasShownUsernameModal, setHasShownUsernameModal] = useState(false);
+ useEffect(() => {
+  if (user && !user.usernameSetAt && !hasShownUsernameModal) {
+    setShowUsernameModal(true);
+    setHasShownUsernameModal(true);
+  }
+}, [user]);
 
   function handleUsernameDone(updatedUser) {
   setShowUsernameModal(false);

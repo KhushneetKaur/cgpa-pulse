@@ -43,6 +43,7 @@ export async function googleAuth(accessToken) {
       passwordHash:    crypto.randomBytes(32).toString("hex"),
       isEmailVerified: true,
       role:            "student",
+      usernameSetAt:   new Date(),
     });
   }
 

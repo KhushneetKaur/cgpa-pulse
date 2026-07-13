@@ -8,7 +8,7 @@ import UsernameSetupModal from "./UsernameSetupModal";
 export default function NavBar() {
   const {
   dark, toggleDark,
-  user, logout,
+  user, setUser,logout,
   saveMsg,
   totalBacklogs,
   cgpa,
@@ -669,9 +669,9 @@ export default function NavBar() {
           inp={inp}
           user={user}
           onDone={(updatedUser) => {
-            setShowUsernameModal(false);
-            if (updatedUser) window.location.reload();
-          }}
+  setShowUsernameModal(false);
+  if (updatedUser) setUser(updatedUser);  // ← update context directly, no reload
+}}
           isChange={true}
         />
       )}

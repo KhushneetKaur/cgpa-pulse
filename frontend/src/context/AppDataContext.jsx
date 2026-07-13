@@ -852,6 +852,7 @@ const value = useMemo(
 
     // --- auth helpers
     user,
+    setUser,
     login,
     signup,
     logout,
@@ -887,7 +888,7 @@ const value = useMemo(
     semKeys, cgpa, doneSems, totalBacklogs,
 
     // auth
-    user, login, signup, logout,
+    user, setUser, login, signup, logout,
     authErr, setAuthErr,
     isSignup, setIsSignup,
     uname, setUname,
