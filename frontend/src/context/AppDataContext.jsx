@@ -33,7 +33,7 @@ export function AppDataProvider({ children }) {
   user, authLoading, login, signup, logout,
   authErr, setAuthErr, isSignup, setIsSignup,
   uname, setUname, pwd, setPwd,
-    clearForm, googleLogin,
+    clearForm, googleLogin, setUser,
 } = auth;
   const { dark, toggleDark } = useTheme();
 
