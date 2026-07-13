@@ -7,16 +7,16 @@ import UsernameSetupModal from "./UsernameSetupModal";
 
 export default function NavBar() {
   const {
-    dark, toggleDark,
-    user, logout,
-    saveMsg,
-    totalBacklogs,
-    cgpa,
-    branch, setBranch,
-    tab, setTab,
-    screen, setScreen,
-    c, scoreClr,
-  } = useAppData();
+  dark, toggleDark,
+  user, logout,
+  saveMsg,
+  totalBacklogs,
+  cgpa,
+  branch, setBranch,
+  tab, setTab,
+  screen, setScreen,
+  c, btn, inp, scoreClr,
+} = useAppData();
 
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
   const showSecondBar = screen === "app" && !!branch;
@@ -276,19 +276,33 @@ export default function NavBar() {
   {user?.username}
 </span>
           </div>
-          <button
+         <button
   onClick={() => setShowUsernameModal(true)}
+  title="Change username"
   style={{
-    background: "transparent",
-    border:     "none",
-    cursor:     "pointer",
-    fontSize:   10,
-    color:      c.muted,
-    fontFamily: "inherit",
-    padding:    "2px 6px",
+    background:   c.hover,
+    border:       `1px solid ${c.border}`,
+    borderRadius: 8,
+    cursor:       "pointer",
+    fontSize:     11,
+    color:        c.sub,
+    fontFamily:   "inherit",
+    padding:      "5px 8px",
+    display:      "flex",
+    alignItems:   "center",
+    gap:          4,
+    transition:   "all 0.15s",
+  }}
+  onMouseEnter={e => {
+    e.currentTarget.style.borderColor = c.accent;
+    e.currentTarget.style.color       = c.accent;
+  }}
+  onMouseLeave={e => {
+    e.currentTarget.style.borderColor = c.border;
+    e.currentTarget.style.color       = c.sub;
   }}
 >
-  ✏
+  ✏ <span className="navbar-signout-text">Username</span>
 </button>
 
           {/* ── Sign out ──────────────────────────────────────────── */}
@@ -646,6 +660,20 @@ export default function NavBar() {
 
           </div>
         </div>
+      )}
+    {showUsernameModal && (
+        <UsernameSetupModal
+          dark={dark}
+          c={c}
+          btn={btn}
+          inp={inp}
+          user={user}
+          onDone={(updatedUser) => {
+            setShowUsernameModal(false);
+            if (updatedUser) window.location.reload();
+          }}
+          isChange={true}
+        />
       )}
     </header>
   );

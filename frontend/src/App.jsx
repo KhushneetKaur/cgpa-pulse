@@ -78,9 +78,9 @@ function AppLayout() {
   }, [user]);
 
   function handleUsernameDone(updatedUser) {
-    setShowUsernameModal(false);
-    // AppDataContext will pick up the new user data on next render
-  }
+  setShowUsernameModal(false);
+  if (updatedUser) setUser(updatedUser);  // ← update context immediately
+}
 
   return (
     <div style={{

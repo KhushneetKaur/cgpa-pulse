@@ -160,6 +160,7 @@ const [googleProcessing, setGoogleProcessing] = useState(hasGoogleRedirect);
 
   const value = {
     user,
+    setUser,
     authErr,
     setAuthErr,
     authLoading,
