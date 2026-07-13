@@ -3,6 +3,7 @@ import { ThemeProvider }   from "./context/ThemeContext";
 import { AppDataProvider, useAppData } from "./context/AppDataContext";
 import { BRANCHES }        from "./data/branches";
 import { Toaster } from "react-hot-toast";
+import { useState, useEffect } from "react";
 
 // Pages
 import LoginPage       from "./pages/login/LoginPage";
@@ -65,7 +66,7 @@ function Shell() {
 }
 
 function AppLayout() {
-   const { user, c, dark, inp, btn, cardSty } = useAppData();
+   const { user, branch, tab, c, dark, inp, btn } = useAppData();
   const [showUsernameModal, setShowUsernameModal] = useState(false);
 
   // Show username chooser if Google user hasn't set one yet
