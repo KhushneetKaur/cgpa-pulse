@@ -3,6 +3,7 @@ import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
 import { TABS } from "../utils/constants";
+import UsernameSetupModal from "./UsernameSetupModal";
 
 export default function NavBar() {
   const {
@@ -19,6 +20,7 @@ export default function NavBar() {
 
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
   const showSecondBar = screen === "app" && !!branch;
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
 
   return (
     <header style={{
@@ -274,6 +276,20 @@ export default function NavBar() {
   {user?.username}
 </span>
           </div>
+          <button
+  onClick={() => setShowUsernameModal(true)}
+  style={{
+    background: "transparent",
+    border:     "none",
+    cursor:     "pointer",
+    fontSize:   10,
+    color:      c.muted,
+    fontFamily: "inherit",
+    padding:    "2px 6px",
+  }}
+>
+  ✏
+</button>
 
           {/* ── Sign out ──────────────────────────────────────────── */}
           <button

@@ -50,6 +50,19 @@ export const loginSchema = Joi.object({
     .messages({ "any.required": "Password is required" }),
 });
 
+export const updateUsernameSchema = Joi.object({
+  username: Joi.string()
+    .min(4).max(15)
+    .pattern(/^[a-zA-Z0-9_]+$/)
+    .pattern(/[a-zA-Z]/, "must contain at least one letter")
+    .required()
+    .messages({
+      "string.pattern.base": "Username must contain at least one letter and only use letters, numbers, underscores",
+      "string.min":          "Username must be at least 4 characters",
+      "string.max":          "Username cannot exceed 15 characters",
+      "any.required":        "Username is required",
+    }),
+});
 // ── Semester data ─────────────────────────────────────────────────────────────
 
 export const semesterSchema = Joi.object({

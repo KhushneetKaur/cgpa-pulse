@@ -99,6 +99,7 @@ export async function registerUser({ username, email, password }) {
     passwordHash:    password,
     role:            "student",
     isEmailVerified: true,
+    hasSetPassword: true,
   });
 
   const accessToken  = generateAccessToken(user._id);
@@ -129,6 +130,12 @@ export async function loginUser({ identifier, password }) {
   if (!user.isActive) {
     throw ApiError.unauthorized("Your account has been deactivated");
   }
+
+if (!user.hasSetPassword) {
+  throw ApiError.badRequest(
+    "This account was created with Google Sign-In. Please use the 'Continue with Google' button to log in."
+  );
+}
 
   const passwordMatch = await user.comparePassword(password);
 if (!passwordMatch) {

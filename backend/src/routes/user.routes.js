@@ -39,5 +39,6 @@ router.put(
   validate(updateLbOptInSchema),
   updateLbOptIn
 );
+router.put("/username", saveLimiter, validate(updateUsernameSchema), updateUsername);
 
 export default router;

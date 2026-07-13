@@ -19,7 +19,41 @@ export async function getProfile(req, res, next) {
     next(err);
   }
 }
+export async function updateUsername(req, res, next) {
+  try {
+    const { username } = req.body;
+    const user         = await User.findById(req.user._id);
 
+    if (!user) throw ApiError.notFound("User not found");
+
+    // Check 30-day cooldown
+    if (user.usernameSetAt) {
+      const daysSince = Math.floor(
+        (Date.now() - new Date(user.usernameSetAt).getTime())
+        / (1000 * 60 * 60 * 24)
+      );
+      if (daysSince < 30) {
+        const daysLeft = 30 - daysSince;
+        throw ApiError.badRequest(
+          `You can change your username in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
+        );
+      }
+    }
+
+    // Check uniqueness
+    const existing = await User.findOne({
+      username: username.trim(),
+      _id:      { $ne: user._id },
+    });
+    if (existing) throw ApiError.conflict("Username is already taken");
+
+    user.username      = username.trim();
+    user.usernameSetAt = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    sendResponse(res, 200, { user: user.toPublicJSON() }, "Username updated");
+  } catch (err) { next(err); }
+}
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
 
 export async function updateBranch(req, res, next) {

@@ -22,6 +22,7 @@ import QuickSGPAModal    from "./components/QuickSGPAModal";
 import BranchSelect      from "./components/BranchSelect";
 import SummaryCards      from "./components/SummaryCards";
 import MRSPTULogo        from "./components/MRSPTULogo";
+import UsernameSetupModal from "./components/UsernameSetupModal";
 
 export default function App() {
   return (
@@ -38,35 +39,23 @@ export default function App() {
 function Shell() {
   const { screen, authLoading, c } = useAppData();
 
-  // Show nothing while checking cookie session
-  // prevents flash of login screen on refresh
   if (authLoading) {
     return (
       <div style={{
         minHeight:      "100vh",
-        background:     c.bg,
         display:        "flex",
         alignItems:     "center",
         justifyContent: "center",
-        flexDirection:  "column",
-        gap:            16,
+        background:     c.bg,
       }}>
         <div style={{
-          width:        40,
-          height:       40,
+          width:        36,
+          height:       36,
           borderRadius: "50%",
-          border:       `3px solid ${c.border}`,
-          borderTop:    `3px solid ${c.accent}`,
+          border:       "3px solid rgba(124,58,237,0.2)",
+          borderTop:    "3px solid #7c3aed",
           animation:    "spin 0.8s linear infinite",
         }} />
-        <p style={{ color: c.muted, fontSize: 13 }}>
-          Loading...
-        </p>
-        <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -76,7 +65,21 @@ function Shell() {
 }
 
 function AppLayout() {
-  const { branch, tab, c, dark } = useAppData(); // ← add dark
+   const { user, c, dark, inp, btn, cardSty } = useAppData();
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+
+  // Show username chooser if Google user hasn't set one yet
+  // Google auto-generates from name — usernameSetAt will be null
+  useEffect(() => {
+    if (user && !user.usernameSetAt) {
+      setShowUsernameModal(true);
+    }
+  }, [user]);
+
+  function handleUsernameDone(updatedUser) {
+    setShowUsernameModal(false);
+    // AppDataContext will pick up the new user data on next render
+  }
 
   return (
     <div style={{
@@ -119,6 +122,18 @@ function AppLayout() {
       <QuickSGPAModal />
       <NavBar />
 
+  {/* Username setup for new Google users */}
+      {showUsernameModal && (
+        <UsernameSetupModal
+          dark={dark}
+          c={c}
+          btn={btn}
+          inp={inp}
+          user={user}
+          onDone={handleUsernameDone}
+          isChange={false}
+        />
+      )}
       <main style={{
         flex:     1,
         maxWidth: 1080,

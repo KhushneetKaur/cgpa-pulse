@@ -25,7 +25,9 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user,        setUser]        = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const hasGoogleRedirect = window.location.hash.includes("access_token");
+const [authLoading, setAuthLoading] = useState(true);
+const [googleProcessing, setGoogleProcessing] = useState(hasGoogleRedirect);
   const [authErr,     setAuthErr]     = useState("");
   const [isSignup,    setIsSignup]    = useState(false);
   const [uname,       setUname]       = useState("");
@@ -45,16 +47,21 @@ export function AuthProvider({ children }) {
       const googleToken = hash.get("access_token");
 
       if (googleToken) {
-        // Clean URL immediately so token isn't exposed
-        window.history.replaceState({}, "", window.location.pathname);
-        const isNew = await googleLogin(googleToken);
-        toast.success(isNew
-          ? "Account created! Welcome to CGPA Pulse 🎉"
-          : "Welcome back! 🎉"
-        );
-        setAuthLoading(false);
-        return;
-      }
+  window.history.replaceState({}, "", window.location.pathname);
+  try {
+    const isNew = await googleLogin(googleToken);
+    toast.success(isNew
+      ? "Account created! Welcome to CGPA Pulse 🎉"
+      : "Welcome back! 🎉"
+    );
+  } catch {
+    toast.error("Google sign-in failed");
+  } finally {
+    setGoogleProcessing(false);
+    setAuthLoading(false);
+  }
+  return;
+}
 
       // ── Normal session restore ──
       const controller = new AbortController();
