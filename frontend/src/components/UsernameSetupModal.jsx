@@ -87,9 +87,11 @@ export default function UsernameSetupModal({ dark, c, btn, inp, user, onDone, is
           lineHeight: 1.6,
         }}>
           {isChange
-            ? `You can change your username once every 30 days.${daysLeft > 0 ? ` ${daysLeft} days remaining.` : ""}`
-            : "Pick a unique username. You can change it once a month."}
-        </p>
+    ? canChange
+      ? "You can change your username once every 30 days."
+      : `You can change your username in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
+    : "Pick a unique username. You can change it once every 30 days."}
+</p>
 
         {/* Cooldown warning */}
         {isChange && !canChange && (

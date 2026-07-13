@@ -69,8 +69,14 @@ function AppLayout() {
    const { user, branch, tab, c, dark, inp, btn, setUser } = useAppData();
   const [showUsernameModal, setShowUsernameModal] = useState(false);
 const [hasShownUsernameModal, setHasShownUsernameModal] = useState(false);
- useEffect(() => {
-  if (user && !user.usernameSetAt && !hasShownUsernameModal) {
+ 
+useEffect(() => {
+  if (
+    user &&
+    user.googleId &&        // only Google users
+    !user.usernameSetAt &&  // who haven't set username yet
+    !hasShownUsernameModal
+  ) {
     setShowUsernameModal(true);
     setHasShownUsernameModal(true);
   }
