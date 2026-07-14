@@ -157,7 +157,7 @@ const extRef = useRef(null);
               changeMark(sub.code, "int", e.target.value, sub.type)
             }
             onKeyDown={e => {
-    if (e.key === " " || e.key === "Tab") {
+    if (e.key === "Enter") {
       e.preventDefault();
       extRef.current?.focus();
     }
@@ -196,7 +196,7 @@ const extRef = useRef(null);
               changeMark(sub.code, "ext", e.target.value, sub.type)
             }
              onKeyDown={e => {
-    if (e.key === " " || e.key === "Tab") {
+    if (e.key === "Enter") {
       e.preventDefault();
       // Find the next subject row's internal input
       const allIntInputs = document.querySelectorAll(".sr-int input");

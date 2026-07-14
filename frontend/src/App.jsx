@@ -38,9 +38,9 @@ export default function App() {
 }
 
 function Shell() {
-  const { screen, authLoading, c } = useAppData();
+   const { screen, authLoading, user, googleProcessing, c } = useAppData();
 
-  if (authLoading) {
+  if (authLoading || (user && screen === "login")) {
     return (
       <div style={{
         minHeight:      "100vh",
