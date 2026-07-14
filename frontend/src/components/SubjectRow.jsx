@@ -148,6 +148,7 @@ const extRef = useRef(null);
         {/* ── Internal input ──────────────────────────────────────── */}
         <div className="sr-int">
           <input
+          ref={intRef}
             type="number"
             min="0"
             max={mx.int}
@@ -186,6 +187,7 @@ const extRef = useRef(null);
         {/* ── External input ──────────────────────────────────────── */}
         <div className="sr-ext">
           <input
+          ref={extRef}
             type="number"
             min="0"
             max={mx.ext}
