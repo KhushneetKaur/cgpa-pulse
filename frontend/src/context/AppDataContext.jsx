@@ -745,39 +745,60 @@ async function removeCustomSubject(semNumber, code) {
   }
 }
 
-
 async function toggleHiddenSubject(semNumber, code, hidden) {
-  // Optimistic update — UI responds instantly
-  setHiddenSubjects(prev => {
+  // Optimistic update to hiddenSubjects
+  const getUpdatedHidden = (prev) => {
     const current = prev[branch]?.[semNumber] || [];
     const updated  = hidden
-      ? [...current.filter(c => c !== code), code]  // add to hidden
-      : current.filter(c => c !== code);             // remove from hidden
+      ? [...current.filter(c => c !== code), code]
+      : current.filter(c => c !== code);
     return {
+      ...prev,
+      [branch]: { ...(prev[branch] || {}), [semNumber]: updated },
+    };
+  };
+
+  setHiddenSubjects(prev => getUpdatedHidden(prev));
+
+  // Recalculate SGPA with new hidden list and update bHist in memory
+  if (bHist[semNumber]?.marks) {
+    const newHiddenCodes = hidden
+      ? [...(bHiddenSubjects[semNumber] || []).filter(c => c !== code), code]
+      : (bHiddenSubjects[semNumber] || []).filter(c => c !== code);
+
+    const newSubs = BRANCHES[branch].semesters[semNumber].subjects
+      .filter(s => !newHiddenCodes.includes(s.code));
+    const customSubs = bCustomSubjects[semNumber] || [];
+    const allSubs    = [...newSubs, ...customSubs];
+
+    const recalc = calcSGPA(allSubs, bHist[semNumber].marks);
+
+    setHist(prev => ({
       ...prev,
       [branch]: {
         ...(prev[branch] || {}),
-        [semNumber]: updated,
+        [semNumber]: {
+          ...(prev[branch]?.[semNumber] || {}),
+          sgpa:    recalc?.sgpa    || prev[branch]?.[semNumber]?.sgpa,
+          credits: recalc?.credits || prev[branch]?.[semNumber]?.credits,
+        },
       },
-    };
-  });
+    }));
+  }
 
   // Sync with backend
   try {
     await apiToggleSubjectVisibility(branch, semNumber, code, hidden);
   } catch (err) {
-    // Revert on failure
+    // Revert both states on failure
     setHiddenSubjects(prev => {
-      const current = prev[branch]?.[semNumber] || [];
+      const current  = prev[branch]?.[semNumber] || [];
       const reverted = hidden
         ? current.filter(c => c !== code)
-        : [...current.filter(c => c !== code), code];
+        : [...current, code];
       return {
         ...prev,
-        [branch]: {
-          ...(prev[branch] || {}),
-          [semNumber]: reverted,
-        },
+        [branch]: { ...(prev[branch] || {}), [semNumber]: reverted },
       };
     });
     console.error("toggleHiddenSubject error:", err);

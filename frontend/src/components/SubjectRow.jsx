@@ -1,6 +1,7 @@
 import { useAppData } from "../context/AppDataContext";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
+import { useRef } from "react";
 
 export default function SubjectRow({ sub, selSem, branch }) {
   const {
@@ -39,6 +40,9 @@ export default function SubjectRow({ sub, selSem, branch }) {
   const displayName = electiveName && electiveName !== "__other__"
     ? electiveName
     : sub.name;
+
+const intRef = useRef(null);
+const extRef = useRef(null);
 
   return (
     <div style={{ paddingBottom: 2 }}>
@@ -151,6 +155,12 @@ export default function SubjectRow({ sub, selSem, branch }) {
             onChange={e =>
               changeMark(sub.code, "int", e.target.value, sub.type)
             }
+            onKeyDown={e => {
+    if (e.key === " " || e.key === "Tab") {
+      e.preventDefault();
+      extRef.current?.focus();
+    }
+  }}
             placeholder={`0–${mx.int}`}
             style={{
               ...inp({
@@ -183,6 +193,19 @@ export default function SubjectRow({ sub, selSem, branch }) {
             onChange={e =>
               changeMark(sub.code, "ext", e.target.value, sub.type)
             }
+             onKeyDown={e => {
+    if (e.key === " " || e.key === "Tab") {
+      e.preventDefault();
+      // Find the next subject row's internal input
+      const allIntInputs = document.querySelectorAll(".sr-int input");
+      const currentInt   = intRef.current;
+      const intList      = Array.from(allIntInputs);
+      const currentIdx   = intList.indexOf(currentInt);
+      if (currentIdx !== -1 && intList[currentIdx + 1]) {
+        intList[currentIdx + 1].focus();
+      }
+    }
+  }}
             placeholder={`0–${mx.ext}`}
             style={{
               ...inp({
