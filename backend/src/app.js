@@ -50,7 +50,7 @@ app.use(helmet());
 app.use(cors({
   origin: uniqueAllowedOrigins,
   credentials: true,   // allow cookies
-  methods:     ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods:     ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
 }));
 
