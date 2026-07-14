@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BRANCHES } from "../data/branches";
+import toast from "react-hot-toast";
 
 export default function CustomiseSubjectsModal({
   dark, c, inp, btn,
@@ -167,8 +168,14 @@ export default function CustomiseSubjectsModal({
                   </p>
                 </div>
                 <button
-                  onClick={() => toggleHiddenSubject(selSem, sub.code, !isHidden)}
-                  style={{
+  onClick={async () => {
+    try {
+      await toggleHiddenSubject(selSem, sub.code, !isHidden);
+    } catch {
+      // error handled in context
+    }
+  }}
+  style={{
                     ...btn(isHidden ? "success" : "danger"),
                     fontSize: 11,
                     padding:  "4px 10px",

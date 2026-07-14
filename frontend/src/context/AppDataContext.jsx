@@ -745,19 +745,41 @@ async function removeCustomSubject(semNumber, code) {
   }
 }
 
+
 async function toggleHiddenSubject(semNumber, code, hidden) {
-  try {
-    const { hiddenSubjects: updated } = await apiToggleSubjectVisibility(
-      branch, semNumber, code, hidden
-    );
-    setHiddenSubjects(prev => ({
+  // Optimistic update — UI responds instantly
+  setHiddenSubjects(prev => {
+    const current = prev[branch]?.[semNumber] || [];
+    const updated  = hidden
+      ? [...current.filter(c => c !== code), code]  // add to hidden
+      : current.filter(c => c !== code);             // remove from hidden
+    return {
       ...prev,
       [branch]: {
         ...(prev[branch] || {}),
         [semNumber]: updated,
       },
-    }));
+    };
+  });
+
+  // Sync with backend
+  try {
+    await apiToggleSubjectVisibility(branch, semNumber, code, hidden);
   } catch (err) {
+    // Revert on failure
+    setHiddenSubjects(prev => {
+      const current = prev[branch]?.[semNumber] || [];
+      const reverted = hidden
+        ? current.filter(c => c !== code)
+        : [...current.filter(c => c !== code), code];
+      return {
+        ...prev,
+        [branch]: {
+          ...(prev[branch] || {}),
+          [semNumber]: reverted,
+        },
+      };
+    });
     console.error("toggleHiddenSubject error:", err);
     throw err;
   }
