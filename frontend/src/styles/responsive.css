@@ -1,10 +1,42 @@
-/* ── Responsive breakpoints for CGPA Pulse ──────────────────────────────── */
+/* ── Responsive Breakpoints for CGPA Pulse ──────────────────────────────── */
 
 /* Hide scrollbar but keep scroll functionality */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { 
+  display: none; 
+}
+.no-scrollbar { 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
 
-/* ── Tablet and below (≤900px) ──────────────────────────────────────────── */
+/* Base Globals */
+html, body {
+  background: #080c18;
+  overscroll-behavior: none;
+  min-height: 100%;
+}
+
+@supports (min-height: 100svh) {
+  .login-hero-root {
+    min-height: 100svh !important;
+  }
+}
+
+.bottom-tab-bar {
+  display: none !important;
+}
+
+/* ── Desktop & Large Tablet Rules (≥641px) ──────────────────────────────── */
+@media (min-width: 641px) {
+  .bottom-tab-bar {
+    display: none !important;
+  }
+  .mobile-sem-pills {
+    display: none !important;
+  }
+}
+
+/* ── Tablet and Below (≤900px) ──────────────────────────────────────────── */
 @media (max-width: 900px) {
   .calc-grid {
     grid-template-columns: 1fr !important;
@@ -30,58 +62,70 @@
 
 /* ── Mobile (≤640px) ─────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
+  /* Global Adjustments */
+  main {
+    padding: 0.75rem 0.65rem 1.25rem !important;
+    padding-bottom: 72px !important; /* Spacing for bottom nav */
+  }
+
+  /* Structural UI Switchers */
+  .bottom-tab-bar {
+    display: flex !important;
+  }
+  .navbar-second-bar {
+    display: none !important;
+  }
+  .mobile-sem-pills {
+    display: block !important;
+  }
+
+  /* Core Layout Overrides */
+  .calc-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .calc-sidebar-wrap {
+    display: none !important;
+  }
+  .calc-column-headers {
+    display: none !important;
+  }
+  .marks-scheme-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Action Buttons */
+  .calc-action-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .calc-action-buttons {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .calc-action-buttons button,
+  .calc-save-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Header Optimization */
+  .navbar-top-grid {
+    height: 48px !important;
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
   .navbar-brand-subtitle {
     display: none !important;
   }
   .navbar-signout-text {
     display: none !important;
   }
-  .branch-select-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .summary-cards-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
-/* ── Small mobile (≤420px) ──────────────────────────────────────────────── */
-@media (max-width: 420px) {
-  .summary-cards-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-  }
-  .navbar-cgpa-pill {
-    padding: 4px 10px !important;
-  }
-  .navbar-cgpa-pill .pct-suffix {
-    display: none !important;
-  }
-}
-@media (max-width: 640px) {
   .navbar-signout-icon-only {
     display: inline !important;
   }
-}
-/* ── Subject row — mobile 2-row layout ──────────────────────────────────── */
-@media (max-width: 640px) {
-  .subject-row-grid {
-    grid-template-columns: repeat(5, 1fr) !important;
-    grid-template-areas:
-      "name  name  name  type  bl"
-      "int   ext   total grade gp" !important;
-    row-gap: 8px !important;
-  }
-  .subject-row-grid > .sr-name  { grid-area: name; }
-  .subject-row-grid > .sr-type  { grid-area: type; }
-  .subject-row-grid > .sr-bl    { grid-area: bl; }
-  .subject-row-grid > .sr-int   { grid-area: int; }
-  .subject-row-grid > .sr-ext   { grid-area: ext; }
-  .subject-row-grid > .sr-total { grid-area: total; }
-  .subject-row-grid > .sr-grade { grid-area: grade; }
-  .subject-row-grid > .sr-gp    { grid-area: gp; }
-}
-/* ── Tab strip — mobile scroll hint + tighter spacing ───────────────────── */
-@media (max-width: 640px) {
+
+  /* Navigation Item Spacing */
   .navbar-second-bar-inner {
     padding: 0 0.5rem !important;
   }
@@ -96,18 +140,48 @@
     padding: 0 10px 0 8px !important;
     font-size: 12px !important;
   }
-  /* Fade edge to signal more tabs are scrollable */
   .navbar-tabs-scroll {
-    -webkit-mask-image: linear-gradient(
-      to right, black 88%, transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right, black 88%, transparent 100%
-    );
+    -webkit-mask-image: linear-gradient(to right, black 88%, transparent 100%);
+    mask-image: linear-gradient(to right, black 88%, transparent 100%);
   }
-}
-/* ── Target Page — mobile stacking ──────────────────────────────────────── */
-@media (max-width: 640px) {
+
+  /* Component Layout Reflows */
+  .branch-select-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .summary-cards-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+  .customise-modal-card {
+    max-width: 92vw !important;
+    max-height: 75vh !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Subject Row Matrix styling */
+  .subject-row-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-areas:
+      "name  name  name  type  bl"
+      "int   ext   total grade gp" !important;
+    row-gap: 8px !important;
+    padding: 10px !important;
+    border: 1px solid rgba(127,127,127,0.14) !important;
+    border-radius: 10px !important;
+  }
+  .subject-row-grid > .sr-name  { grid-area: name; }
+  .subject-row-grid > .sr-type  { grid-area: type; }
+  .subject-row-grid > .sr-bl    { grid-area: bl; }
+  .subject-row-grid > .sr-int   { grid-area: int; }
+  .subject-row-grid > .sr-ext   { grid-area: ext; }
+  .subject-row-grid > .sr-total { grid-area: total; }
+  .subject-row-grid > .sr-grade { grid-area: grade; }
+  .subject-row-grid > .sr-gp    { grid-area: gp; }
+
+  /* Target & Predictor Configurations */
   .target-input-row {
     grid-template-columns: 1fr !important;
   }
@@ -124,9 +198,7 @@
   .target-pct-table {
     grid-template-columns: repeat(2, 1fr) !important;
   }
-}
-/* ── Predictor Page — mobile stacking ───────────────────────────────────── */
-@media (max-width: 640px) {
+
   .predictor-top-grid {
     grid-template-columns: 1fr !important;
   }
@@ -145,9 +217,8 @@
   .predictor-col-headers {
     display: none !important;
   }
-}
-/* ── History Page — mobile stacking ─────────────────────────────────────── */
-@media (max-width: 640px) {
+
+  /* History Configuration */
   .history-summary-row {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -160,7 +231,8 @@
     font-size: 11px !important;
   }
 }
-/* ── Backlogs Page — mobile stacking ────────────────────────────────────── */
+
+/* ── Mid-Mobile & Phablets (≤480px) ─────────────────────────────────────── */
 @media (max-width: 480px) {
   .backlog-subject-row {
     flex-direction: column !important;
@@ -171,23 +243,22 @@
     align-self: stretch !important;
     text-align: center !important;
   }
-}
-/* ── Grade Table Page — mobile reflow ───────────────────────────────────── */
-@media (max-width: 480px) {
+  .hero-btn-text {
+    display: none !important;
+  }
+
+  /* Grade Table Re-flow */
   .grade-table-header {
     display: none !important;
   }
   .grade-table-row {
-    grid-template-columns: 1fr !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
     grid-template-areas:
       "marks  grade"
       "marks  gp"
       "perf   perf" !important;
     row-gap: 4px !important;
-  }
-  .grade-table-row {
-    display: grid !important;
-    grid-template-columns: 1fr auto !important;
   }
   .gt-marks { grid-column: 1; grid-row: 1; }
   .gt-grade { grid-column: 2; grid-row: 1; justify-self: end; }
@@ -199,21 +270,8 @@
     font-size: 11px !important;
     color: var(--muted-color, inherit);
   }
-}
-/* ── Leaderboard Page — mobile reflow ───────────────────────────────────── */
-@media (max-width: 480px) {
-  .lb-row {
-    grid-template-columns: 32px 1fr auto !important;
-    grid-template-areas:
-      "rank info cgpa"
-      "rank badge cgpa" !important;
-    row-gap: 4px !important;
-  }
-  .lb-rank  { grid-area: rank; }
-  .lb-info  { grid-area: info; }
-  .lb-badge { grid-area: badge; justify-self: start; }
-  .lb-cgpa  { grid-area: cgpa; }
 
+  /* Leaderboard Row optimization */
   .lb-header-row {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -227,197 +285,58 @@
     flex-direction: column !important;
     align-items: flex-start !important;
   }
-}
-/* ── QuickSGPAModal — mobile button stacking ────────────────────────────── */
-@media (max-width: 380px) {
-  .qsgpa-actions {
-    flex-direction: column !important;
+  .lb-row {
+    grid-template-columns: 28px 1fr auto !important;
+    gap: 8px !important;
+    grid-template-areas:
+      "rank info cgpa"
+      "rank badge cgpa" !important;
+    row-gap: 4px !important;
   }
-  .qsgpa-actions button {
-    flex: 1 1 100% !important;
+  .lb-rank  { grid-area: rank; }
+  .lb-badge { grid-area: badge; justify-self: start; }
+  .lb-cgpa  { grid-area: cgpa; font-size: 15px !important; }
+  .lb-info  { 
+    grid-area: info;
+    min-width: 0;
+    overflow: hidden;
   }
-}
-/* ── Customise Subjects Modal — responsive ───────────────────────────────── */
-@media (max-width: 640px) {
-  .customise-modal-card {
-    max-width:    92vw !important;
-    max-height:   75vh !important;
-    padding:      16px !important;
-    border-radius: 14px !important;
-  }
-}
-/* ── Login Hero — mobile ─────────────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .hero-btn-text {
-    display: none !important;
+  .lb-info p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
 }
 
-/* ── Prevent overscroll black gap ───────────────────────────────────────── */
-html, body {
-  background:          #080c18;
-  overscroll-behavior: none;
-  min-height:          100%;
-}
-/* ── Hero mobile fix ──────────────────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .hero-btn-text {
-    display: none !important;
-  }
-}
-
-@supports (min-height: 100svh) {
-  .login-hero-root {
-    min-height: 100svh !important;
-  }
-}
-/* Phone-first spacing and calculator ergonomics */
-@media (max-width: 640px) {
-  main {
-    padding: 0.75rem 0.65rem 1.25rem !important;
-  }
-
-  .marks-scheme-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .calc-column-headers {
-    display: none !important;
-  }
-
-  .calc-action-row {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-
-  .calc-action-buttons {
-    width: 100% !important;
-  }
-
-  .calc-action-buttons button,
-  .calc-save-btn {
-    width: 100% !important;
-    justify-content: center !important;
-  }
-
-  .subject-row-grid {
-    padding: 10px !important;
-    border: 1px solid rgba(127,127,127,0.14) !important;
-    border-radius: 10px !important;
-  }
-
+/* ── Small Mobile (≤420px) ──────────────────────────────────────────────── */
+@media (max-width: 420px) {
   .summary-cards-grid {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
-    margin-bottom: 14px !important;
+  }
+  .navbar-cgpa-pill {
+    padding: 4px 10px !important;
+  }
+  .navbar-cgpa-pill .pct-suffix {
+    display: none !important;
   }
 }
 
+/* ── Compact Mini Screens (≤380px) ──────────────────────────────────────── */
 @media (max-width: 380px) {
   .branch-select-grid,
   .summary-cards-grid,
   .target-pct-table {
     grid-template-columns: 1fr !important;
   }
-
   .navbar-tab-btn {
     padding: 0 8px !important;
   }
-}
-/* ── Bottom tab bar — only on mobile ────────────────────────────────────── */
-.bottom-tab-bar {
-  display: none !important;
-}
-@media (min-width: 641px) {
-  .bottom-tab-bar {
-    display: none !important;
-  }
-}
-@media (max-width: 640px) {
-  /* Show bottom tab bar */
-  .bottom-tab-bar {
-    display: flex !important;
-  }
-
-  /* Hide second navbar tab strip — replaced by bottom bar */
-  .navbar-second-bar {
-    display: none !important;
-  }
-
-  /* Add padding so content doesn't hide behind bottom bar */
-  main {
-    padding-bottom: 72px !important;
-  }
-
-  /* Calculator — full width, no sidebar */
-  .calc-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .calc-sidebar-wrap {
-    display: none !important;
-  }
-
-  /* Mobile semester pills show instead of sidebar */
-  .mobile-sem-pills {
-    display: block !important;
-  }
-
-  /* Column headers hide on mobile */
-  .calc-column-headers {
-    display: none !important;
-  }
-
-  /* Action row stacks on mobile */
-  .calc-action-row {
+  .qsgpa-actions {
     flex-direction: column !important;
-    align-items:    stretch !important;
   }
-  .calc-action-buttons {
-    justify-content: center !important;
-  }
-  .calc-save-btn {
-    width: 100% !important;
-    text-align: center !important;
-    justify-content: center !important;
-  }
-}
-
-@media (min-width: 641px) {
-  /* Hide mobile pills on desktop */
-  .mobile-sem-pills {
-    display: none !important;
-  }
-}
-@media (max-width: 640px) {
-  /* Tighter top bar on mobile */
-  .navbar-top-grid {
-    height: 48px !important;
-    padding: 0 12px !important;
-    gap: 8px !important;
-  }
-
-  /* Hide CGPA pill text on very small screens */
-  .navbar-center-pills {
-    display: none !important;
-  }
-}
-/* ── Leaderboard — mobile name fix ──────────────────────────────────────── */
-@media (max-width: 480px) {
-  .lb-row {
-    grid-template-columns: 28px 1fr auto !important;
-    gap: 8px !important;
-  }
-  .lb-info {
-    min-width: 0;
-    overflow:  hidden;
-  }
-  .lb-info p {
-    overflow:      hidden;
-    text-overflow: ellipsis;
-    white-space:   nowrap;
-    max-width:     100%;
-  }
-  .lb-cgpa {
-    font-size: 15px !important;
+  .qsgpa-actions button {
+    flex: 1 1 100% !important;
   }
 }
