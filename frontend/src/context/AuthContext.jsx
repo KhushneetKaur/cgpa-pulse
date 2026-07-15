@@ -159,23 +159,15 @@ const [googleProcessing, setGoogleProcessing] = useState(hasGoogleRedirect);
   }, []);
 
   const value = {
-    user,
-    setUser,
-    authErr,
-    setAuthErr,
-    authLoading,
-    isSignup,
-    setIsSignup,
-    uname,
-    setUname,
-    pwd,
-    setPwd,
-    login,
-    signup,
-    logout,
-    clearForm,
-    googleLogin,
-  };
+  user,
+  setUser,
+  authErr,
+  setAuthErr,
+  authLoading,
+  logout,
+  clearForm,
+  googleLogin,
+};
 
   return (
     <AuthContext.Provider value={value}>

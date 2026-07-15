@@ -30,10 +30,11 @@ export function useAppData() {
 export function AppDataProvider({ children }) {
   const auth = useAuth();
   const {
-  user, authLoading, login, signup, logout,
-  authErr, setAuthErr, isSignup, setIsSignup,
-  uname, setUname, pwd, setPwd,
-    clearForm, googleLogin, setUser, googleProcessing,
+  user, authLoading, logout,
+  authErr, setAuthErr,
+  clearForm,
+  googleLogin,
+  setUser,
 } = auth;
   const { dark, toggleDark } = useTheme();
 

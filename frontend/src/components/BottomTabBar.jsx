@@ -195,10 +195,16 @@ export default function BottomTabBar() {
               }}
             >
               <span style={{
-                fontSize:   isActive ? 20 : 18,
-                transition: "all 0.15s",
-              }}>
-                {t.icon}
+  fontSize:   isActive ? 20 : 18,
+  transition: "all 0.15s",
+  filter:     t.key === "backlogs" && totalBacklogs > 0
+    ? "none"
+    : undefined,
+  color:      t.key === "backlogs" && totalBacklogs > 0 && !isActive
+    ? c.bad
+    : undefined,
+}}>
+  {t.icon}
               </span>
               <span style={{
                 fontSize:      9,
