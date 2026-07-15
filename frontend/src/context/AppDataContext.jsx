@@ -338,12 +338,10 @@ setHiddenSubjects(hiddenMap);
       setElectiveNames(electiveMap);
     }
 
-    try {
-      const lbResult = await apiGetLeaderboard("ALL");
-      setLbData(lbResult.entries || []);
-    } catch {
-      setLbData([]);
-    }
+    const [semResult, lbResult] = await Promise.allSettled([
+  user.branch ? apiGetSemesters(user.branch) : Promise.resolve(null),
+  apiGetLeaderboard("ALL"),
+]);
 
     setScreen("app");
   } catch (err) {
@@ -529,8 +527,6 @@ async function saveSem() {
     toast.error("Delete failed");
   }
   }
-
-    
 
   // --- quick SGPA
   function openQuick(s) {
