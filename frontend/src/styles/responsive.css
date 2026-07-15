@@ -328,7 +328,11 @@ html, body {
 .bottom-tab-bar {
   display: none !important;
 }
-
+@media (min-width: 641px) {
+  .bottom-tab-bar {
+    display: none !important;
+  }
+}
 @media (max-width: 640px) {
   /* Show bottom tab bar */
   .bottom-tab-bar {
@@ -342,7 +346,7 @@ html, body {
 
   /* Add padding so content doesn't hide behind bottom bar */
   main {
-    padding-bottom: 80px !important;
+    padding-bottom: 72px !important;
   }
 
   /* Calculator — full width, no sidebar */
@@ -395,5 +399,25 @@ html, body {
   /* Hide CGPA pill text on very small screens */
   .navbar-center-pills {
     display: none !important;
+  }
+}
+/* ── Leaderboard — mobile name fix ──────────────────────────────────────── */
+@media (max-width: 480px) {
+  .lb-row {
+    grid-template-columns: 28px 1fr auto !important;
+    gap: 8px !important;
+  }
+  .lb-info {
+    min-width: 0;
+    overflow:  hidden;
+  }
+  .lb-info p {
+    overflow:      hidden;
+    text-overflow: ellipsis;
+    white-space:   nowrap;
+    max-width:     100%;
+  }
+  .lb-cgpa {
+    font-size: 15px !important;
   }
 }
