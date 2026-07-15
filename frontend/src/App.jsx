@@ -24,6 +24,7 @@ import BranchSelect      from "./components/BranchSelect";
 import SummaryCards      from "./components/SummaryCards";
 import MRSPTULogo        from "./components/MRSPTULogo";
 import UsernameSetupModal from "./components/UsernameSetupModal";
+import BottomTabBar from "./components/BottomTabBar";
 
 export default function App() {
   return (
@@ -156,6 +157,7 @@ useEffect(() => {
           </>
         )}
       </main>
+      <BottomTabBar />
     </div>
   );
 }

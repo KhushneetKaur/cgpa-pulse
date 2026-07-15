@@ -324,3 +324,76 @@ html, body {
     padding: 0 8px !important;
   }
 }
+/* ── Bottom tab bar — only on mobile ────────────────────────────────────── */
+.bottom-tab-bar {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  /* Show bottom tab bar */
+  .bottom-tab-bar {
+    display: flex !important;
+  }
+
+  /* Hide second navbar tab strip — replaced by bottom bar */
+  .navbar-second-bar {
+    display: none !important;
+  }
+
+  /* Add padding so content doesn't hide behind bottom bar */
+  main {
+    padding-bottom: 80px !important;
+  }
+
+  /* Calculator — full width, no sidebar */
+  .calc-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .calc-sidebar-wrap {
+    display: none !important;
+  }
+
+  /* Mobile semester pills show instead of sidebar */
+  .mobile-sem-pills {
+    display: block !important;
+  }
+
+  /* Column headers hide on mobile */
+  .calc-column-headers {
+    display: none !important;
+  }
+
+  /* Action row stacks on mobile */
+  .calc-action-row {
+    flex-direction: column !important;
+    align-items:    stretch !important;
+  }
+  .calc-action-buttons {
+    justify-content: center !important;
+  }
+  .calc-save-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+}
+
+@media (min-width: 641px) {
+  /* Hide mobile pills on desktop */
+  .mobile-sem-pills {
+    display: none !important;
+  }
+}
+@media (max-width: 640px) {
+  /* Tighter top bar on mobile */
+  .navbar-top-grid {
+    height: 48px !important;
+    padding: 0 12px !important;
+    gap: 8px !important;
+  }
+
+  /* Hide CGPA pill text on very small screens */
+  .navbar-center-pills {
+    display: none !important;
+  }
+}

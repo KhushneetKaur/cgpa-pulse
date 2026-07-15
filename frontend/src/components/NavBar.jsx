@@ -347,7 +347,9 @@ export default function NavBar() {
 
       {/* ── Second bar: branch + tabs ─────────────────────────────── */}
       {showSecondBar && (
-        <div style={{
+        <div 
+        className="navbar-second-bar"
+        style={{
           background: dark
             ? "rgba(19,22,42,0.9)"
             : "rgba(248,247,255,0.9)",

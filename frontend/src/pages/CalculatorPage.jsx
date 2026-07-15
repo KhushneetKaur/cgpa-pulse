@@ -4,6 +4,7 @@ import { BRANCHES } from "../data/branches";
 import SemesterSidebar from "../components/SemesterSidebar";
 import SubjectRow from "../components/SubjectRow";
 import CustomiseSubjectsModal from "../components/CustomiseSubjectsModal";
+import MobileSemesterPills from "../components/MobileSemesterPills";
 
 export default function CalculatorPage() {
   const {
@@ -12,34 +13,42 @@ export default function CalculatorPage() {
     c, cardSty,
   } = useAppData();
   return (
-<div
-  className="calc-grid"
-  style={{
-    display:             "grid",
-    gridTemplateColumns: "196px 1fr",
-    gap:                 14,
-    alignItems:          "start",
-  }}
->
-  <div
-    className="calc-sidebar-wrap"
-    style={{
-      position:  "sticky",
-      top:       14,
-      maxHeight: "calc(100vh - 28px)",
-      overflowY: "auto",
-    }}
-  >
-    <SemesterSidebar />
-  </div>
+  <div>
+    {/* Mobile semester pills — hidden on desktop via CSS */}
+    <div className="mobile-sem-pills" style={{ display: "none" }}>
+      <MobileSemesterPills />
+    </div>
 
-  {!selSem ? (
-    <EmptyState c={c} cardSty={cardSty} />
-  ) : (
-    <MarksPanel />
-  )}
-</div>
-  );
+    {/* Desktop grid */}
+    <div
+      className="calc-grid"
+      style={{
+        display:             "grid",
+        gridTemplateColumns: "196px 1fr",
+        gap:                 14,
+        alignItems:          "start",
+      }}
+    >
+      <div
+        className="calc-sidebar-wrap"
+        style={{
+          position:  "sticky",
+          top:       14,
+          maxHeight: "calc(100vh - 28px)",
+          overflowY: "auto",
+        }}
+      >
+        <SemesterSidebar />
+      </div>
+
+      {!selSem ? (
+        <EmptyState c={c} cardSty={cardSty} />
+      ) : (
+        <MarksPanel />
+      )}
+    </div>
+  </div>
+);
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
