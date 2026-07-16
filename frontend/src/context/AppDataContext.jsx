@@ -31,7 +31,7 @@ export function AppDataProvider({ children }) {
   const auth = useAuth();
   const {
   user, authLoading, logout,
-  authErr, setAuthErr,
+  authErr, setAuthErr,     
   clearForm,
   googleLogin,
   setUser,
@@ -893,17 +893,9 @@ const value = useMemo(
     // --- auth helpers
     user,
     setUser,
-    login,
-    signup,
     logout,
     authErr,
     setAuthErr,
-    isSignup,
-    setIsSignup,
-    uname,
-    setUname,
-    pwd,
-    setPwd,
     authLoading,
     clearForm,googleLogin, googleProcessing,
 
@@ -928,11 +920,8 @@ const value = useMemo(
     semKeys, cgpa, doneSems, totalBacklogs,
 
     // auth
-    user, setUser, login, signup, logout,
+    user, setUser, logout,
     authErr, setAuthErr,
-    isSignup, setIsSignup,
-    uname, setUname,
-    pwd, setPwd,
     authLoading,
      clearForm,googleLogin,googleProcessing,
 
