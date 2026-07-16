@@ -648,7 +648,7 @@ const totalCr       = [...hardcodedSubs, ...customSubs]
     const lb = await apiGetLeaderboard("ALL");
     setLbData(lb.entries || []);
   } catch (err) {
-    console.error("toggleLbOptIn error:", err);
+   console.error("toggleLbOptIn error:", err?.message || err?.status || JSON.stringify(err));
     throw err; // ← rethrow so LeaderboardPage can catch it
   }
 }

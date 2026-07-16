@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
@@ -21,6 +21,7 @@ export default function NavBar() {
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
   const showSecondBar = screen === "app" && !!branch;
   const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
 
   return (
     <header style={{
@@ -199,151 +200,354 @@ export default function NavBar() {
 
 
           <div style={{
-          display: "flex",
-         alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 10,
-         }}>
-          {/* ── Dark mode toggle ──────────────────────────────────── */}
+  display:        "flex",
+  alignItems:     "center",
+  justifyContent: "flex-end",
+  gap:            8,
+}}>
+  {/* ── Dark mode toggle ──────────────────── */}
+  <button
+    type="button"
+    onClick={e => { e.currentTarget.blur(); toggleDark(); }}
+    title={dark ? "Light mode" : "Dark mode"}
+    style={{
+      width:          32,
+      height:         32,
+      display:        "flex",
+      alignItems:     "center",
+      justifyContent: "center",
+      background:     c.hover,
+      border:         `1px solid ${c.border}`,
+      borderRadius:   8,
+      color:          c.sub,
+      fontSize:       15,
+      cursor:         "pointer",
+      flexShrink:     0,
+      transition:     "all 0.2s",
+      outline:        "none",
+    }}
+  >
+    {dark ? "☀" : "☾"}
+  </button>
+
+  {/* ── Desktop: username + edit + signout ── */}
+  <div
+    className="navbar-desktop-user"
+    style={{ display: "flex", alignItems: "center", gap: 8 }}
+  >
+    {/* User pill */}
+    <div style={{
+      display:      "flex",
+      alignItems:   "center",
+      gap:          8,
+      background:   c.hover,
+      border:       `1px solid ${c.border}`,
+      borderRadius: 99,
+      padding:      "4px 12px 4px 4px",
+    }}>
+      <div style={{
+        width:          26,
+        height:         26,
+        borderRadius:   "50%",
+        background:     "linear-gradient(135deg, #6d28d9, #a78bfa)",
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "center",
+        fontSize:       11,
+        fontWeight:     700,
+        color:          "#fff",
+        flexShrink:     0,
+      }}>
+        {user?.username?.[0]?.toUpperCase() || "?"}
+      </div>
+      <span
+        className="navbar-username-text"
+        style={{
+          fontSize:     12,
+          color:        c.text,
+          fontWeight:   500,
+          maxWidth:     90,
+          overflow:     "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace:   "nowrap",
+        }}
+      >
+        {user?.username}
+      </span>
+    </div>
+
+    {/* Edit username button */}
+    <button
+      onClick={() => setShowUsernameModal(true)}
+      title="Change username"
+      style={{
+        background:   c.hover,
+        border:       `1px solid ${c.border}`,
+        borderRadius: 8,
+        cursor:       "pointer",
+        fontSize:     11,
+        color:        c.sub,
+        fontFamily:   "inherit",
+        padding:      "5px 8px",
+        display:      "flex",
+        alignItems:   "center",
+        gap:          4,
+        transition:   "all 0.15s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = c.accent;
+        e.currentTarget.style.color       = c.accent;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = c.border;
+        e.currentTarget.style.color       = c.sub;
+      }}
+    >
+      ✏ <span className="navbar-signout-text">Username</span>
+    </button>
+
+    {/* Sign out */}
+    <button
+      type="button"
+      onClick={e => { e.currentTarget.blur(); logout(); setScreen("login"); }}
+      style={{
+        fontSize:     12,
+        color:        c.sub,
+        background:   "transparent",
+        border:       `1px solid ${c.border}`,
+        borderRadius: 8,
+        padding:      "6px 12px",
+        cursor:       "pointer",
+        whiteSpace:   "nowrap",
+        fontFamily:   "inherit",
+        transition:   "all 0.15s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background  = dark
+          ? "rgba(248,113,113,0.1)" : "rgba(220,38,38,0.06)";
+        e.currentTarget.style.borderColor = c.bad;
+        e.currentTarget.style.color       = c.bad;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background  = "transparent";
+        e.currentTarget.style.borderColor = c.border;
+        e.currentTarget.style.color       = c.sub;
+      }}
+    >
+      <span className="navbar-signout-text">Sign out</span>
+      <span className="navbar-signout-icon-only" style={{ display: "none" }}>⎋</span>
+    </button>
+  </div>
+
+  {/* ── Mobile: avatar button only ───────── */}
+  <div className="navbar-mobile-user" style={{ position: "relative" }}>
+    <button
+      onClick={() => setShowAvatarMenu(v => !v)}
+      style={{
+        width:          34,
+        height:         34,
+        borderRadius:   "50%",
+        background:     "linear-gradient(135deg, #6d28d9, #a78bfa)",
+        border:         `2px solid ${showAvatarMenu
+          ? c.accent
+          : "transparent"}`,
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "center",
+        fontSize:       13,
+        fontWeight:     700,
+        color:          "#fff",
+        cursor:         "pointer",
+        flexShrink:     0,
+        boxShadow:      showAvatarMenu
+          ? `0 0 0 3px ${c.accent}44`
+          : "none",
+        transition:     "all 0.2s",
+      }}
+    >
+      {user?.username?.[0]?.toUpperCase() || "?"}
+    </button>
+
+    {/* Avatar dropdown */}
+    {showAvatarMenu && (
+      <>
+        {/* Backdrop */}
+        <div
+          onClick={() => setShowAvatarMenu(false)}
+          style={{
+            position: "fixed",
+            inset:    0,
+            zIndex:   148,
+          }}
+        />
+
+        {/* Dropdown card */}
+        <div style={{
+          position:     "absolute",
+          top:          "calc(100% + 8px)",
+          right:        0,
+          zIndex:       149,
+          background:   dark ? "#0f1424" : "#fff",
+          border:       `1px solid ${c.border}`,
+          borderRadius: 16,
+          boxShadow:    dark
+            ? "0 16px 48px rgba(0,0,0,0.5)"
+            : "0 16px 48px rgba(109,40,217,0.12)",
+          minWidth:     220,
+          overflow:     "hidden",
+          animation:    "scaleIn 0.15s ease both",
+        }}>
+
+          {/* User info header */}
+          <div style={{
+            padding:      "14px 16px 10px",
+            borderBottom: `1px solid ${c.border}`,
+          }}>
+            <div style={{
+              display:    "flex",
+              alignItems: "center",
+              gap:        10,
+            }}>
+              <div style={{
+                width:          36,
+                height:         36,
+                borderRadius:   "50%",
+                background:     "linear-gradient(135deg, #6d28d9, #a78bfa)",
+                display:        "flex",
+                alignItems:     "center",
+                justifyContent: "center",
+                fontSize:       15,
+                fontWeight:     700,
+                color:          "#fff",
+                flexShrink:     0,
+              }}>
+                {user?.username?.[0]?.toUpperCase() || "?"}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p style={{
+                  margin:       0,
+                  fontSize:     13,
+                  fontWeight:   700,
+                  color:        c.text,
+                  overflow:     "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace:   "nowrap",
+                  maxWidth:     140,
+                }}>
+                  {user?.username}
+                </p>
+                <p style={{
+                  margin:   0,
+                  fontSize: 10,
+                  color:    c.muted,
+                }}>
+                  MRSPTU Student
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Change username */}
           <button
-          type = "button"
-            onClick={e => {
-              e.currentTarget.blur();
-              toggleDark();
+            onClick={() => {
+              setShowAvatarMenu(false);
+              setShowUsernameModal(true);
             }}
-            title={dark ? "Light mode" : "Dark mode"}
             style={{
-              width:          32,
-              height:         32,
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "center",
-              background:     c.hover,
-              border:         `1px solid ${c.border}`,
-              borderRadius:   8,
-              color:          c.sub,
-              fontSize:       15,
-              cursor:         "pointer",
-              flexShrink:     0,
-              transition:     "background 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.18s ease",
-              outline:        "none",
-              boxShadow:      "none",
-              }}
-              >
-           
-            {dark ? "☀" : "☾"}
+              width:      "100%",
+              display:    "flex",
+              alignItems: "center",
+              gap:        12,
+              padding:    "12px 16px",
+              border:     "none",
+              background: "transparent",
+              cursor:     "pointer",
+              fontFamily: "inherit",
+              textAlign:  "left",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e =>
+              e.currentTarget.style.background = c.hover}
+            onMouseLeave={e =>
+              e.currentTarget.style.background = "transparent"}
+          >
+            <span style={{ fontSize: 16 }}>✏️</span>
+            <div>
+              <p style={{
+                margin:     0,
+                fontSize:   13,
+                fontWeight: 500,
+                color:      c.text,
+              }}>
+                Change Username
+              </p>
+              {user?.usernameSetAt && (
+                <p style={{
+                  margin:   0,
+                  fontSize: 10,
+                  color:    c.muted,
+                }}>
+                  {(() => {
+                    const days = Math.max(0, 30 - Math.floor(
+                      (Date.now() - new Date(user.usernameSetAt).getTime())
+                      / (1000 * 60 * 60 * 24)
+                    ));
+                    return days > 0
+                      ? `Available in ${days} day${days === 1 ? "" : "s"}`
+                      : "Available now";
+                  })()}
+                </p>
+              )}
+            </div>
           </button>
 
-          {/* ── User avatar + name ────────────────────────────────── */}
+          {/* Divider */}
           <div style={{
-            display:      "flex",
-            alignItems:   "center",
-            gap:          8,
-            background:   c.hover,
-            border:       `1px solid ${c.border}`,
-            borderRadius: 99,
-            padding:      "4px 12px 4px 4px",
-          }}>
-            {/* Avatar circle */}
-            <div style={{
-              width:          26,
-              height:         26,
-              borderRadius:   "50%",
-              background:     "linear-gradient(135deg, #6d28d9, #a78bfa)",
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "center",
-              fontSize:       11,
-              fontWeight:     700,
-              color:          "#fff",
-              flexShrink:     0,
-              letterSpacing:  0.3,
-            }}>
-              {user?.username?.[0]?.toUpperCase() || "?"}
-            </div>
-           <span
-  className="navbar-username-text"
-  style={{
-    fontSize:     12,
-    color:        c.text,
-    fontWeight:   500,
-    maxWidth:     90,
-    overflow:     "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace:   "nowrap",
-  }}
->
-  {user?.username}
-</span>
-          </div>
-         <button
-  onClick={() => setShowUsernameModal(true)}
-  title="Change username"
-  style={{
-    background:   c.hover,
-    border:       `1px solid ${c.border}`,
-    borderRadius: 8,
-    cursor:       "pointer",
-    fontSize:     11,
-    color:        c.sub,
-    fontFamily:   "inherit",
-    padding:      "5px 8px",
-    display:      "flex",
-    alignItems:   "center",
-    gap:          4,
-    transition:   "all 0.15s",
-  }}
-  onMouseEnter={e => {
-    e.currentTarget.style.borderColor = c.accent;
-    e.currentTarget.style.color       = c.accent;
-  }}
-  onMouseLeave={e => {
-    e.currentTarget.style.borderColor = c.border;
-    e.currentTarget.style.color       = c.sub;
-  }}
->
-  ✏ <span className="navbar-signout-text">Username</span>
-</button>
+            height:     1,
+            background: c.border,
+            margin:     "2px 0",
+          }} />
 
-          {/* ── Sign out ──────────────────────────────────────────── */}
+          {/* Sign out */}
           <button
-          type = "button"
-            onClick={e => {
-             e.currentTarget.blur();
-             logout();
-             setScreen("login");
-             }}
+            onClick={() => {
+              setShowAvatarMenu(false);
+              logout();
+              setScreen("login");
+            }}
             style={{
-              fontSize:     12,
-              color:        c.sub,
-              background:   "transparent",
-              border:       `1px solid ${c.border}`,
-              borderRadius: 8,
-              padding:      "6px 12px",
-              cursor:       "pointer",
-              whiteSpace:   "nowrap",
-              fontFamily:   "inherit",
-              transition:   "all 0.15s",
+              width:      "100%",
+              display:    "flex",
+              alignItems: "center",
+              gap:        12,
+              padding:    "12px 16px",
+              border:     "none",
+              background: "transparent",
+              cursor:     "pointer",
+              fontFamily: "inherit",
+              textAlign:  "left",
+              transition: "background 0.15s",
             }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background  = dark
-                ? "rgba(248,113,113,0.1)"
-                : "rgba(220,38,38,0.06)";
-              e.currentTarget.style.borderColor = c.bad;
-              e.currentTarget.style.color       = c.bad;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background  = "transparent";
-              e.currentTarget.style.borderColor = c.border;
-              e.currentTarget.style.color       = c.sub;
-            }}
+            onMouseEnter={e =>
+              e.currentTarget.style.background = `${c.bad}14`}
+            onMouseLeave={e =>
+              e.currentTarget.style.background = "transparent"}
           >
-  <span className="navbar-signout-text">Sign out</span>
-  <span className="navbar-signout-icon-only" style={{ display: "none" }}>⎋</span>
-</button>
-         </div>
+            <span style={{ fontSize: 16 }}>⎋</span>
+            <p style={{
+              margin:     0,
+              fontSize:   13,
+              fontWeight: 500,
+              color:      c.bad,
+            }}>
+              Sign out
+            </p>
+          </button>
         </div>
-      </div>
+      </>
+    )}
+  </div>
+</div>
 
       {/* ── Second bar: branch + tabs ─────────────────────────────── */}
       {showSecondBar && (

@@ -386,3 +386,19 @@ html, body {
     display: none !important;
   }
 }
+/* ── Navbar user area — desktop/mobile switch ────────────────────────────── */
+.navbar-desktop-user {
+  display: flex !important;
+}
+.navbar-mobile-user {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .navbar-desktop-user {
+    display: none !important;
+  }
+  .navbar-mobile-user {
+    display: block !important;
+  }
+}
