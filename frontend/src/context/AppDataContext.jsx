@@ -897,7 +897,7 @@ const value = useMemo(
     authErr,
     setAuthErr,
     authLoading,
-    clearForm,googleLogin, googleProcessing,
+    clearForm,googleLogin, 
 
     // --- custom subjects
     bCustomSubjects,
@@ -923,7 +923,7 @@ const value = useMemo(
     user, setUser, logout,
     authErr, setAuthErr,
     authLoading,
-     clearForm,googleLogin,googleProcessing,
+     clearForm,googleLogin,
 
     // theme
     dark, scoreClr, toggleDark,
