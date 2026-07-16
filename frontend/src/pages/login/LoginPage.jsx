@@ -113,13 +113,8 @@ function handleGoogleLogin() {
 
 // ── Standard Core Form Modal ──
 function FormModal({
-  dark, formMode, modalView, signupSuccess, onClose, handleGoogleLogin
+  dark, formMode, signupSuccess, onClose, handleGoogleLogin
 }) {
-  const { setIsSignup } = useAppData();
-
-  useEffect(() => {
-    setIsSignup(formMode === "signup");
-  }, [formMode, setIsSignup]);
 
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
