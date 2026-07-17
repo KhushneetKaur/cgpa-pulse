@@ -402,3 +402,19 @@ html, body {
     display: block !important;
   }
 }
+/* ── Mobile/Desktop marks layout switch ─────────────────────────────────── */
+.mobile-marks-layout {
+  display: none !important;
+}
+.desktop-marks-layout {
+  display: grid !important;
+}
+
+@media (max-width: 640px) {
+  .mobile-marks-layout {
+    display: block !important;
+  }
+  .desktop-marks-layout {
+    display: none !important;
+  }
+}

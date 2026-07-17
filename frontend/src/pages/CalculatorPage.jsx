@@ -5,6 +5,7 @@ import SemesterSidebar from "../components/SemesterSidebar";
 import SubjectRow from "../components/SubjectRow";
 import CustomiseSubjectsModal from "../components/CustomiseSubjectsModal";
 import MobileSemesterPills from "../components/MobileSemesterPills";
+import MobileMarksPanel from "../components/MobileMarksPanel";
 
 export default function CalculatorPage() {
   const {
@@ -12,16 +13,33 @@ export default function CalculatorPage() {
     selSem,
     c, cardSty,
   } = useAppData();
-  return (
+
+return (
   <div>
-    {/* Mobile semester pills — hidden on desktop via CSS */}
+    {/* Mobile semester pills */}
     <div className="mobile-sem-pills" style={{ display: "none" }}>
       <MobileSemesterPills />
     </div>
 
+    {/* Mobile marks layout */}
+    <div className="mobile-marks-layout" style={{ display: "none" }}>
+      {selSem ? (
+        <MobileMarksPanel branch={branch} selSem={selSem} />
+      ) : (
+        <div style={{
+          padding:    "40px 20px",
+          textAlign:  "center",
+          color:      c.muted,
+          fontSize:   14,
+        }}>
+          ↑ Select a semester above to enter marks
+        </div>
+      )}
+    </div>
+
     {/* Desktop grid */}
     <div
-      className="calc-grid"
+      className="desktop-marks-layout calc-grid"
       style={{
         display:             "grid",
         gridTemplateColumns: "196px 1fr",
