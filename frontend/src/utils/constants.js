@@ -44,7 +44,7 @@ export function getPerformanceLabel(cgpa) {
 
 // ── Tab definitions (NavBar + App routing) ────────────────────────────────────
 export const TABS = [
-  { key: "calculator",  label: "Calculator",  icon: "🧮" },
+  { key: "calculator",  label: "Calculator",  icon: "📝" },
   { key: "history",     label: "History",     icon: "📋" },
   { key: "target",      label: "Target",      icon: "🎯" },
   { key: "predictor",   label: "Predictor",   icon: "🔮" },

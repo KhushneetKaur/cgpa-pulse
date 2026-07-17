@@ -251,7 +251,8 @@ const subs = [...hardcodedSubs, ...customSubs];
 </div>
 
       {/* ── Column headers ─────────────────────────────────────────── */}
-      <div className="calc-column-headers" style={{
+      <div className="calc-column-headers" 
+      style={{
         display:             "grid",
         gridTemplateColumns: "1fr 34px 80px 80px 90px 50px 34px 34px",
         gap:                 6,
@@ -332,7 +333,7 @@ const subs = [...hardcodedSubs, ...customSubs];
 >
   ✏️ Customise Subjects
 </button>
-         {bHist[selSem]?.sgpa && (
+         {bHist[selSem] && (
           <button
         type="button"
         onClick={() => {

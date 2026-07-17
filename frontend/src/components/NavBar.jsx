@@ -335,7 +335,7 @@ export default function NavBar() {
                 }}
               >
                 <span className="navbar-signout-text">Sign out</span>
-                <span className="navbar-signout-icon-only" style={{ display: "none" }}>⎋</span>
+                <span className="navbar-signout-icon-only" style={{ display: "none" }}>→</span>
               </button>
             </div>
 
