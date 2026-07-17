@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
+import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
+
 
 export default function MobileMarksPanel({ branch, selSem }) {
   const {
@@ -11,7 +13,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
     bElectiveNames,
     liveRes, saving, saveSem,
     openQuick, deleteSemRecord, bHist,
-    c, dark, scoreClr, btn,
+    c, dark, scoreClr, btn, bElectiveNames, setElectiveName,
   } = useAppData();
 
   const [activeIdx, setActiveIdx] = useState(0);
@@ -96,6 +98,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
   marginBottom:        12,
   width:               "100%",
   minWidth:            0,
+   paddingBottom:       300,
 }}>
         {subs.map((sub, idx) => {
           const { total, grade, isBL } = getMicroCardData(sub);
@@ -156,6 +159,8 @@ export default function MobileMarksPanel({ branch, selSem }) {
                 {isBL ? "⚠ " : ""}{getSubjectDisplay(sub)}
               </p>
 
+
+
               {/* Type + total + grade */}
               <div style={{
                 display:    "flex",
@@ -200,44 +205,57 @@ export default function MobileMarksPanel({ branch, selSem }) {
 
       {/* ── Bottom dock — input for active subject ──────────────── */}
       <div style={{
-        background:   c.card,
-        border:       `1px solid ${c.accent}44`,
-        borderRadius: 14,
-        padding:      "14px",
-        position:     "sticky",
-        bottom:       68,  // above bottom tab bar
-      }}>
+  background:   c.card,
+  border:       `1px solid ${c.accent}44`,
+  borderRadius: "14px 14px 0 0",
+  padding:      "14px 14px 8px",
+  position:     "fixed",
+  bottom:       60,   // above bottom tab bar
+  left:         0,
+  right:        0,
+  zIndex:       120,
+  boxShadow:    dark
+    ? "0 -8px 32px rgba(0,0,0,0.5)"
+    : "0 -8px 32px rgba(109,40,217,0.1)",
+}}>
 
         {/* Subject name + nav */}
-        <div style={{
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "space-between",
-          marginBottom:   12,
-        }}>
-          <button
-            onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
-            disabled={activeIdx === 0}
-            style={{
-              ...btn("ghost"),
-              padding:  "5px 10px",
-              fontSize: 12,
-              opacity:  activeIdx === 0 ? 0.3 : 1,
-            }}
-          >
-            ← Prev
-          </button>
+       <div style={{
+  display:     "flex",
+  alignItems:  "center",
+  marginBottom: 12,
+  gap:         6,
+}}>
+  <button
+    onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
+    disabled={activeIdx === 0}
+    style={{
+      ...btn("ghost"),
+      padding:    "5px 10px",
+      fontSize:   12,
+      opacity:    activeIdx === 0 ? 0.3 : 1,
+      flexShrink: 0,   // ← never shrinks
+      whiteSpace: "nowrap",
+    }}
+  >
+    ← Prev
+  </button>
 
-          <div style={{ textAlign: "center", flex: 1, padding: "0 8px" }}>
-            <p style={{
-              margin:       0,
-              fontSize:     12,
-              fontWeight:   700,
-              color:        c.text,
-              overflow:     "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace:   "nowrap",
-            }}>
+  <div style={{
+    textAlign:  "center",
+    flex:       1,
+    minWidth:   0,     // ← allows text truncation
+    padding:    "0 2px",
+  }}>
+    <p style={{
+      margin:       0,
+      fontSize:     12,
+      fontWeight:   700,
+      color:        c.text,
+      overflow:     "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace:   "nowrap",
+    }}>
               {getSubjectDisplay(activeSub)}
             </p>
             <p style={{
@@ -259,6 +277,8 @@ export default function MobileMarksPanel({ branch, selSem }) {
               padding:  "5px 10px",
               fontSize: 12,
               opacity:  activeIdx === subs.length - 1 ? 0.3 : 1,
+              flexShrink: 0,    // ← add this
+              whiteSpace: "nowrap",
             }}
           >
             Next →
