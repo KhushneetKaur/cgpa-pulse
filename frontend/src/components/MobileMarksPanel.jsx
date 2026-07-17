@@ -52,7 +52,14 @@ export default function MobileMarksPanel({ branch, selSem }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+  <div style={{
+    display:       "flex",
+    flexDirection: "column",
+    gap:           0,
+    width:         "100%",
+    overflowX:     "hidden",
+    boxSizing:     "border-box",
+  }}>
 
       {/* ── Live SGPA bar ──────────────────────────────────────── */}
       {liveRes && (
@@ -83,11 +90,13 @@ export default function MobileMarksPanel({ branch, selSem }) {
 
       {/* ── Top grid — all subjects ─────────────────────────────── */}
       <div style={{
-        display:             "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap:                 8,
-        marginBottom:        12,
-      }}>
+  display:             "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap:                 8,
+  marginBottom:        12,
+  width:               "100%",
+  minWidth:            0,
+}}>
         {subs.map((sub, idx) => {
           const { total, grade, isBL } = getMicroCardData(sub);
           const isActive = idx === activeIdx;
@@ -115,6 +124,9 @@ export default function MobileMarksPanel({ branch, selSem }) {
                 fontFamily:   "inherit",
                 transition:   "all 0.15s",
                 position:     "relative",
+                 minWidth:     0,        
+                overflow:     "hidden", 
+                boxSizing:    "border-box", 
               }}
             >
               {/* Active indicator dot */}

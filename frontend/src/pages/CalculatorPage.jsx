@@ -22,20 +22,47 @@ return (
     </div>
 
     {/* Mobile marks layout */}
-    <div className="mobile-marks-layout" style={{ display: "none" }}>
-      {selSem ? (
-        <MobileMarksPanel branch={branch} selSem={selSem} />
-      ) : (
-        <div style={{
-          padding:    "40px 20px",
-          textAlign:  "center",
-          color:      c.muted,
-          fontSize:   14,
-        }}>
-          ↑ Select a semester above to enter marks
-        </div>
-      )}
+   <div className="mobile-marks-layout" style={{ display: "none" }}>
+  {selSem ? (
+    <MobileMarksPanel branch={branch} selSem={selSem} />
+  ) : (
+    <div style={{
+      ...cardSty(),
+      display:        "flex",
+      flexDirection:  "column",
+      alignItems:     "center",
+      justifyContent: "center",
+      minHeight:      220,
+      gap:            8,
+      userSelect:     "none",
+      cursor:         "default",
+      textAlign:      "center",
+    }}>
+      <p style={{
+        fontSize:   28,
+        margin:     0,
+        lineHeight: 1,
+      }}>
+        📝
+      </p>
+      <p style={{
+        color:      c.muted,
+        fontSize:   14,
+        margin:     0,
+        fontWeight: 500,
+      }}>
+        Select a semester above
+      </p>
+      <p style={{
+        color:    c.muted,
+        fontSize: 12,
+        margin:   0,
+      }}>
+        or tap ⚡ to save a known SGPA
+      </p>
     </div>
+  )}
+</div>
 
     {/* Desktop grid */}
     <div
