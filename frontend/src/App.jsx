@@ -14,6 +14,7 @@ import PredictorPage   from "./pages/PredictorPage";
 import BacklogsPage    from "./pages/BacklogsPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import GradeTablePage  from "./pages/GradeTablePage";
+import ProfilePage from "./pages/ProfilePage";
 
 // Components
 import NavBar            from "./components/NavBar";
@@ -171,6 +172,7 @@ function TabContent({ tab }) {
     case "backlogs":    return <BacklogsPage    />;
     case "leaderboard": return <LeaderboardPage />;
     case "grade table": return <GradeTablePage  />;
+    case "profile": return <ProfilePage />;
     default:            return <CalculatorPage  />;
   }
 }

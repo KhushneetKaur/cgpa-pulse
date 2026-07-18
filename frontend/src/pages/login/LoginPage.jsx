@@ -6,6 +6,7 @@ import LoginForm         from "./LoginForm";
 import AboutModal        from "./AboutModal";
 import DisclaimerModal   from "../../components/DisclaimerModal";
 import toast from "react-hot-toast";
+import MobileLoginDrawer from "./MobileLoginDrawer";
 
 export default function LoginPage() {
   const { dark, toggleDark, clearForm, setShowDisclaimer, googleLogin} = useAppData();
@@ -26,6 +27,14 @@ function handleGoogleLogin() {
   const [formMode,      setFormMode]      = useState("login");
   const [mounted,       setMounted]       = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 640);
+
+useEffect(() => {
+  function onResize() { setIsMobile(window.innerWidth <= 640); }
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, []);
+
 
   useEffect(() => {
     clearForm();
@@ -52,63 +61,74 @@ function handleGoogleLogin() {
   }
 
   return (
-    <div style={{
-      minHeight:     "100vh",
-      display:       "flex",
-      flexDirection: "column",
-      alignItems:    "center",
-      position:      "relative",
-      overflowX:     "hidden",
-    }}>
-      <LoginBackground dark={dark} />
+  <div style={{
+    minHeight:     "100vh",
+    display:       "flex",
+    flexDirection: "column",
+    alignItems:    "center",
+    position:      "relative",
+    overflowX:     "hidden",
+  }}>
 
-      <button
-        onClick={toggleDark}
-        style={{
-          position:       "fixed",
-          top:            "clamp(14px,2.5vw,20px)",
-          right:          "clamp(14px,3vw,22px)",
-          zIndex:         50,
-          width:          38, height: 38,
-          borderRadius:   "50%",
-          background:     dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)",
-          border:         `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "rgba(124,58,237,0.16)"}`,
-          backdropFilter: "blur(14px)",
-          color:          dark ? "rgba(255,255,255,0.7)" : "#7c3aed",
-          fontSize:       16, cursor: "pointer",
-          display:        "flex", alignItems: "center", justifyContent: "center",
-          fontFamily:     "inherit", transition: "all 0.2s",
-        }}
-        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-      >
-        {dark ? "☀" : "☾"}
-      </button>
-
-      <LoginHero
-        onAuth={handleAuth}
-        onAbout={handleAboutClick}
-        onDisclaimer={handleDisclaimerClick}
-        mounted={mounted}
+    {isMobile ? (
+      // ── Mobile: Live App Peek drawer ──────────────────────
+      <MobileLoginDrawer
+        handleGoogleLogin={handleGoogleLogin}
+        dark={dark}
       />
+    ) : (
+      // ── Desktop: existing hero layout ──────────────────────
+      <>
+        <LoginBackground dark={dark} />
+        <button
+          onClick={toggleDark}
+          style={{
+            position:       "fixed",
+            top:            "clamp(14px,2.5vw,20px)",
+            right:          "clamp(14px,3vw,22px)",
+            zIndex:         50,
+            width:          38, height: 38,
+            borderRadius:   "50%",
+            background:     dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)",
+            border:         `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "rgba(124,58,237,0.16)"}`,
+            backdropFilter: "blur(14px)",
+            color:          dark ? "rgba(255,255,255,0.7)" : "#7c3aed",
+            fontSize:       16, cursor: "pointer",
+            display:        "flex", alignItems: "center", justifyContent: "center",
+            fontFamily:     "inherit", transition: "all 0.2s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+        >
+          {dark ? "☀" : "☾"}
+        </button>
 
-      {showForm && (
-        <FormModal
-          dark={dark}
-          formMode={formMode}
-          signupSuccess={signupSuccess}
-          onClose={handleClose}
-          handleGoogleLogin={handleGoogleLogin}
+        <LoginHero
+          onAuth={handleAuth}
+          onAbout={handleAboutClick}
+          onDisclaimer={handleDisclaimerClick}
+          mounted={mounted}
         />
-      )}
 
-      {showAbout && (
-        <AboutModal onClose={() => setShowAbout(false)} dark={dark} />
-      )}
+        {showForm && (
+          <FormModal
+            dark={dark}
+            formMode={formMode}
+            signupSuccess={signupSuccess}
+            onClose={handleClose}
+            handleGoogleLogin={handleGoogleLogin}
+          />
+        )}
 
-      <DisclaimerModal />
-    </div>
-  );
+        {showAbout && (
+          <AboutModal onClose={() => setShowAbout(false)} dark={dark} />
+        )}
+
+        <DisclaimerModal />
+      </>
+    )}
+  </div>
+);
 }
 
 // ── Standard Core Form Modal ──
