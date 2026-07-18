@@ -5,6 +5,45 @@ import { getGrade, getMaxMarks } from "../data/gradeTable";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 
 
+function ElectiveDockInput({ code, value, onSave, dark, c }) {
+  const [local, setLocal] = useState(value);
+
+  useEffect(() => {
+    setLocal(value);
+  }, [value, code]);
+
+  return (
+    <input
+      value={local}
+      onChange={e => setLocal(e.target.value)}
+      onBlur={() => {
+        const trimmed = local.trim();
+        onSave(code, trimmed || "__other__");
+      }}
+      onKeyDown={e => {
+        if (e.key === "Enter") {
+          const trimmed = local.trim();
+          onSave(code, trimmed || "__other__");
+          e.target.blur();
+        }
+      }}
+      placeholder="Type your subject name…"
+      style={{
+        width:        "100%",
+        boxSizing:    "border-box",
+        padding:      "8px 10px",
+        fontSize:     13,
+        fontFamily:   "inherit",
+        borderRadius: 10,
+        border:       `1.5px solid ${c.accent}`,
+        background:   dark ? "rgba(255,255,255,0.06)" : "#fff",
+        color:        c.text,
+        outline:      "none",
+      }}
+    />
+  );
+}
+
 export default function MobileMarksPanel({ branch, selSem }) {
   const {
     marks, changeMark,
@@ -333,31 +372,15 @@ export default function MobileMarksPanel({ branch, selSem }) {
             <option value="__other__">✏ Other (type below)</option>
           </select>
 
-          {(electiveName === "__other__" || isCustom) && (
-            <input
-              value={electiveName === "__other__" ? "" : electiveName}
-              onChange={e =>
-                setElectiveName(
-                  activeSub.code,
-                  e.target.value || "__other__"
-                )
-              }
-              placeholder="Type your subject name…"
-              autoFocus
-              style={{
-                width:        "100%",
-                boxSizing:    "border-box",
-                padding:      "8px 10px",
-                fontSize:     13,
-                fontFamily:   "inherit",
-                borderRadius: 10,
-                border:       `1.5px solid ${c.accent}`,
-                background:   dark ? "rgba(255,255,255,0.06)" : "#fff",
-                color:        c.text,
-                outline:      "none",
-              }}
-            />
-          )}
+            {(electiveName === "__other__" || isCustom) && (
+  <ElectiveDockInput
+    code={activeSub.code}
+    value={electiveName === "__other__" ? "" : electiveName}
+    onSave={setElectiveName}
+    dark={dark}
+    c={c}
+  />
+)}
         </>
       );
     })()}

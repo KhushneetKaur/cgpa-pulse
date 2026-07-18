@@ -1,7 +1,45 @@
 import { useAppData } from "../context/AppDataContext";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
-import { useRef } from "react";
+import { useRef, useState, useEffect} from "react";
+
+function ElectiveInput({ code, value, onSave, inp, c, accent }) {
+  const [local, setLocal] = useState(value);
+
+  // Sync if external value changes (e.g. switching subjects)
+  useEffect(() => {
+    setLocal(value);
+  }, [value, code]);
+
+  return (
+    <input
+      value={local}
+      onChange={e => setLocal(e.target.value)}
+      onBlur={() => {
+        const trimmed = local.trim();
+        onSave(code, trimmed || "__other__");
+      }}
+      onKeyDown={e => {
+        if (e.key === "Enter") {
+          const trimmed = local.trim();
+          onSave(code, trimmed || "__other__");
+          e.target.blur();
+        }
+      }}
+      placeholder="Type your subject name…"
+      autoFocus
+      style={{
+        ...inp({
+          fontSize:    10,
+          padding:     "3px 8px",
+          marginTop:   4,
+          borderColor: accent,
+        }),
+        width: "100%",
+      }}
+    />
+  );
+}
 
 export default function SubjectRow({ sub, selSem, branch }) {
   const {
@@ -100,25 +138,16 @@ const extRef = useRef(null);
                 <option value="__other__">✏ Other (type below)</option>
               </select>
 
-              {(electiveName === "__other__" || isCustom) && (
-                <input
-                  value={electiveName === "__other__" ? "" : electiveName}
-                  onChange={e =>
-                    setElectiveName(sub.code, e.target.value || "__other__")
-                  }
-                  placeholder="Type your subject name…"
-                  autoFocus
-                  style={{
-                    ...inp({
-                      fontSize:    10,
-                      padding:     "3px 8px",
-                      marginTop:   4,
-                      borderColor: c.accent,
-                    }),
-                    width: "100%",
-                  }}
-                />
-              )}
+             {(electiveName === "__other__" || isCustom) && (
+  <ElectiveInput
+    code={sub.code}
+    value={electiveName === "__other__" ? "" : electiveName}
+    onSave={setElectiveName}
+    inp={inp}
+    c={c}
+    accent={c.accent}
+  />
+)}
             </div>
           )}
         </div>
