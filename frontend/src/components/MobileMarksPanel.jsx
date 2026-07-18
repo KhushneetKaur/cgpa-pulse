@@ -285,6 +285,85 @@ export default function MobileMarksPanel({ branch, selSem }) {
           </button>
         </div>
 
+{activeSub.elective && (
+  <div style={{ marginBottom: 10 }}>
+    {(() => {
+      const opts = ELECTIVE_OPTIONS[branch]?.[activeSub.code] || [];
+      const electiveName = bElectiveNames[activeSub.code] || "";
+      const isCustom = electiveName && !opts.includes(electiveName);
+      const dropVal  = isCustom ? "__other__" : electiveName;
+
+      return (
+        <>
+          <p style={{
+            margin:   "0 0 4px",
+            fontSize: 10,
+            color:    c.sub,
+            fontWeight: 600,
+          }}>
+            Select Subject Name
+          </p>
+          <select
+            value={dropVal}
+            onChange={e => {
+              const val = e.target.value;
+              setElectiveName(
+                activeSub.code,
+                val === "__other__" ? "__other__" : val
+              );
+            }}
+            style={{
+              width:        "100%",
+              boxSizing:    "border-box",
+              padding:      "8px 10px",
+              fontSize:     13,
+              fontFamily:   "inherit",
+              borderRadius: 10,
+              border:       `1.5px solid ${c.accent}66`,
+              background:   dark ? "rgba(255,255,255,0.06)" : "#fff",
+              color:        c.text,
+              outline:      "none",
+              marginBottom: isCustom ? 6 : 0,
+            }}
+          >
+            <option value="">— Select subject —</option>
+            {opts.map(o => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+            <option value="__other__">✏ Other (type below)</option>
+          </select>
+
+          {(electiveName === "__other__" || isCustom) && (
+            <input
+              value={electiveName === "__other__" ? "" : electiveName}
+              onChange={e =>
+                setElectiveName(
+                  activeSub.code,
+                  e.target.value || "__other__"
+                )
+              }
+              placeholder="Type your subject name…"
+              autoFocus
+              style={{
+                width:        "100%",
+                boxSizing:    "border-box",
+                padding:      "8px 10px",
+                fontSize:     13,
+                fontFamily:   "inherit",
+                borderRadius: 10,
+                border:       `1.5px solid ${c.accent}`,
+                background:   dark ? "rgba(255,255,255,0.06)" : "#fff",
+                color:        c.text,
+                outline:      "none",
+              }}
+            />
+          )}
+        </>
+      );
+    })()}
+  </div>
+)}
+
         {/* Inputs */}
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
 
