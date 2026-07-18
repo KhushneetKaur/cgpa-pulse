@@ -13,7 +13,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
     bElectiveNames,
     liveRes, saving, saveSem,
     openQuick, deleteSemRecord, bHist,
-    c, dark, scoreClr, btn, bElectiveNames, setElectiveName,
+    c, dark, scoreClr, btn, setElectiveName,
   } = useAppData();
 
   const [activeIdx, setActiveIdx] = useState(0);
