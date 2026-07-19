@@ -1,0 +1,152 @@
+/* ==========================================================================
+   Terminal View Styles
+   ========================================================================== */
+.terminal-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: #080c18;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px 24px;
+  font-family: monospace;
+  overflow-y: auto;
+}
+
+.terminal-scanlines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.terminal-inner {
+  position: relative;
+  z-index: 2;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* ==========================================================================
+   Main App View (Mobile Defaults)
+   ========================================================================== */
+.app-layout-wrapper {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.brand-section {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 52%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.login-drawer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 20;
+  border-radius: 24px 24px 0 0;
+  padding: 10px 22px 44px;
+  transform: translateY(100%);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-drawer.visible {
+  transform: translateY(0);
+}
+
+.drawer-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 99px;
+  margin: 0 auto 18px;
+}
+
+/* Theme variations */
+.login-drawer.dark-theme {
+  background: rgba(13, 14, 26, 0.94);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.55);
+}
+.login-drawer.light-theme {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  box-shadow: 0 -20px 60px rgba(109, 40, 217, 0.12);
+}
+
+.drawer-handle.dark-theme { background: rgba(255, 255, 255, 0.15); }
+.drawer-handle.light-theme { background: rgba(0, 0, 0, 0.1); }
+
+/* ==========================================================================
+   Desktop Responsive Overrides (width >= 768px) - NO MORE !IMPORTANT
+   ========================================================================== */
+@media (min-width: 768px) {
+  .app-layout-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10%;
+  }
+
+  .brand-section {
+    position: relative;
+    height: auto;
+    width: 45%;
+    align-items: flex-start;
+    text-align: left;
+    padding: 0;
+    top: auto; left: auto; right: auto; /* Reset mobile absolute placement */
+  }
+
+  .brand-section p, 
+  .brand-section .feature-grid {
+    text-align: left;
+    max-width: 320px;
+  }
+
+  .login-drawer {
+    position: relative;
+    width: 420px;
+    border-radius: 24px;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 32px 28px;
+    bottom: auto; left: auto; right: auto; /* Reset mobile absolute placement */
+  }
+
+  .login-drawer.visible {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .login-drawer.dark-theme {
+    border-bottom: 1px solid rgba(167, 139, 250, 0.18);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  }
+
+  .login-drawer.light-theme {
+    border-bottom: 1px solid rgba(124, 58, 237, 0.12);
+    box-shadow: 0 20px 60px rgba(109, 40, 217, 0.12);
+  }
+
+  .drawer-handle {
+    display: none;
+  }
+}
