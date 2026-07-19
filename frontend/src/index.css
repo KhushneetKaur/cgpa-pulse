@@ -1,44 +1,41 @@
-﻿/*  Google Font Inter*/
+﻿/* Google Font Inter */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* Reset  */
+/* Reset & Root Setup */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
-html, body {
-  font-size: 18px;
-}
-html, body, #root {
-  margin:     0;
-  padding:    0;
-  min-height: 100%;
-  background: #080c18;
-}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
-  background: #080c18;  /* matches dark mode bg */
+  background: #080c18;  /* Matches dark mode bg */
   overscroll-behavior: none;
 }
 
 html.light {
-  background: #f4f3ff;  /* matches light mode bg */
+  background: #f4f3ff;  /* Matches light mode bg */
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont,
-               'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 400;
   line-height: 1.6;
-   overscroll-behavior-y: none;
   min-height: 100dvh;
 }
 
-/*  Scrollbar  */
+/* Global Layout Selector Consolidation */
+html, body, #root {
+  min-height: 100%;
+  background: #080c18;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -54,7 +51,7 @@ body {
   background: #a78bfa;
 }
 
-/*  Number inputs  hide spinner arrows  */
+/* Number inputs hide spinner arrows */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -64,30 +61,34 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/*  Focus ring  global  */
+/* Focus ring global */
 :focus-visible {
   outline: 2px solid #818cf8;
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* Selection color  */
+/* Selection color */
 ::selection {
   background: #ddd6fe;
   color: #1e1b4b;
 }
 
-/*  Focused transitions on interactive UI  */
+/* Focused transitions on interactive UI */
 button, input, select, textarea, a {
   transition: background-color 0.18s ease, border-color 0.18s ease,
               color 0.18s ease, box-shadow 0.18s ease;
 }
 
+/* Utility: hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Responsive & Accessibility Overrides */
 @media (max-width: 640px) {
   html {
     scroll-behavior: auto;
   }
-
   [style*="backdrop-filter"],
   [style*="BackdropFilter"] {
     backdrop-filter: none !important;
@@ -104,12 +105,7 @@ button, input, select, textarea, a {
   }
 }
 
-/*  Utility: hide scrollbar but keep scroll */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-
-
+/* Optimized Performance Keyframes (Duplicates Removed) */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
@@ -126,11 +122,49 @@ button, input, select, textarea, a {
   from { opacity: 0; transform: translateY(-16px); }
   to   { opacity: 1; transform: translateY(0);     }
 }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
 @keyframes gradientShift {
   0%   { background-position: 0% 50%;   }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%;   }
 }
+@keyframes neonPulse {
+  0%,100% { opacity: 0.55; }
+  50%     { opacity: 1;    }
+}
+@keyframes termGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(16,185,129,0.35);
+    border-color: #10b981;
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(16,185,129,0.7), 0 0 44px rgba(16,185,129,0.25);
+    border-color: #34d399;
+    color: #34d399;
+  }
+}
+@keyframes consolePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+@keyframes floatCard {
+  0%   { transform: translateY(0);      opacity: 0; }
+  8%   { opacity: 0.65; }
+  85%  { opacity: 0.45; }
+  100% { transform: translateY(-110vh); opacity: 0; }
+}
+
+/* Background Orb Animations */
 @keyframes orbFloat0 {
   0%,100% { transform: translate(0,0) scale(1);           }
   33%     { transform: translate(28px,-38px) scale(1.07); }
@@ -149,90 +183,4 @@ button, input, select, textarea, a {
   0%,100% { transform: translate(0,0) scale(1);           }
   40%     { transform: translate(-18px,-32px) scale(1.09);}
   80%     { transform: translate(26px,12px) scale(0.94);  }
-}
-@keyframes neonPulse {
-  0%,100% { opacity: 0.55; }
-  50%     { opacity: 1;    }
-}
-@keyframes floatCard {
-  0%,100% { transform: translateY(0px) rotate(-1.5deg); }
-  50%     { transform: translateY(-10px) rotate(1deg);  }
-}
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.94); }
-  to   { opacity: 1; transform: scale(1);    }
-}
-/* Global keyframes  */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-@keyframes shimmer {
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.94); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes floatY {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(6px); }
-}
-
-/*  Prevent overscroll black gap on iOS  */
-html, body {
-  background:          #080c18;
-  overscroll-behavior: none;
-  min-height:          100%;
-}
-
-html, body, #root {
-  margin:  0;
-  padding: 0;
-}
-
-/*  Smooth scrolling  */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-@keyframes floatCard {
-  0%   { transform: translateY(0);      opacity: 0; }
-  8%   { opacity: 0.65; }
-  85%  { opacity: 0.45; }
-  100% { transform: translateY(-110vh); opacity: 0; }
-}
-
-@keyframes termGlow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(16,185,129,0.35);
-    border-color: #10b981;
-  }
-  50% {
-    box-shadow: 0 0 22px rgba(16,185,129,0.7), 0 0 44px rgba(16,185,129,0.25);
-    border-color: #34d399;
-    color: #34d399;
-  }
-}
-
-@keyframes consolePulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
 }

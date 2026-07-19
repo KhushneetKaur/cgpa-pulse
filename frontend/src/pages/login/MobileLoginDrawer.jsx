@@ -5,7 +5,7 @@ import AboutModal from "./AboutModal";
 const LINES = [
   { text: "> CGPA Pulse v1.0.0  —  MRSPTU Bathinda", delay: 0,    color: "#eceef8" },
   { text: "> Initializing grade engine...        [OK]", delay: 450,  color: "#2dd4aa" },
-  { text: "> Loading 6 engineering branches...   [OK]", delay: 900,  color: "#2dd4aa" },
+  { text: "> Loading 7 engineering branches...   [OK]", delay: 900,  color: "#2dd4aa" },
   { text: "> Syncing semester data structure...  [OK]", delay: 1350, color: "#2dd4aa" },
   { text: "  ─────────────────────────────────────────", delay: 1750, color: "rgba(236,238,248,0.2)" },
   { text: "> System Architect: Khushneet Kaur",         delay: 2150, color: "#a78bfa" },
