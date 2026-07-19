@@ -1,4 +1,4 @@
-import { useState,useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import SemesterSidebar from "../components/SemesterSidebar";
