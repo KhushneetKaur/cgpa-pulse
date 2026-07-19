@@ -205,16 +205,10 @@ function Terminal({ onDone, onOpenAbout }) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function MobileLoginDrawer({ handleGoogleLogin, dark }) {
-  const isFirstVisit = !localStorage.getItem("cgpapulse_visited");
-
-  const [phase,         setPhase]         = useState(isFirstVisit ? "terminal" : "main");
+  const [phase, setPhase] = useState("terminal");
   const [termFading,    setTermFading]     = useState(false);
-  const [drawerVisible, setDrawerVisible] = useState(!isFirstVisit);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const [showAbout,     setShowAbout]     = useState(false);
-
-  useEffect(() => {
-    if (!isFirstVisit) setTimeout(() => setDrawerVisible(true), 200);
-  }, []);
 
   function handleTermDone() {
     setTermFading(true);
