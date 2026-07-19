@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import React ,{ createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { BRANCHES } from "../data/branches";
 import { calcSGPA, calcCGPA, calcTarget } from "../utils/calculations";
 import { useAuth } from "../context/AuthContext";
