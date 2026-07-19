@@ -1,7 +1,7 @@
-﻿/* â”€â”€ Google Font â€” Inter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+﻿/*  Google Font Inter*/
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* â”€â”€ Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Reset  */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -38,7 +38,7 @@ body {
   min-height: 100dvh;
 }
 
-/* â”€â”€ Scrollbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Scrollbar  */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -54,7 +54,7 @@ body {
   background: #a78bfa;
 }
 
-/* â”€â”€ Number inputs â€” hide spinner arrows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Number inputs  hide spinner arrows  */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -64,20 +64,20 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* â”€â”€ Focus ring â€” global â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Focus ring  global  */
 :focus-visible {
   outline: 2px solid #818cf8;
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* â”€â”€ Selection color â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Selection color  */
 ::selection {
   background: #ddd6fe;
   color: #1e1b4b;
 }
 
-/* â”€â”€ Focused transitions on interactive UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Focused transitions on interactive UI  */
 button, input, select, textarea, a {
   transition: background-color 0.18s ease, border-color 0.18s ease,
               color 0.18s ease, box-shadow 0.18s ease;
@@ -104,7 +104,7 @@ button, input, select, textarea, a {
   }
 }
 
-/* â”€â”€ Utility: hide scrollbar but keep scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Utility: hide scrollbar but keep scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -162,7 +162,7 @@ button, input, select, textarea, a {
   from { opacity: 0; transform: scale(0.94); }
   to   { opacity: 1; transform: scale(1);    }
 }
-/* â”€â”€ Global keyframes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Global keyframes  */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -197,7 +197,7 @@ button, input, select, textarea, a {
   50%       { transform: translateY(6px); }
 }
 
-/* â”€â”€ Prevent overscroll black gap on iOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Prevent overscroll black gap on iOS  */
 html, body {
   background:          #080c18;
   overscroll-behavior: none;
@@ -209,8 +209,30 @@ html, body, #root {
   padding: 0;
 }
 
-/* â”€â”€ Smooth scrolling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/*  Smooth scrolling  */
 * {
   -webkit-tap-highlight-color: transparent;
 }
+@keyframes floatCard {
+  0%   { transform: translateY(0);      opacity: 0; }
+  8%   { opacity: 0.65; }
+  85%  { opacity: 0.45; }
+  100% { transform: translateY(-110vh); opacity: 0; }
+}
 
+@keyframes termGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(16,185,129,0.35);
+    border-color: #10b981;
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(16,185,129,0.7), 0 0 44px rgba(16,185,129,0.25);
+    border-color: #34d399;
+    color: #34d399;
+  }
+}
+
+@keyframes consolePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}

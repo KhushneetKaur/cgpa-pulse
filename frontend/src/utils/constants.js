@@ -51,5 +51,4 @@ export const TABS = [
   { key: "backlogs",    label: "Backlogs",    icon: "⚠"  },
   { key: "leaderboard", label: "Leaderboard", icon: "🏆" },
   { key: "grade table", label: "Grade Table", icon: "📊" },
-  { key: "profile", icon: "👤", label: "Profile" },
 ];

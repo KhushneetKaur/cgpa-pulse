@@ -172,7 +172,6 @@ function TabContent({ tab }) {
     case "backlogs":    return <BacklogsPage    />;
     case "leaderboard": return <LeaderboardPage />;
     case "grade table": return <GradeTablePage  />;
-    case "profile": return <ProfilePage />;
     default:            return <CalculatorPage  />;
   }
 }
