@@ -1,12 +1,11 @@
 import { useAppData } from "../context/AppDataContext";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
-import { useRef, useState, useEffect} from "react";
+import { useRef, useState, useEffect } from "react";
 
 function ElectiveInput({ code, value, onSave, inp, c, accent }) {
   const [local, setLocal] = useState(value);
 
-  // Sync if external value changes (e.g. switching subjects)
   useEffect(() => {
     setLocal(value);
   }, [value, code]);
@@ -30,9 +29,9 @@ function ElectiveInput({ code, value, onSave, inp, c, accent }) {
       autoFocus
       style={{
         ...inp({
-          fontSize:    10,
-          padding:     "3px 8px",
-          marginTop:   4,
+          fontSize: 10,
+          padding: "3px 8px",
+          marginTop: 4,
           borderColor: accent,
         }),
         width: "100%",
@@ -79,8 +78,8 @@ export default function SubjectRow({ sub, selSem, branch }) {
     ? electiveName
     : sub.name;
 
-const intRef = useRef(null);
-const extRef = useRef(null);
+  const intRef = useRef(null);
+  const extRef = useRef(null);
 
   return (
     <div style={{ paddingBottom: 2 }}>
@@ -138,16 +137,18 @@ const extRef = useRef(null);
                 <option value="__other__">✏ Other (type below)</option>
               </select>
 
-             {(electiveName === "__other__" || isCustom) && (
-  <ElectiveInput
-    code={sub.code}
-    value={electiveName === "__other__" ? "" : electiveName}
-    onSave={setElectiveName}
-    inp={inp}
-    c={c}
-    accent={c.accent}
-  />
-)}
+              {(electiveName === "__other__" || isCustom) && (
+                <React.Fragment>
+                  <ElectiveInput
+                    code={sub.code}
+                    value={electiveName === "__other__" ? "" : electiveName}
+                    onSave={setElectiveName}
+                    inp={inp}
+                    c={c}
+                    accent={c.accent}
+                  />
+                </React.Fragment>
+              )}
             </div>
           )}
         </div>
@@ -177,7 +178,7 @@ const extRef = useRef(null);
         {/* ── Internal input ──────────────────────────────────────── */}
         <div className="sr-int">
           <input
-          ref={intRef}
+            ref={intRef}
             type="number"
             min="0"
             max={mx.int}
@@ -186,11 +187,11 @@ const extRef = useRef(null);
               changeMark(sub.code, "int", e.target.value, sub.type)
             }
             onKeyDown={e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      extRef.current?.focus();
-    }
-  }}
+              if (e.key === "Enter") {
+                e.preventDefault();
+                extRef.current?.focus();
+              }
+            }}
             placeholder={`0–${mx.int}`}
             style={{
               ...inp({
@@ -216,7 +217,7 @@ const extRef = useRef(null);
         {/* ── External input ──────────────────────────────────────── */}
         <div className="sr-ext">
           <input
-          ref={extRef}
+            ref={extRef}
             type="number"
             min="0"
             max={mx.ext}
@@ -224,19 +225,25 @@ const extRef = useRef(null);
             onChange={e =>
               changeMark(sub.code, "ext", e.target.value, sub.type)
             }
-             onKeyDown={e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      // Find the next subject row's internal input
-      const allIntInputs = document.querySelectorAll(".sr-int input");
-      const currentInt   = intRef.current;
-      const intList      = Array.from(allIntInputs);
-      const currentIdx   = intList.indexOf(currentInt);
-      if (currentIdx !== -1 && intList[currentIdx + 1]) {
-        intList[currentIdx + 1].focus();
-      }
-    }
-  }}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                
+                // 1. Find the parent container holding all the rows to scope the query
+                const container = intRef.current?.closest(".semester-container") || document;
+                
+                // 2. Query only the internal inputs inside this specific container
+                const allIntInputs = container.querySelectorAll(".sr-int input");
+                const intList = Array.from(allIntInputs);
+                
+                // 3. Jump to the next index
+                const currentIdx = intList.indexOf(intRef.current);
+                if (currentIdx !== -1 && intList[currentIdx + 1]) {
+                  intList[currentIdx + 1].focus();
+                  intList[currentIdx + 1].select(); // Optional: selects text for easier overwriting
+                }
+              }
+            }}
             placeholder={`0–${mx.ext}`}
             style={{
               ...inp({
@@ -261,7 +268,7 @@ const extRef = useRef(null);
 
         {/* ── Total ───────────────────────────────────────────────── */}
         <div className="sr-total" style={{
-          background:   bothFilled
+          background:  bothFilled
             ? (grade ? `${scoreClr(grade.points)}14` : c.hover)
             : c.hover,
           borderRadius: 8,
