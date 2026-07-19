@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AboutModal from "./AboutModal";
+import AboutModal from "../pages/login/AboutModal";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
