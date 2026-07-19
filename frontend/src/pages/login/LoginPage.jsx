@@ -1,115 +1,69 @@
 import { useState, useEffect } from "react";
 import { useAppData } from "../../context/AppDataContext";
-import LoginBackground from "./LoginBackground";
-import LoginHero from "./LoginHero";
-import LoginForm from "./LoginForm";
+import MobileLoginDrawer from "./MobileLoginDrawer";
 import AboutModal from "./AboutModal";
 import DisclaimerModal from "../../components/DisclaimerModal";
-import MobileLoginDrawer from "./MobileLoginDrawer";
+import { useGoogleLogin } from "@react-oauth/google";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
-  const { dark, toggleDark, clearForm, setShowDisclaimer } = useAppData();
-
+  const { dark, toggleDark, clearForm, googleLogin } = useAppData();
   const [showAbout, setShowAbout] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [signupSuccess] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 640);
 
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= 640);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  useEffect(() => {
-    clearForm();
-    const t = setTimeout(() => setMounted(true), 80);
-    return () => clearTimeout(t);
-  }, [clearForm]);
+  useEffect(() => { clearForm(); }, []);
 
   function handleGoogleLogin() {
     const params = new URLSearchParams({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      redirect_uri: window.location.origin,
+      client_id:     import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      redirect_uri:  window.location.origin,
       response_type: "token",
-      scope: "openid email profile",
-      prompt: "select_account",
+      scope:         "openid email profile",
+      prompt:        "select_account",
     });
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   }
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      position: "relative",
-      overflowX: "hidden",
-    }}>
-      {isMobile ? (
-        <MobileLoginDrawer
-          handleGoogleLogin={handleGoogleLogin}
-          dark={dark}
-        />
-      ) : (
-        <>
-          <LoginBackground dark={dark} />
-          
-          <button
-            onClick={toggleDark}
-            style={{
-              position: "fixed",
-              top: "clamp(14px,2.5vw,20px)",
-              right: "clamp(14px,3vw,22px)",
-              zIndex: 50,
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              background: dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.7)",
-              border: `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "rgba(124,58,237,0.16)"}`,
-              backdropFilter: "blur(14px)",
-              color: dark ? "rgba(255,255,255,0.7)" : "#7c3aed",
-              fontSize: 16,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "inherit",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-          >
-            {dark ? "☀" : "☾"}
-          </button>
+    <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
 
-          <LoginHero
-            onAuth={() => {
-              clearForm();
-              setShowForm(true);
-            }}
-            onAbout={() => setShowAbout(true)}
-            onDisclaimer={() => setShowDisclaimer(true)}
-            mounted={mounted}
-          />
+      {/* Dark toggle — floats top right on all screens */}
+      <button
+        onClick={toggleDark}
+        style={{
+          position:       "fixed",
+          top:            16,
+          right:          16,
+          zIndex:         400,
+          width:          36,
+          height:         36,
+          borderRadius:   "50%",
+          background:     dark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.7)",
+          border:         `1px solid ${dark ? "rgba(255,255,255,0.2)" : "rgba(124,58,237,0.2)"}`,
+          backdropFilter: "blur(12px)",
+          color:          dark ? "rgba(255,255,255,0.8)" : "#7c3aed",
+          fontSize:       15,
+          cursor:         "pointer",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          fontFamily:     "inherit",
+          transition:     "all 0.2s",
+        }}
+      >
+        {dark ? "☀" : "☾"}
+      </button>
 
-          {showForm && (
-            <FormModal
-              signupSuccess={signupSuccess}
-              onClose={() => setShowForm(false)}
-              handleGoogleLogin={handleGoogleLogin}
-            />
-          )}
+      <MobileLoginDrawer
+        handleGoogleLogin={handleGoogleLogin}
+        dark={dark}
+        onOpenAbout={() => setShowAbout(true)}
+      />
 
-          {showAbout && (
-            <AboutModal onClose={() => setShowAbout(false)} dark={dark} />
-          )}
-
-          <DisclaimerModal />
-        </>
+      {showAbout && (
+        <AboutModal onClose={() => setShowAbout(false)} dark={dark} />
       )}
+
+      <DisclaimerModal />
     </div>
   );
 }

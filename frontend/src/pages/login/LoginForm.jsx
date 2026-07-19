@@ -5,6 +5,8 @@ import { useAppData } from "../../context/AppDataContext";
 export default function LoginForm({ mounted, signupSuccess, handleGoogleLogin }) {
   const { dark: isDark } = useAppData();
 
+  const isVisible = mounted !== false;
+
   return (
     <div style={{
       width:          "100%",
@@ -12,8 +14,8 @@ export default function LoginForm({ mounted, signupSuccess, handleGoogleLogin })
       flexDirection:  "column",
       alignItems:     "center",
       padding:        "0",
-      opacity:        mounted ? 1 : 0,
-      transform:      mounted ? "translateY(0)" : "translateY(22px)",
+      opacity:        isVisible ? 1 : 0,
+      transform:      isVisible ? "translateY(0)" : "translateY(22px)",
       transition:     "opacity 0.65s ease 0.2s, transform 0.65s ease 0.2s",
     }}>
       <div style={{ width: "100%", maxWidth: 400 }}>

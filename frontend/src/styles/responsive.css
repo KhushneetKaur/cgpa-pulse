@@ -394,3 +394,12 @@ html, body {
     flex: 1 1 100% !important;
   }
 }
+/* ── Login drawer — desktop centering ───────────────────────────────────── */
+@media (min-width: 641px) {
+  /* Add left/right margin so drawer feels like a centered card not a full strip */
+  .login-drawer-wrap {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    max-width: 560px !important;
+  }
+}
