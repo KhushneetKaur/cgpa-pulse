@@ -26,6 +26,22 @@ html, body {
   display: none !important;
 }
 
+.navbar-desktop-user {
+  display: flex !important;
+}
+
+.navbar-mobile-user {
+  display: none !important;
+}
+
+.mobile-marks-layout {
+  display: none !important;
+}
+
+.desktop-marks-layout {
+  display: grid !important;
+}
+
 /* ── Desktop & Large Tablet Rules (≥641px) ──────────────────────────────── */
 @media (min-width: 641px) {
   .bottom-tab-bar {
@@ -62,13 +78,11 @@ html, body {
 
 /* ── Mobile (≤640px) ─────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  /* Global Adjustments */
+  /* Global & Structural Switchers */
   main {
     padding: 0.75rem 0.65rem 1.25rem !important;
     padding-bottom: 72px !important; /* Spacing for bottom nav */
   }
-
-  /* Structural UI Switchers */
   .bottom-tab-bar {
     display: flex !important;
   }
@@ -77,6 +91,18 @@ html, body {
   }
   .mobile-sem-pills {
     display: block !important;
+  }
+  .navbar-desktop-user {
+    display: none !important;
+  }
+  .navbar-mobile-user {
+    display: block !important;
+  }
+  .mobile-marks-layout {
+    display: block !important;
+  }
+  .desktop-marks-layout {
+    display: none !important;
   }
 
   /* Core Layout Overrides */
@@ -149,11 +175,6 @@ html, body {
   .branch-select-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
-  .summary-cards-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    margin-bottom: 14px !important;
-  }
   .customise-modal-card {
     max-width: 92vw !important;
     max-height: 75vh !important;
@@ -161,15 +182,52 @@ html, body {
     border-radius: 14px !important;
   }
 
+  /* Compact Summary Cards Variant */
+  .summary-cards-grid {
+    display: flex !important;
+    gap: 0 !important;
+    background: transparent !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    margin-bottom: 12px !important;
+    border: 1px solid rgba(129, 140, 248, 0.15) !important;
+  }
+  .summary-cards-grid > div {
+    flex: 1 !important;
+    min-width: 0 !important;
+    border-radius: 0 !important;
+    padding: 7px 8px !important;
+    border: none !important;
+    border-right: 1px solid rgba(129, 140, 248, 0.12) !important;
+    box-shadow: none !important;
+  }
+  .summary-cards-grid > div:last-child {
+    border-right: none !important;
+  }
+  .summary-cards-grid > div p:first-child {
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .summary-cards-grid > div p:nth-child(2) {
+    font-size: 15px !important;
+    margin: 0 !important;
+  }
+  .summary-cards-grid > div p:nth-child(3) {
+    display: none !important;
+  }
+
   /* Subject Row Matrix styling */
   .subject-row-grid {
     grid-template-columns: repeat(5, 1fr) !important;
     grid-template-areas:
-      "name  name  name  type  bl"
-      "int   ext   total grade gp" !important;
+      "name name name type bl"
+      "int  ext  total grade gp" !important;
     row-gap: 8px !important;
     padding: 10px !important;
-    border: 1px solid rgba(127,127,127,0.14) !important;
+    border: 1px solid rgba(127, 127, 127, 0.14) !important;
     border-radius: 10px !important;
   }
   .subject-row-grid > .sr-name  { grid-area: name; }
@@ -311,10 +369,6 @@ html, body {
 
 /* ── Small Mobile (≤420px) ──────────────────────────────────────────────── */
 @media (max-width: 420px) {
-  .summary-cards-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-  }
   .navbar-cgpa-pill {
     padding: 4px 10px !important;
   }
@@ -338,83 +392,5 @@ html, body {
   }
   .qsgpa-actions button {
     flex: 1 1 100% !important;
-  }
-}
-/* ── Summary cards — compact on mobile only ─────────────────────────────── */
-@media (max-width: 640px) {
-  .summary-cards-grid {
-    display:       flex !important;
-    gap:           0 !important;
-    background:    transparent !important;
-    border-radius: 10px !important;
-    overflow:      hidden !important;
-    margin-bottom: 12px !important;
-    border:        1px solid rgba(129,140,248,0.15) !important;
-  }
-
-  .summary-cards-grid > div {
-    flex:          1 !important;
-    min-width:     0 !important;
-    border-radius: 0 !important;
-    padding:       7px 8px !important;
-    border:        none !important;
-    border-right:  1px solid rgba(129,140,248,0.12) !important;
-    box-shadow:    none !important;
-  }
-
-  .summary-cards-grid > div:last-child {
-    border-right: none !important;
-  }
-
-  /* Label — smaller */
-  .summary-cards-grid > div p:first-child {
-    font-size:     8px !important;
-    margin-bottom: 2px !important;
-    white-space:   nowrap !important;
-    overflow:      hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  /* Value — smaller */
-  .summary-cards-grid > div p:nth-child(2) {
-    font-size: 15px !important;
-    margin:    0 !important;
-  }
-
-  /* Sub text — hide on mobile to save space */
-  .summary-cards-grid > div p:nth-child(3) {
-    display: none !important;
-  }
-}
-/* ── Navbar user area — desktop/mobile switch ────────────────────────────── */
-.navbar-desktop-user {
-  display: flex !important;
-}
-.navbar-mobile-user {
-  display: none !important;
-}
-
-@media (max-width: 640px) {
-  .navbar-desktop-user {
-    display: none !important;
-  }
-  .navbar-mobile-user {
-    display: block !important;
-  }
-}
-/* ── Mobile/Desktop marks layout switch ─────────────────────────────────── */
-.mobile-marks-layout {
-  display: none !important;
-}
-.desktop-marks-layout {
-  display: grid !important;
-}
-
-@media (max-width: 640px) {
-  .mobile-marks-layout {
-    display: block !important;
-  }
-  .desktop-marks-layout {
-    display: none !important;
   }
 }
