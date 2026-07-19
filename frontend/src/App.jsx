@@ -14,7 +14,6 @@ import PredictorPage   from "./pages/PredictorPage";
 import BacklogsPage    from "./pages/BacklogsPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import GradeTablePage  from "./pages/GradeTablePage";
-import ProfilePage from "./pages/ProfilePage";
 
 // Components
 import NavBar            from "./components/NavBar";

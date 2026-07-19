@@ -291,21 +291,24 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark }) {
               CGPA
             </h1>
             <h1 style={{
-              margin:               "0 0 14px",
-              fontSize:             "clamp(44px,12vw,62px)",
-              fontWeight:           900,
-              fontStyle:            "italic",
-              letterSpacing:        -2,
-              lineHeight:           1,
-              background:           dark
-                ? "linear-gradient(135deg,#c084fc,#67e8f9)"
-                : "linear-gradient(135deg,#7c3aed,#10b981)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor:  "transparent",
-              backgroundClip:       "text",
-            }}>
-              PULSE
-            </h1>
+  margin:               "0 0 14px",
+  fontSize:             "clamp(44px,12vw,62px)",
+  fontWeight:           900,
+  fontStyle:            "italic",
+  letterSpacing:        -2,
+  lineHeight:           1.1,         
+  paddingBottom:        4,           
+  background:           dark
+    ? "linear-gradient(135deg,#c084fc,#67e8f9)"
+    : "linear-gradient(135deg,#7c3aed,#10b981)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor:  "transparent",
+  backgroundClip:       "text",
+  overflow:             "visible",     
+  display:              "block",       
+}}>
+  PULSE
+</h1>
 
             <p style={{
               margin:     "0 0 14px",

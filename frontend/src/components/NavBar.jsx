@@ -261,7 +261,8 @@ const [mobileBranchOpen, setMobileBranchOpen] = useState(false);
     {/* ── Desktop dropdown ──────────────────────────────── */}
     {showAvatarMenu && (
       <>
-        <div onClick={() => setShowAvatarMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 148 }} />
+        <div onClick={() => setShowAvatarMenu(false)}
+         style={{ position: "fixed", inset: 0, zIndex: 148 }} />
         <div style={{
           position:     "absolute",
           top:          "calc(100% + 8px)",
@@ -491,23 +492,24 @@ const [mobileBranchOpen, setMobileBranchOpen] = useState(false);
     />
 
     {/* Sheet */}
-    <div style={{
-      position:             "fixed",
-      bottom:               0, left: 0, right: 0,
-      zIndex:               199,
-      background:           dark ? "#0f1424" : "#fff",
-      borderRadius:         "20px 20px 0 0",
-      border:               `1px solid ${c.border}`,
-      borderBottom:         "none",
-      maxHeight:            "85vh",
-      overflowY:            "auto",
-      scrollbarWidth:       "none",
-      boxShadow:            dark
-        ? "0 -16px 48px rgba(0,0,0,0.55)"
-        : "0 -16px 48px rgba(109,40,217,0.12)",
-      animation:            "slideUp 0.3s ease both",
-      paddingBottom:        "env(safe-area-inset-bottom)",
-    }}>
+    <div 
+style={{
+  position:       "fixed",
+  bottom:         0, left: 0, right: 0,
+  zIndex:         199,
+  background:     dark ? "#0f1424" : "#fff",
+  borderRadius:   "20px 20px 0 0",
+  border:         `1px solid ${c.border}`,
+  borderBottom:   "none",
+  maxHeight:      "85vh",        // ← keep this
+  overflowY:      "auto",
+  scrollbarWidth: "none",
+  boxShadow:      dark
+    ? "0 -16px 48px rgba(0,0,0,0.55)"
+    : "0 -16px 48px rgba(109,40,217,0.12)",
+  animation:      "slideUp 0.3s ease both",
+  paddingBottom:  "calc(env(safe-area-inset-bottom) + 24px)",  // ← explicit extra padding
+}}>
       <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
 
       {/* Handle */}
@@ -748,7 +750,7 @@ const [mobileBranchOpen, setMobileBranchOpen] = useState(false);
             width: "100%", display: "flex", alignItems: "center",
             gap: 10, padding: "13px 14px", borderRadius: 10,
             border: `1px solid ${c.bad}33`, background: `${c.bad}08`,
-            cursor: "pointer", fontFamily: "inherit", marginBottom: 8,
+            cursor: "pointer", fontFamily: "inherit", marginBottom: 24,
           }}
         >
           <span style={{ fontSize: 16 }}>→</span>
