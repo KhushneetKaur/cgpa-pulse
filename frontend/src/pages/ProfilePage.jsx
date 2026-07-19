@@ -20,6 +20,7 @@ export default function ProfilePage() {
       })
     : "—";
 
+  // Safe fallback calculation for profile username cooling cycles
   const daysLeft = user?.usernameSetAt
     ? Math.max(0, 30 - Math.floor(
         (Date.now() - new Date(user.usernameSetAt).getTime())
@@ -28,7 +29,7 @@ export default function ProfilePage() {
     : 0;
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto" }}>
+    <div style={{ maxWidth: 600, margin: "0 auto", paddingBottom: 24 }}>
 
       {/* ── Profile header card ───────────────────────────────── */}
       <div style={{
@@ -68,10 +69,10 @@ export default function ProfilePage() {
             textOverflow: "ellipsis",
             whiteSpace:   "nowrap",
           }}>
-            {user?.username}
+            {user?.username || "Anonymous Student"}
           </p>
           <p style={{
-            margin:   "0 0 4px",
+            margin:   "0 0 8px",
             fontSize: 13,
             color:    c.sub,
           }}>
@@ -122,7 +123,7 @@ export default function ProfilePage() {
           },
           {
             label: "Semesters Done",
-            value: `${doneSems}/8`,
+            value: `${doneSems || 0}/8`,
             color: doneSems === 8 ? c.ok : c.accent,
             icon:  "📚",
           },
@@ -186,7 +187,7 @@ export default function ProfilePage() {
               Username
             </p>
             <p style={{ margin: 0, fontSize: 12, color: c.sub }}>
-              @{user?.username}
+              @{user?.username || "setup_needed"}
               {daysLeft > 0 && (
                 <span style={{ color: c.muted, marginLeft: 6 }}>
                   · Change in {daysLeft}d
@@ -218,7 +219,7 @@ export default function ProfilePage() {
         }}>
           <div>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: c.text }}>
-              Leaderboard
+              Leaderboard status
             </p>
             <p style={{ margin: 0, fontSize: 12, color: c.sub }}>
               {lbOptIn

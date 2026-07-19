@@ -84,13 +84,15 @@ function FloatingCards({ dark }) {
 
 // ── Terminal sequence ─────────────────────────────────────────────────────────
 function Terminal({ onDone, onOpenAbout }) {
-  const [visible, setVisible]   = useState([]);
-  const [allDone, setAllDone]   = useState(false);
+  const [visible, setVisible] = useState([]);
+  const [allDone, setAllDone] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0); // Tracks exactly who gets the cursor
 
   useEffect(() => {
     const timers = LINES.map((line, i) =>
       setTimeout(() => {
         setVisible(prev => [...prev, line]);
+        setActiveIndex(i); // Explicitly state which line is processing
         if (i === LINES.length - 1) setAllDone(true);
       }, line.delay)
     );
@@ -101,26 +103,26 @@ function Terminal({ onDone, onOpenAbout }) {
     <div
       onClick={allDone ? onDone : undefined}
       style={{
-        position:       "fixed",
-        inset:          0,
-        zIndex:         300,
-        background:     "#080c18",
-        display:        "flex",
-        flexDirection:  "column",
+        position: "fixed",
+        inset: 0,
+        zIndex: 300,
+        background: "#080c18",
+        display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
-        padding:        "32px 24px",
-        fontFamily:     "monospace",
-        cursor:         allDone ? "pointer" : "default",
-        overflowY:      "auto",
+        padding: "32px 24px",
+        fontFamily: "monospace",
+        cursor: allDone ? "pointer" : "default",
+        overflowY: "auto",
       }}
     >
       {/* Scanline */}
       <div style={{
-        position:        "absolute",
-        inset:           0,
+        position: "absolute",
+        inset: 0,
         backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px)",
-        pointerEvents:   "none",
-        zIndex:          1,
+        pointerEvents: "none",
+        zIndex: 1,
       }} />
 
       <div style={{ position: "relative", zIndex: 2 }}>
@@ -131,37 +133,37 @@ function Terminal({ onDone, onOpenAbout }) {
                 <button
                   onClick={e => { e.stopPropagation(); onOpenAbout(); }}
                   style={{
-                    background:   "transparent",
-                    border:       "1px solid #10b981",
+                    background: "transparent",
+                    border: "1px solid #10b981",
                     borderRadius: 8,
-                    padding:      "10px 16px",
-                    color:        "#10b981",
-                    fontSize:     13,
-                    fontFamily:   "monospace",
-                    cursor:       "pointer",
-                    display:      "flex",
-                    alignItems:   "center",
-                    gap:          10,
-                    animation:    "termGlow 2.5s ease-in-out infinite",
-                    width:        "100%",
-                    textAlign:    "left",
+                    padding: "10px 16px",
+                    color: "#10b981",
+                    fontSize: 13,
+                    fontFamily: "monospace",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    animation: "termGlow 2.5s ease-in-out infinite",
+                    width: "100%",
+                    textAlign: "left",
                   }}
                 >
                   <span style={{
-                    width:        7,
-                    height:       7,
+                    width: 7,
+                    height: 7,
                     borderRadius: "50%",
-                    background:   "#10b981",
-                    flexShrink:   0,
-                    animation:    "consolePulse 1s step-end infinite",
-                    boxShadow:    "0 0 6px #10b981",
+                    background: "#10b981",
+                    flexShrink: 0,
+                    animation: "consolePulse 1s step-end infinite",
+                    boxShadow: "0 0 6px #10b981",
                   }} />
                   <span>
                     [ Developer Console ]
                     <span style={{
-                      color:      "rgba(16,185,129,0.6)",
+                      color: "rgba(16,185,129,0.6)",
                       marginLeft: 8,
-                      fontSize:   11,
+                      fontSize: 11,
                     }}>
                       — tap to meet the architect
                     </span>
@@ -173,23 +175,24 @@ function Terminal({ onDone, onOpenAbout }) {
 
           return (
             <p key={i} style={{
-              margin:     "3px 0",
-              fontSize:   12,
-              color:      line.color,
+              margin: "3px 0",
+              fontSize: 12,
+              color: line.color,
               lineHeight: 1.7,
               whiteSpace: "pre-wrap",
-              wordBreak:  "break-word",
+              wordBreak: "break-word",
             }}>
               {line.text}
-              {i === visible.length - 1 && !allDone && (
+              {/* FIXED: Explicitly use activeIndex instead of mutating array lengths */}
+              {i === activeIndex && !allDone && (
                 <span style={{
-                  display:       "inline-block",
-                  width:         8,
-                  height:        13,
-                  background:    "#7c83f5",
-                  marginLeft:    2,
+                  display: "inline-block",
+                  width: 8,
+                  height: 13,
+                  background: "#7c83f5",
+                  marginLeft: 2,
                   verticalAlign: "middle",
-                  animation:     "blink 0.7s step-end infinite",
+                  animation: "blink 0.7s step-end infinite",
                 }} />
               )}
             </p>

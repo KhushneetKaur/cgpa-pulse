@@ -1,9 +1,8 @@
+import React from "react";
 import toast from "react-hot-toast";
 import { useAppData } from "../../context/AppDataContext";
-export default function LoginForm({ mounted, signupSuccess, onClose, handleGoogleLogin }) {
-  const { dark, c } = useAppData();
 
-  // Import c from useAppData
+export default function LoginForm({ mounted, signupSuccess, handleGoogleLogin }) {
   const { dark: isDark } = useAppData();
 
   return (

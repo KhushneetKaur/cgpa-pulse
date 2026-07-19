@@ -4,7 +4,6 @@ import { BRANCHES } from "../data/branches";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 
-
 function ElectiveDockInput({ code, value, onSave, dark, c }) {
   const [local, setLocal] = useState(value);
 
@@ -93,14 +92,16 @@ export default function MobileMarksPanel({ branch, selSem }) {
   }
 
   return (
-  <div style={{
-    display:       "flex",
-    flexDirection: "column",
-    gap:           0,
-    width:         "100%",
-    overflowX:     "hidden",
-    boxSizing:     "border-box",
-  }}>
+    <div style={{
+      display:       "flex",
+      flexDirection: "column",
+      gap:           0,
+      width:         "100%",
+      overflowX:     "hidden",
+      boxSizing:     "border-box",
+      /* Safe breathing room so the fixed panel doesn't hide grid items */
+      paddingBottom: "320px", 
+    }}>
 
       {/* ── Live SGPA bar ──────────────────────────────────────── */}
       {liveRes && (
@@ -131,14 +132,13 @@ export default function MobileMarksPanel({ branch, selSem }) {
 
       {/* ── Top grid — all subjects ─────────────────────────────── */}
       <div style={{
-  display:             "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap:                 8,
-  marginBottom:        12,
-  width:               "100%",
-  minWidth:            0,
-   paddingBottom:       300,
-}}>
+        display:             "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap:                 8,
+        marginBottom:        12,
+        width:               "100%",
+        minWidth:            0,
+      }}>
         {subs.map((sub, idx) => {
           const { total, grade, isBL } = getMicroCardData(sub);
           const isActive = idx === activeIdx;
@@ -166,7 +166,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
                 fontFamily:   "inherit",
                 transition:   "all 0.15s",
                 position:     "relative",
-                 minWidth:     0,        
+                minWidth:     0,        
                 overflow:     "hidden", 
                 boxSizing:    "border-box", 
               }}
@@ -197,8 +197,6 @@ export default function MobileMarksPanel({ branch, selSem }) {
               }}>
                 {isBL ? "⚠ " : ""}{getSubjectDisplay(sub)}
               </p>
-
-
 
               {/* Type + total + grade */}
               <div style={{
@@ -244,57 +242,57 @@ export default function MobileMarksPanel({ branch, selSem }) {
 
       {/* ── Bottom dock — input for active subject ──────────────── */}
       <div style={{
-  background:   c.card,
-  border:       `1px solid ${c.accent}44`,
-  borderRadius: "14px 14px 0 0",
-  padding:      "14px 14px 8px",
-  position:     "fixed",
-  bottom:       60,   // above bottom tab bar
-  left:         0,
-  right:        0,
-  zIndex:       120,
-  boxShadow:    dark
-    ? "0 -8px 32px rgba(0,0,0,0.5)"
-    : "0 -8px 32px rgba(109,40,217,0.1)",
-}}>
+        background:   c.card,
+        border:       `1px solid ${c.accent}44`,
+        borderRadius: "14px 14px 0 0",
+        padding:      "14px 14px 8px",
+        position:     "fixed",
+        bottom:       60,   // above bottom tab bar
+        left:         0,
+        right:        0,
+        zIndex:       120,
+        boxShadow:    dark
+          ? "0 -8px 32px rgba(0,0,0,0.5)"
+          : "0 -8px 32px rgba(109,40,217,0.1)",
+      }}>
 
         {/* Subject name + nav */}
-       <div style={{
-  display:     "flex",
-  alignItems:  "center",
-  marginBottom: 12,
-  gap:         6,
-}}>
-  <button
-    onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
-    disabled={activeIdx === 0}
-    style={{
-      ...btn("ghost"),
-      padding:    "5px 10px",
-      fontSize:   12,
-      opacity:    activeIdx === 0 ? 0.3 : 1,
-      flexShrink: 0,   // ← never shrinks
-      whiteSpace: "nowrap",
-    }}
-  >
-    ← Prev
-  </button>
+        <div style={{
+          display:     "flex",
+          alignItems:  "center",
+          marginBottom: 12,
+          gap:         6,
+        }}>
+          <button
+            onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
+            disabled={activeIdx === 0}
+            style={{
+              ...btn("ghost"),
+              padding:    "5px 10px",
+              fontSize:   12,
+              opacity:    activeIdx === 0 ? 0.3 : 1,
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            ← Prev
+          </button>
 
-  <div style={{
-    textAlign:  "center",
-    flex:       1,
-    minWidth:   0,     // ← allows text truncation
-    padding:    "0 2px",
-  }}>
-    <p style={{
-      margin:       0,
-      fontSize:     12,
-      fontWeight:   700,
-      color:        c.text,
-      overflow:     "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace:   "nowrap",
-    }}>
+          <div style={{
+            textAlign:  "center",
+            flex:       1,
+            minWidth:   0,
+            padding:    "0 2px",
+          }}>
+            <p style={{
+              margin:       0,
+              fontSize:     12,
+              fontWeight:   700,
+              color:        c.text,
+              overflow:     "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace:   "nowrap",
+            }}>
               {getSubjectDisplay(activeSub)}
             </p>
             <p style={{
@@ -316,7 +314,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
               padding:  "5px 10px",
               fontSize: 12,
               opacity:  activeIdx === subs.length - 1 ? 0.3 : 1,
-              flexShrink: 0,    // ← add this
+              flexShrink: 0,
               whiteSpace: "nowrap",
             }}
           >
@@ -324,68 +322,68 @@ export default function MobileMarksPanel({ branch, selSem }) {
           </button>
         </div>
 
-{activeSub.elective && (
-  <div style={{ marginBottom: 10 }}>
-    {(() => {
-      const opts = ELECTIVE_OPTIONS[branch]?.[activeSub.code] || [];
-      const electiveName = bElectiveNames[activeSub.code] || "";
-      const isCustom = electiveName && !opts.includes(electiveName);
-      const dropVal  = isCustom ? "__other__" : electiveName;
+        {activeSub.elective && (
+          <div style={{ marginBottom: 10 }}>
+            {(() => {
+              const opts = ELECTIVE_OPTIONS[branch]?.[activeSub.code] || [];
+              const electiveName = bElectiveNames[activeSub.code] || "";
+              const isCustom = electiveName && !opts.includes(electiveName);
+              const dropVal  = isCustom ? "__other__" : electiveName;
 
-      return (
-        <>
-          <p style={{
-            margin:   "0 0 4px",
-            fontSize: 10,
-            color:    c.sub,
-            fontWeight: 600,
-          }}>
-            Select Subject Name
-          </p>
-          <select
-            value={dropVal}
-            onChange={e => {
-              const val = e.target.value;
-              setElectiveName(
-                activeSub.code,
-                val === "__other__" ? "__other__" : val
+              return (
+                <>
+                  <p style={{
+                    margin:   "0 0 4px",
+                    fontSize: 10,
+                    color:    c.sub,
+                    fontWeight: 600,
+                  }}>
+                    Select Subject Name
+                  </p>
+                  <select
+                    value={dropVal}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setElectiveName(
+                        activeSub.code,
+                        val === "__other__" ? "__other__" : val
+                      );
+                    }}
+                    style={{
+                      width:        "100%",
+                      boxSizing:    "border-box",
+                      padding:      "8px 10px",
+                      fontSize:     13,
+                      fontFamily:   "inherit",
+                      borderRadius: 10,
+                      border:       `1.5px solid ${c.accent}66`,
+                      background:   dark ? "rgba(255,255,255,0.06)" : "#fff",
+                      color:        c.text,
+                      outline:      "none",
+                      marginBottom: isCustom ? 6 : 0,
+                    }}
+                  >
+                    <option value="">— Select subject —</option>
+                    {opts.map(o => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                    <option value="__other__">✏ Other (type below)</option>
+                  </select>
+
+                  {(electiveName === "__other__" || isCustom) && (
+                    <ElectiveDockInput
+                      code={activeSub.code}
+                      value={electiveName === "__other__" ? "" : electiveName}
+                      onSave={setElectiveName}
+                      dark={dark}
+                      c={c}
+                    />
+                  )}
+                </>
               );
-            }}
-            style={{
-              width:        "100%",
-              boxSizing:    "border-box",
-              padding:      "8px 10px",
-              fontSize:     13,
-              fontFamily:   "inherit",
-              borderRadius: 10,
-              border:       `1.5px solid ${c.accent}66`,
-              background:   dark ? "rgba(255,255,255,0.06)" : "#fff",
-              color:        c.text,
-              outline:      "none",
-              marginBottom: isCustom ? 6 : 0,
-            }}
-          >
-            <option value="">— Select subject —</option>
-            {opts.map(o => (
-              <option key={o} value={o}>{o}</option>
-            ))}
-            <option value="__other__">✏ Other (type below)</option>
-          </select>
-
-            {(electiveName === "__other__" || isCustom) && (
-  <ElectiveDockInput
-    code={activeSub.code}
-    value={electiveName === "__other__" ? "" : electiveName}
-    onSave={setElectiveName}
-    dark={dark}
-    c={c}
-  />
-)}
-        </>
-      );
-    })()}
-  </div>
-)}
+            })()}
+          </div>
+        )}
 
         {/* Inputs */}
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
@@ -403,6 +401,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
             <input
               ref={intRef}
               type="number"
+              inputMode="decimal"
               min="0"
               max={mx.int}
               value={entry.int ?? ""}
@@ -452,6 +451,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
             <input
               ref={extRef}
               type="number"
+              inputMode="decimal"
               min="0"
               max={mx.ext}
               value={entry.ext ?? ""}
@@ -461,7 +461,6 @@ export default function MobileMarksPanel({ branch, selSem }) {
               onKeyDown={e => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  // Move to next subject
                   if (activeIdx < subs.length - 1) {
                     setActiveIdx(i => i + 1);
                     setTimeout(() => intRef.current?.focus(), 100);

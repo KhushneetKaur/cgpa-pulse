@@ -1,6 +1,6 @@
+import React, { useState, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
-import { useState } from "react";
 import LeaderboardOptInModal from "../components/LeaderboardOptInModal";
 
 export default function LeaderboardPage() {
@@ -11,14 +11,14 @@ export default function LeaderboardPage() {
   } = useAppData();
 
   const [showOptInModal, setShowOptInModal] = useState(false);
-  const [optOutErr,      setOptOutErr]      = useState("");
+  const [optOutErr, setOptOutErr] = useState("");
+
+  const pageContainerStyle = useMemo(() => cardSty(), [cardSty]);
 
   async function handleToggle() {
     if (!lbOptIn) {
-      // Opting IN — show confirmation first
       setShowOptInModal(true);
     } else {
-      // Opting OUT — try, server enforces 30-day lock
       try {
         setOptOutErr("");
         await toggleLbOptIn();
@@ -36,21 +36,22 @@ export default function LeaderboardPage() {
       setOptOutErr(err?.message || "Failed to opt in");
     }
   }
+
   return (
-    <div style={cardSty()}>
+    <div style={pageContainerStyle}>
 
       {/* Header row */}
       <div
-  className="lb-header-row"
-  style={{
-    display:        "flex",
-    justifyContent: "space-between",
-    alignItems:     "flex-start",
-    marginBottom:   16,
-    flexWrap:       "wrap",
-    gap:            10,
-  }}
->
+        className="lb-header-row"
+        style={{
+          display:        "flex",
+          justifyContent: "space-between",
+          alignItems:     "flex-start",
+          marginBottom:   16,
+          flexWrap:       "wrap",
+          gap:            10,
+        }}
+      >
         <div>
           <p style={{
             margin:     0,
@@ -70,48 +71,48 @@ export default function LeaderboardPage() {
         </div>
 
         <div>
-  <button
-    onClick={handleToggle}
-    style={{
-      ...btn("ghost"),
-      fontSize:    12,
-      borderColor: lbOptIn ? c.ok : c.border,
-      color:       lbOptIn ? c.ok : c.sub,
-      fontWeight:  lbOptIn ? 600 : 400,
-    }}
-  >
-    {lbOptIn
-      ? "✓ You're on the board · Opt out"
-      : "Add my CGPA to the board"}
-  </button>
-{optOutErr && (
-  <p style={{
-    margin:     "6px 0 0",
-    fontSize:   11,
-    color:      c.bad,
-    fontWeight: 500,
-  }}>
-    {optOutErr}
-  </p>
-)}
-</div>
+          <button
+            onClick={handleToggle}
+            style={{
+              ...btn("ghost"),
+              fontSize:    12,
+              borderColor: lbOptIn ? c.ok : c.border,
+              color:       lbOptIn ? c.ok : c.sub,
+              fontWeight:  lbOptIn ? 600 : 400,
+            }}
+          >
+            {lbOptIn
+              ? "✓ You're on the board · Opt out"
+              : "Add my CGPA to the board"}
+          </button>
+          {optOutErr && (
+            <p style={{
+              margin:     "6px 0 0",
+              fontSize:   11,
+              color:      c.bad,
+              fontWeight: 500,
+            }}>
+              {optOutErr}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Your current standing */}
       {cgpa && (
         <div
-  className="lb-your-standing"
-  style={{
-    padding:      "10px 14px",
-    background:   c.accentLt,
-    border:       `1px solid ${c.accentTxt}44`,
-    borderRadius: 8,
-    marginBottom: 14,
-    display:      "flex",
-    alignItems:   "center",
-    gap:          12,
-  }}
->
+          className="lb-your-standing"
+          style={{
+            padding:      "10px 14px",
+            background:   c.accentLt,
+            border:       `1px solid ${c.accentTxt}44`,
+            borderRadius: 8,
+            marginBottom: 14,
+            display:      "flex",
+            alignItems:   "center",
+            gap:          12,
+          }}
+        >
           <div>
             <p style={{
               margin:   0,
@@ -169,7 +170,8 @@ export default function LeaderboardPage() {
           display:       "flex",
           flexDirection: "column",
           gap:           6,
-        }}>
+        }}
+      >
           {lbData.map((entry, idx) => {
             const isMe  = entry.username === user?.username;
             const medal = idx === 0 ? "🥇"
@@ -193,49 +195,48 @@ export default function LeaderboardPage() {
       )}
       
       {showOptInModal && (
-  <LeaderboardOptInModal
-    dark={dark}
-    c={c}
-    btn={btn}
-    onConfirm={handleConfirmOptIn}
-    onCancel={() => setShowOptInModal(false)}
-  />
-)}
+        <LeaderboardOptInModal
+          dark={dark}
+          c={c}
+          btn={btn}
+          onConfirm={handleConfirmOptIn}
+          onCancel={() => setShowOptInModal(false)}
+        />
+      )}
     </div>
   );
 }
 
-// ─── Individual leaderboard row ───────────────────────────────────────────────
-function LeaderboardRow({ entry, idx, isMe, medal, c, scoreClr }) {
+// ─── Individual leaderboard row (Memoized for high render efficiency) ───────────
+const LeaderboardRow = React.memo(function LeaderboardRow({ entry, idx, isMe, medal, c, scoreClr }) {
   const branchInfo = BRANCHES[entry.branch];
 
   return (
     <div
-  className="lb-row"
-  style={{
-    display:             "grid",
-    gridTemplateColumns: "40px 1fr auto auto",
-    gap:                 12,
-    alignItems:          "center",
-    padding:             "10px 14px",
-    background:          isMe ? c.accentLt : c.hover,
-    borderRadius:        8,
-    border:              `1px solid ${isMe ? `${c.accentTxt}44` : c.border}`,
-  }}
->
+      className="lb-row"
+      style={{
+        display:             "grid",
+        gridTemplateColumns: "40px 1fr auto auto",
+        gap:                 12,
+        alignItems:          "center",
+        padding:             "10px 14px",
+        background:          isMe ? c.accentLt : c.hover,
+        borderRadius:        8,
+        border:              `1px solid ${isMe ? `${c.accentTxt}44` : c.border}`,
+      }}
+    >
+      {/* Rank */}
+      <span className="lb-rank" style={{
+        fontSize:   medal ? 18 : 13,
+        textAlign:  "center",
+        color:      medal ? undefined : c.muted,
+        fontWeight: medal ? undefined : 600,
+      }}>
+        {medal || `#${idx + 1}`}
+      </span>
 
-  {/* Rank */}
-  <span className="lb-rank" style={{
-    fontSize:   medal ? 18 : 13,
-    textAlign:  "center",
-    color:      medal ? undefined : c.muted,
-    fontWeight: medal ? undefined : 600,
-  }}>
-    {medal || `#${idx + 1}`}
-  </span>
-
-  {/* Username + branch */}
-  <div className="lb-info">
+      {/* Username + branch */}
+      <div className="lb-info">
         <p style={{
           margin:     0,
           fontSize:   13,
@@ -263,28 +264,28 @@ function LeaderboardRow({ entry, idx, isMe, medal, c, scoreClr }) {
         </p>
       </div>
 
-     {/* Branch badge */}
-<span className="lb-badge" style={{
-  fontSize:     11,
-  color:        branchInfo?.color || c.sub,
-  background:   `${branchInfo?.color || c.border}18`,
-  border:       `1px solid ${branchInfo?.color || c.border}44`,
-  borderRadius: 6,
-  padding:      "2px 8px",
-  fontWeight:   600,
-  whiteSpace:   "nowrap",
-}}>
-  {branchInfo?.short || entry.branch}
-</span>
+      {/* Branch badge */}
+      <span className="lb-badge" style={{
+        fontSize:     11,
+        color:        branchInfo?.color || c.sub,
+        background:   `${branchInfo?.color || c.border}18`,
+        border:       `1px solid ${branchInfo?.color || c.border}44`,
+        borderRadius: 6,
+        padding:      "2px 8px",
+        fontWeight:   600,
+        whiteSpace:   "nowrap",
+      }}>
+        {branchInfo?.short || entry.branch}
+      </span>
 
       {/* CGPA */}
       <span className="lb-cgpa" style={{
-  fontSize:   18,
-  fontWeight: 700,
-  color:      scoreClr(entry.cgpa),
-}}>
-  {entry.cgpa}
-</span>
+        fontSize:   18,
+        fontWeight: 700,
+        color:      scoreClr(entry.cgpa),
+      }}>
+        {entry.cgpa}
+      </span>
     </div>
   );
-}
+});

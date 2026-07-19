@@ -7,60 +7,56 @@ import SkeletonCard from "./SkeletonCard";
 
 export default function SummaryCards() {
   const {
-  cgpa,
-  doneSems,
-  selSem,
-  liveRes,
-  totalBacklogs,
-  c,
-  dark,
-  scoreClr,
-  authLoading,
-} = useAppData()
+    cgpa,
+    doneSems,
+    selSem,
+    liveRes,
+    totalBacklogs,
+    c,
+    dark,
+    scoreClr,
+    authLoading,
+  } = useAppData();
 
   const percentage = cgpaToPercentage(cgpa);
-if (authLoading) {
-  return (
-   <div
-  className="summary-cards-grid"
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
-    gap: 10,
-    marginBottom: 20,
-  }}
->
-      {[1, 2, 3, 4].map(i => (
-        <SkeletonCard key={i} dark={dark} rows={2} height={88} />
-      ))}
-    </div>
-  );
-}
+
+  if (authLoading) {
+    return (
+      <div
+        className="summary-cards-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(145px, 1fr))",
+          gap: 10,
+          marginBottom: 20,
+        }}
+      >
+        {[1, 2, 3, 4].map(i => (
+          <SkeletonCard key={i} dark={dark} rows={2} height={88} />
+        ))}
+      </div>
+    );
+  }
+
   const cards = [
     {
       label: "Overall CGPA",
       value: cgpa || "—",
       sub: cgpa ? `${percentage}% equivalent` : null,
-      hi: cgpa,
+      hi: cgpa ? true : false,
       hiColor: cgpa ? scoreClr(cgpa) : c.text,
     },
     {
       label: "Semesters Saved",
       value: `${doneSems} / 8`,
-      sub:
-        doneSems === 8
-          ? "All semesters complete 🎉"
-          : null,
-      hi: null,
+      sub: doneSems === 8 ? "All semesters complete 🎉" : null,
+      hi: false,
     },
     {
       label: "Backlogs",
       value: totalBacklogs > 0 ? totalBacklogs : "None",
-      sub:
-        totalBacklogs > 0
-          ? "Tap Backlogs tab to view"
-          : "Clean record ✓",
-      hi: null,
+      sub: totalBacklogs > 0 ? "Tap Backlogs tab to view" : "Clean record ✓",
+      hi: false,
       red: totalBacklogs > 0,
     },
     {
@@ -77,10 +73,8 @@ if (authLoading) {
         : selSem
         ? "Enter marks to preview"
         : "Select a semester",
-      hi: liveRes?.sgpa,
-      hiColor: liveRes
-        ? scoreClr(liveRes.sgpa) // remove `c.purple` reference
-        : c.text,
+      hi: liveRes?.sgpa ? true : false,
+      hiColor: liveRes ? scoreClr(liveRes.sgpa) : c.text,
       partial: liveRes?.isPartial,
     },
   ];
@@ -104,16 +98,18 @@ if (authLoading) {
 
 // ─── Individual card ──────────────────────────────────────────────────────────
 function Card({ card, c }) {
+  // Dynamically matches the background boundary to the text's score color
   const borderColor = card.red
     ? `${c.bad}44`
     : card.hi
-    ? `${c.accentTxt}44`
+    ? `${card.hiColor}33`
     : c.border;
 
+  // Gives CGPA and SGPA distinct background glows based on performance
   const bgColor = card.red
     ? `${c.bad}11`
     : card.hi
-    ? c.accentLt
+    ? `${card.hiColor}0c` // Elegant 4-5% alpha tint matching their actual grade score color
     : c.hover;
 
   return (
@@ -123,6 +119,7 @@ function Card({ card, c }) {
         borderRadius: 10,
         padding: "12px 14px",
         border: `1px solid ${borderColor}`,
+        transition: "all 0.2s ease-in-out",
       }}
     >
       {/* Label */}
@@ -143,9 +140,7 @@ function Card({ card, c }) {
           fontSize: 22,
           fontWeight: 700,
           margin: 0,
-          color: card.red
-            ? c.bad
-            : card.hiColor || c.text,
+          color: card.red ? c.bad : card.hiColor || c.text,
         }}
       >
         {card.value}
@@ -160,11 +155,11 @@ function Card({ card, c }) {
             color: card.red
               ? c.bad
               : card.partial
-              ? c.bad   // or any existing color; was `c.purple`
+              ? c.accentTxt // Replaced bad/purple with your crisp, readable theme accent text
               : card.hi
-              ? c.ok
+              ? card.hiColor // Subtext follows score color for perfect matching
               : c.muted,
-            fontWeight: card.hi && !card.partial ? 500 : 400,
+            fontWeight: card.hi ? 500 : 400,
           }}
         >
           {card.sub}

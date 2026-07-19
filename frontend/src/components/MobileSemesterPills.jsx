@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useAppData } from "../context/AppDataContext";
 
 export default function MobileSemesterPills() {
@@ -8,19 +9,38 @@ export default function MobileSemesterPills() {
     c, dark, scoreClr,
   } = useAppData();
 
+  // Create references to individual pill elements for dynamic centering
+  const pillRefs = useRef({});
+
+  useEffect(() => {
+    if (selSem && pillRefs.current[selSem]) {
+      pillRefs.current[selSem].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [selSem]);
+
   return (
-    <div style={{
-      marginBottom: 12,
-    }}>
-      {/* Semester pills */}
+    <div style={{ marginBottom: 12 }}>
+      {/* ── Semester pills row ─────────────────────────────────── */}
       <div style={{
-        display:        "flex",
-        gap:            8,
-        overflowX:      "auto",
-        paddingBottom:  6,
-        scrollbarWidth: "none",
-        msOverflowStyle: "none",
+        display:         "flex",
+        gap:             8,
+        overflowX:       "auto",
+        paddingBottom:   6,
+        WebkitOverflowScrolling: "touch", // Smooth iOS scrolling inertial momentum
+        scrollbarWidth:  "none",          // Firefox
+        msOverflowStyle: "none",          // IE/Edge
       }}>
+        {/* Modern Webkit Scrollbar Hide */}
+        <style>{`
+          div::-webkit-scrollbar {
+            display: none !important;
+          }
+        `}</style>
+
         {semKeys.map(s => {
           const saved      = bHist[s]?.sgpa;
           const isSelected = selSem === s;
@@ -29,6 +49,7 @@ export default function MobileSemesterPills() {
           return (
             <button
               key={s}
+              ref={el => { pillRefs.current[s] = el; }}
               onClick={() => selectSem(s)}
               style={{
                 flexShrink:   0,
@@ -50,7 +71,7 @@ export default function MobileSemesterPills() {
             >
               <span style={{
                 fontSize:   13,
-                fontWeight: isSelected ? 700 : 400,
+                fontWeight: isSelected ? 700 : 500,
                 color:      isSelected ? c.accent : c.text,
                 whiteSpace: "nowrap",
               }}>
@@ -84,12 +105,13 @@ export default function MobileSemesterPills() {
         })}
       </div>
 
-      {/* Quick SGPA row */}
+      {/* ── Sub-actions footer ─────────────────────────────────── */}
       <div style={{
         display:    "flex",
-        gap:        6,
+        gap:        8,
         marginTop:  6,
-        flexWrap:   "wrap",
+        alignItems: "center",
+        flexWrap:   "nowrap", 
       }}>
         {selSem && (
           <button
@@ -103,6 +125,8 @@ export default function MobileSemesterPills() {
               color:        c.sub,
               cursor:       "pointer",
               fontFamily:   "inherit",
+              whiteSpace:   "nowrap",
+              flexShrink:   0,
             }}
           >
             ⚡ Quick SGPA
@@ -111,10 +135,12 @@ export default function MobileSemesterPills() {
         <span style={{
           fontSize:   10,
           color:      c.muted,
-          alignSelf:  "center",
-          lineHeight: 1.5,
+          lineHeight: 1.3,
+          overflow:   "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         }}>
-          ⚠ = backlog · ⚡ = save SGPA directly
+          ⚠ = backlog · ⚡ = direct override
         </span>
       </div>
     </div>

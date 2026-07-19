@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 
 // CGPA reference table for the converter
@@ -24,11 +25,14 @@ export default function TargetPage() {
     c, inp, btn, cardSty, scoreClr,
   } = useAppData();
 
+  // Cache static card style function valuations to prevent computational re-evaluations
+  const computedCardStyle = useMemo(() => cardSty(), [cardSty]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
       {/* ── Target CGPA calculator ────────────────────────────────── */}
-      <div style={cardSty()}>
+      <div style={computedCardStyle}>
         <p style={{
           margin:     "0 0 4px",
           fontSize:   15,
@@ -64,14 +68,14 @@ export default function TargetPage() {
 
         {/* Input row */}
         <div
-  className="target-input-row"
-  style={{
-    display:             "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap:                 12,
-    marginBottom:        14,
-  }}
->
+          className="target-input-row"
+          style={{
+            display:             "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap:                 12,
+            marginBottom:        14,
+          }}
+        >
           {/* Current CGPA — read only */}
           <div>
             <p style={{
@@ -172,7 +176,7 @@ export default function TargetPage() {
       </div>
 
       {/* ── Percentage converter ──────────────────────────────────── */}
-      <div style={cardSty()}>
+      <div style={computedCardStyle}>
         <p style={{
           margin:     "0 0 4px",
           fontSize:   15,
@@ -193,18 +197,18 @@ export default function TargetPage() {
         {/* Your CGPA highlight */}
         {cgpa && (
           <div
-  className="target-cgpa-highlight"
-  style={{
-    padding:      "12px 14px",
-    background:   c.accentLt,
-    border:       `1px solid ${c.accentTxt}44`,
-    borderRadius: 8,
-    marginBottom: 12,
-    display:      "flex",
-    alignItems:   "center",
-    gap:          12,
-  }}
->
+            className="target-cgpa-highlight"
+            style={{
+              padding:      "12px 14px",
+              background:   c.accentLt,
+              border:       `1px solid ${c.accentTxt}44`,
+              borderRadius: 8,
+              marginBottom: 12,
+              display:      "flex",
+              alignItems:   "center",
+              gap:          12,
+            }}
+          >
             <div>
               <p style={{
                 margin:   0,
@@ -250,13 +254,13 @@ export default function TargetPage() {
 
         {/* Reference table */}
         <div
-  className="target-pct-table"
-  style={{
-    display:             "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-    gap:                 6,
-  }}
->
+          className="target-pct-table"
+          style={{
+            display:             "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+            gap:                 6,
+          }}
+        >
           {CGPA_PERCENTAGE_REFS.map(({ cgpa: cg, pct }) => (
             <div
               key={cg}
@@ -294,8 +298,8 @@ export default function TargetPage() {
   );
 }
 
-// ─── Target result display ────────────────────────────────────────────────────
-function TargetResult({ result, c, scoreClr }) {
+// ─── Target result display (Memoized to isolate calculator recalculation effects) ───
+const TargetResult = React.memo(function TargetResult({ result, c, scoreClr }) {
 
   // Error state
   if (result.error) {
@@ -353,17 +357,17 @@ function TargetResult({ result, c, scoreClr }) {
 
       {/* ── 3-column summary header ───────────────────────────────── */}
       <div
-  className="target-result-grid"
-  style={{
-    display:    "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    background: isAchievable
-                  ? (c.accentLt)
-                  : `${c.bad}11`,
-    padding:    "16px",
-    gap:        12,
-  }}
->
+        className="target-result-grid"
+        style={{
+          display:    "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          background: isAchievable
+                      ? (c.accentLt)
+                      : `${c.bad}11`,
+          padding:    "16px",
+          gap:        12,
+        }}
+      >
         {/* Current */}
         <div>
           <p style={{
@@ -528,39 +532,39 @@ function TargetResult({ result, c, scoreClr }) {
 
             {/* Difficulty warnings */}
             {parseFloat(result.needed) >= 9.5 && (
-  <div style={{
-    padding:      "8px 12px",
-    background:   parseFloat(result.maxReachable) >= parseFloat(result.target)
-      ? `${c.warn}11`
-      : `${c.bad}11`,
-    border:       `1px solid ${
-      parseFloat(result.maxReachable) >= parseFloat(result.target)
-        ? `${c.warn}33`
-        : `${c.bad}33`
-    }`,
-    borderRadius: 8,
-    fontSize:     12,
-    color:        parseFloat(result.maxReachable) >= parseFloat(result.target)
-      ? c.warn
-      : c.bad,
-  }}>
-    {parseFloat(result.maxReachable) >= parseFloat(result.target) ? (
-      <>
-        ⚡ Technically achievable but extremely demanding — you need{" "}
-        <strong>{result.needed}</strong> average SGPA, meaning near-perfect
-        scores in every remaining semester. Your ceiling with perfect scores
-        is <strong>{result.maxReachable}</strong> — just above your target.
-      </>
-    ) : (
-      <>
-        ⚠ Not achievable from your current position. Even scoring a perfect
-        10 in all remaining semesters gives a maximum CGPA of{" "}
-        <strong>{result.maxReachable}</strong>.
-        Lower your target to {result.maxReachable} or below.
-      </>
-    )}
-  </div>
-)}
+              <div style={{
+                padding:      "8px 12px",
+                background:   parseFloat(result.maxReachable) >= parseFloat(result.target)
+                  ? `${c.warn}11`
+                  : `${c.bad}11`,
+                border:       `1px solid ${
+                  parseFloat(result.maxReachable) >= parseFloat(result.target)
+                    ? `${c.warn}33`
+                    : `${c.bad}33`
+                }`,
+                borderRadius: 8,
+                fontSize:     12,
+                color:        parseFloat(result.maxReachable) >= parseFloat(result.target)
+                  ? c.warn
+                  : c.bad,
+              }}>
+                {parseFloat(result.maxReachable) >= parseFloat(result.target) ? (
+                  <>
+                    ⚡ Technically achievable but extremely demanding — you need{" "}
+                    <strong>{result.needed}</strong> average SGPA, meaning near-perfect
+                    scores in every remaining semester. Your ceiling with perfect scores
+                    is <strong>{result.maxReachable}</strong> — just above your target.
+                  </>
+                ) : (
+                  <>
+                    ⚠ Not achievable from your current position. Even scoring a perfect
+                    10 in all remaining semesters gives a maximum CGPA of{" "}
+                    <strong>{result.maxReachable}</strong>.
+                    Lower your target to {result.maxReachable} or below.
+                  </>
+                )}
+              </div>
+            )}
 
             {parseFloat(result.needed) >= 8.5
               && parseFloat(result.needed) < 9.5 && (
@@ -605,4 +609,4 @@ function TargetResult({ result, c, scoreClr }) {
       </div>
     </div>
   );
-}
+});

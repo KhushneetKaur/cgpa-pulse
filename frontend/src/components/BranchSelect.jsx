@@ -1,63 +1,60 @@
+import { useState } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
 import SkeletonCard from "./SkeletonCard";
 
-
 export default function BranchSelect() {
   const { setBranch, hist, c, dark, cardSty, authLoading } = useAppData();
 
-if (authLoading) {
-  return (
-    <div style={{
-      ...cardSty(),
-      padding: "2.5rem 2rem",
-    }}>
-      {/* Fake heading bars */}
-      <div style={{
-        display:        "flex",
-        flexDirection:  "column",
-        alignItems:     "center",
-        gap:            10,
-        marginBottom:   28,
-      }}>
+  if (authLoading) {
+    return (
+      <div style={{ ...cardSty(), padding: "2.5rem 2rem" }}>
+        {/* Fake heading bars */}
         <div style={{
-          width:        56,
-          height:       56,
-          borderRadius: "50%",
-          background:   dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
-        }} />
-        <div style={{
-          width:        180,
-          height:       16,
-          borderRadius: 8,
-          background:   dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
-        }} />
-        <div style={{
-          width:        280,
-          height:       12,
-          borderRadius: 6,
-          background:   dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
-        }} />
-      </div>
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          gap:            10,
+          marginBottom:   28,
+        }}>
+          <div style={{
+            width:        56,
+            height:       56,
+            borderRadius: "50%",
+            background:   dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
+          }} />
+          <div style={{
+            width:        180,
+            height:       16,
+            borderRadius: 8,
+            background:   dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
+          }} />
+          <div style={{
+            width:        280,
+            height:       12,
+            borderRadius: 6,
+            background:   dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+          }} />
+        </div>
 
-      {/* Fake branch cards grid */}
-      <div style={{
-        display:             "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))",
-        gap:                 10,
-        maxWidth:            620,
-        margin:              "0 auto",
-        position:            "relative",
-        overflow:            "hidden",
-      }}>
-        {[1, 2, 3, 4, 5, 6].map(i => (
-          <SkeletonCard key={i} dark={dark} rows={2} height={100} />
-        ))}
+        {/* Fake branch cards grid */}
+        <div style={{
+          display:             "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))",
+          gap:                 10,
+          maxWidth:            620,
+          margin:              "0 auto",
+          position:            "relative",
+          overflow:            "hidden",
+        }}>
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <SkeletonCard key={i} dark={dark} rows={2} height={100} />
+          ))}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div style={{
@@ -65,7 +62,6 @@ if (authLoading) {
       textAlign: "center",
       padding:   "2.5rem 2rem",
     }}>
-
       {/* Logo */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
         <MRSPTULogo size={56} />
@@ -86,21 +82,20 @@ if (authLoading) {
         margin:       "0 0 28px",
         lineHeight:   1.5,
       }}>
-        Choose your engineering discipline to load the correct
-        subjects and marks scheme.
+        Choose your engineering discipline to load the correct subjects and marks scheme.
       </p>
 
       {/* Branch grid */}
       <div
-  className="branch-select-grid"
-  style={{
-    display:             "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))",
-    gap:                 10,
-    maxWidth:            620,
-    margin:              "0 auto",
-  }}
->
+        className="branch-select-grid"
+        style={{
+          display:             "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))",
+          gap:                 10,
+          maxWidth:            620,
+          margin:              "0 auto",
+        }}
+      >
         {Object.entries(BRANCHES).map(([key, b]) => {
           const savedSems = hist[key]
             ? Object.values(hist[key]).filter(s => s.sgpa).length
@@ -129,8 +124,7 @@ if (authLoading) {
         marginTop:  24,
         lineHeight: 1.5,
       }}>
-        You can switch between branches anytime from the top bar.
-        Progress is saved separately for each branch.
+        You can switch between branches anytime from the top bar. Progress is saved separately for each branch.
       </p>
     </div>
   );
@@ -138,6 +132,8 @@ if (authLoading) {
 
 // ─── Individual branch card ───────────────────────────────────────────────────
 function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   const hasProgress = savedSems > 0;
   const isComplete  = savedSems === totalSems;
   const progress    = Math.round((savedSems / totalSems) * 100);
@@ -145,10 +141,12 @@ function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
   return (
     <button
       onClick={onSelect}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         padding:       "16px 12px",
-        background:    c.hover,
-        border:        `2px solid ${c.border}`,
+        background:    isHovered ? `${branch.color}11` : c.hover,
+        border:        `2px solid ${isHovered ? branch.color : c.border}`,
         borderRadius:  10,
         cursor:        "pointer",
         display:       "flex",
@@ -157,14 +155,6 @@ function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
         gap:           6,
         transition:    "border-color 0.15s, background 0.15s",
         width:         "100%",
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = branch.color;
-        e.currentTarget.style.background  = `${branch.color}11`;
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = c.border;
-        e.currentTarget.style.background  = c.hover;
       }}
     >
       {/* Branch short name */}
@@ -214,7 +204,7 @@ function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
           }}>
             {isComplete
               ? "All semesters saved ✓"
-              : `${savedSems} / ${totalSems} semesters saved`}
+              : `${savedSems} / ${totalSems} saved`}
           </span>
         </div>
       )}
