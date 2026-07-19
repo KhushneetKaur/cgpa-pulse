@@ -297,7 +297,8 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark }) {
   fontStyle:            "italic",
   letterSpacing:        -2,
   lineHeight:           1.1,         
-  paddingBottom:        4,           
+  paddingBottom:        4,    
+  paddingRight:         "0.22em",       
   background:           dark
     ? "linear-gradient(135deg,#c084fc,#67e8f9)"
     : "linear-gradient(135deg,#7c3aed,#10b981)",
