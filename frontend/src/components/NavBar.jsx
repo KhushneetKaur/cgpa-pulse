@@ -43,6 +43,8 @@ export default function NavBar() {
         borderBottom: `1px solid ${dark
           ? "rgba(129,140,248,0.15)"
           : "rgba(109,40,217,0.1)"}`,
+          position: "relative",   
+          zIndex:   2,        
       }}>
         <div
           className="navbar-top-grid"
@@ -489,6 +491,8 @@ export default function NavBar() {
             borderBottom: `1px solid ${dark
               ? "rgba(129,140,248,0.1)"
               : "rgba(109,40,217,0.08)"}`,
+              position: "relative",   
+              zIndex:   1,
           }}
         >
           <div
