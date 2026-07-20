@@ -15,7 +15,7 @@ import SummaryCards from "./components/SummaryCards";
 import MRSPTULogo from "./components/MRSPTULogo";
 import UsernameSetupModal from "./components/UsernameSetupModal";
 import BottomTabBar from "./components/BottomTabBar";
-import OnboardingModal from "./components/OnboardingModal";
+import OnboardingModal from "./components/OnboardingModal.jsx";
 
 // Code Splitting Definitions
 const LoginPage = React.lazy(() => import("./pages/login/LoginPage"));
