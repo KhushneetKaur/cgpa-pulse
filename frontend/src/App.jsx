@@ -15,6 +15,7 @@ import SummaryCards from "./components/SummaryCards";
 import MRSPTULogo from "./components/MRSPTULogo";
 import UsernameSetupModal from "./components/UsernameSetupModal";
 import BottomTabBar from "./components/BottomTabBar";
+import OnboardingModal from "./components/OnboardingModal";
 
 // Code Splitting Definitions
 const LoginPage = React.lazy(() => import("./pages/login/LoginPage"));
@@ -77,38 +78,36 @@ function Shell() {
 }
 
 function AppLayout() {
-  const { user, branch, tab, c, dark, inp, btn, setUser } = useAppData();
-  const [showUsernameModal, setShowUsernameModal] = useState(false);
-  const [hasShownUsernameModal, setHasShownUsernameModal] = useState(false);
+  const {
+    user, branch, tab,
+    c, dark, inp, btn,
+    setUser, setBranch,
+  } = useAppData();
 
-  // Background Preloading Execution
+  const [showOnboarding,    setShowOnboarding]    = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
+
   useEffect(() => {
-    if (branch) {
-      const idleCallback = window.requestIdleCallback || ((cb) => setTimeout(cb, 1000));
-      
-      idleCallback(() => {
-        preloadComponent(() => import("./pages/CalculatorPage"));
-        preloadComponent(() => import("./pages/HistoryPage"));
-        preloadComponent(() => import("./pages/TargetPage"));
-        preloadComponent(() => import("./pages/PredictorPage"));
-        preloadComponent(() => import("./pages/BacklogsPage"));
-        preloadComponent(() => import("./pages/LeaderboardPage"));
-        preloadComponent(() => import("./pages/GradeTablePage"));
-      });
+    if (user && user.googleId && !user.usernameSetAt && !hasShownOnboarding) {
+      setShowOnboarding(true);
+      setHasShownOnboarding(true);
     }
-  }, [branch]);
- 
-  useEffect(() => {
-    if (
-      user &&
-      user.googleId &&        // only Google users
-      !user.usernameSetAt &&  // who haven't set username yet
-      !hasShownUsernameModal
-    ) {
-      setShowUsernameModal(true);
-      setHasShownUsernameModal(true);
+  }, [user]);
+
+ async function handleOnboardingDone(chosenUsername, chosenBranch) {
+    setShowOnboarding(false);
+    // Refresh user from context — username and branch now set
+    // Reload user data by updating context
+    try {
+      const { apiGetProfile } = await import("./services/user.api.js");
+      const updatedUser = await apiGetProfile();
+      setUser(updatedUser);
+      setBranch(chosenBranch);
+    } catch {
+      // User data will refresh on next app load
     }
-  }, [user, hasShownUsernameModal]);
+  }
 
   function handleUsernameDone(updatedUser) {
     setShowUsernameModal(false);
@@ -190,6 +189,30 @@ function AppLayout() {
     </div>
   );
 }
+
+{/* Onboarding — new Google users only */}
+      {showOnboarding && (
+        <OnboardingModal
+          dark={dark}
+          c={c}
+          btn={btn}
+          inp={inp}
+          user={user}
+          onDone={handleOnboardingDone}
+        />
+      )}
+
+      {/* Username change modal — existing users */}
+      {showUsernameModal && (
+        <UsernameSetupModal
+          dark={dark} c={c} btn={btn} inp={inp} user={user}
+          onDone={updatedUser => {
+            setShowUsernameModal(false);
+            if (updatedUser) setUser(updatedUser);
+          }}
+          isChange={true}
+        />
+      )}
 
 function TabContent({ tab }) {
   switch (tab) {

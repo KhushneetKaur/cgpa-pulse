@@ -3,6 +3,8 @@ import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
+import CustomiseSubjectsModal from "./CustomiseSubjectsModal";
+
 
 function ElectiveDockInput({ code, value, onSave, dark, c }) {
   const [local, setLocal] = useState(value);
@@ -57,6 +59,7 @@ export default function MobileMarksPanel({ branch, selSem }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const intRef = useRef(null);
   const extRef = useRef(null);
+  const [showCustomise, setShowCustomise] = useState(false);
 
   const hiddenCodes   = (bHiddenSubjects || {})[selSem] || [];
   const hardcodedSubs = BRANCHES[branch].semesters[selSem].subjects
@@ -569,49 +572,70 @@ export default function MobileMarksPanel({ branch, selSem }) {
           </button>
         </div>
 
-        {/* Quick SGPA + delete */}
-        <div style={{
-          display:        "flex",
-          justifyContent: "center",
-          gap:            12,
-          marginTop:      8,
-        }}>
-          <button
-            onClick={() => openQuick(selSem)}
-            style={{
-              background: "transparent",
-              border:     "none",
-              fontSize:   11,
-              color:      c.muted,
-              cursor:     "pointer",
-              fontFamily: "inherit",
-              padding:    "4px 8px",
-            }}
-          >
-            ⚡ Quick SGPA
-          </button>
-          {bHist[selSem] && (
-            <button
-              onClick={() => {
-                if (window.confirm("Delete records for this semester?")) {
-                  deleteSemRecord(selSem);
-                }
-              }}
-              style={{
-                background: "transparent",
-                border:     "none",
-                fontSize:   11,
-                color:      c.bad,
-                cursor:     "pointer",
-                fontFamily: "inherit",
-                padding:    "4px 8px",
-              }}
-            >
-              Delete records
-            </button>
-          )}
-        </div>
+       {/* Quick SGPA + customise + delete */}
+       <div style={{
+       display:        "flex",
+  justifyContent: "center",
+  flexWrap:       "wrap",
+  gap:            10,
+  marginTop:      8,
+}}>
+  <button
+    onClick={() => openQuick(selSem)}
+    style={{
+      background: "transparent", border: "none",
+      fontSize: 11, color: c.muted,
+      cursor: "pointer", fontFamily: "inherit", padding: "4px 8px",
+    }}
+  >
+    ⚡ Quick SGPA
+  </button>
+
+  <button
+    onClick={() => setShowCustomise(true)}
+    style={{
+      background: "transparent", border: "none",
+      fontSize: 11, color: c.muted,
+      cursor: "pointer", fontFamily: "inherit", padding: "4px 8px",
+    }}
+  >
+    ✏️ Customise
+  </button>
+
+  {bHist[selSem] && (
+    <button
+      onClick={() => {
+        if (window.confirm("Delete records for this semester?")) {
+          deleteSemRecord(selSem);
+        }
+      }}
+      style={{
+        background: "transparent", border: "none",
+        fontSize: 11, color: c.bad,
+        cursor: "pointer", fontFamily: "inherit", padding: "4px 8px",
+      }}
+    >
+      Delete records
+    </button>
+  )}
+</div>
       </div>
+    {showCustomise && (
+  <CustomiseSubjectsModal
+    dark={dark}
+    c={c}
+    inp={inp}
+    btn={btn}
+    branch={branch}
+    selSem={selSem}
+    bCustomSubjects={bCustomSubjects}
+    bHiddenSubjects={bHiddenSubjects}
+    addCustomSubject={addCustomSubject}
+    removeCustomSubject={removeCustomSubject}
+    toggleHiddenSubject={toggleHiddenSubject}
+    onClose={() => setShowCustomise(false)}
+  />
+)}
     </div>
   );
 }

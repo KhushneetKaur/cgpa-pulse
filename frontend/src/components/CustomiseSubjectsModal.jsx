@@ -168,10 +168,10 @@ export default function CustomiseSubjectsModal({
                   </p>
                 </div>
                 <button
-  onClick={async () => {
-    try {
-      await toggleHiddenSubject(selSem, sub.code, !isHidden);
-    } catch {
+                 onClick={async () => {
+                try {
+                await toggleHiddenSubject(selSem, sub.code, !isHidden);
+                } catch {
       // error handled in context
     }
   }}
