@@ -476,6 +476,255 @@ export default function NavBar() {
         </div>
       </div>
 
+      {/* ── Second bar: branch + tabs ─────────────────────────────── */}
+      {showSecondBar && (
+        <div
+          className="navbar-second-bar"
+          style={{
+            background: dark
+              ? "rgba(19,22,42,0.9)"
+              : "rgba(248,247,255,0.9)",
+            backdropFilter:       "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            borderBottom: `1px solid ${dark
+              ? "rgba(129,140,248,0.1)"
+              : "rgba(109,40,217,0.08)"}`,
+          }}
+        >
+          <div
+            className="navbar-second-bar-inner"
+            style={{
+              maxWidth:   1080,
+              margin:     "0 auto",
+              display:    "flex",
+              alignItems: "stretch",
+              padding:    "0 1.25rem",
+            }}
+          >
+            {/* ── Branch dropdown ─────────────────────────────────── */}
+            <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
+              <button
+                className="navbar-branch-btn"
+                onClick={() => setBranchMenuOpen(o => !o)}
+                style={{
+                  display:     "flex",
+                  alignItems:  "center",
+                  gap:         8,
+                  padding:     "0 16px 0 12px",
+                  height:      44,
+                  background:  "transparent",
+                  border:      "none",
+                  borderRight: `1px solid ${c.border}`,
+                  cursor:      "pointer",
+                  color:       c.text,
+                  fontSize:    13,
+                  fontWeight:  600,
+                  fontFamily:  "inherit",
+                  whiteSpace:  "nowrap",
+                  transition:  "background 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = c.hover}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <span style={{
+                  width:        8,
+                  height:       8,
+                  borderRadius: "50%",
+                  background:   BRANCHES[branch]?.color || c.accent,
+                  flexShrink:   0,
+                  boxShadow:    `0 0 6px ${BRANCHES[branch]?.color || c.accent}88`,
+                }} />
+                {BRANCHES[branch]?.short}
+                <span style={{ fontSize: 9, color: c.muted, marginLeft: 2 }}>▾</span>
+              </button>
+
+              {/* Branch dropdown menu */}
+              {branchMenuOpen && (
+                <>
+                  <div
+                    onClick={() => setBranchMenuOpen(false)}
+                    style={{ position: "fixed", inset: 0, zIndex: 99 }}
+                  />
+                  <div style={{
+                    position:     "absolute",
+                    top:          "calc(100% + 6px)",
+                    left:         0,
+                    zIndex:       200,
+                    background:   c.card,
+                    border:       `1px solid ${c.border}`,
+                    borderRadius: 14,
+                    boxShadow:    dark
+                      ? "0 16px 48px rgba(0,0,0,0.5)"
+                      : "0 16px 48px rgba(109,40,217,0.12)",
+                    minWidth:     240,
+                    overflow:     "hidden",
+                    padding:      "6px",
+                  }}>
+                    <p style={{
+                      margin:        "6px 10px 6px",
+                      fontSize:      10,
+                      color:         c.muted,
+                      fontWeight:    600,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.8,
+                    }}>
+                      Switch Branch
+                    </p>
+
+                    {Object.entries(BRANCHES).map(([key, b]) => {
+                      const isActive = branch === key;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => { setBranch(key); setBranchMenuOpen(false); }}
+                          style={{
+                            width:        "100%",
+                            display:      "flex",
+                            alignItems:   "center",
+                            gap:          10,
+                            padding:      "9px 10px",
+                            background:   isActive
+                              ? dark ? "rgba(129,140,248,0.15)" : "rgba(109,40,217,0.07)"
+                              : "transparent",
+                            border:       "none",
+                            borderRadius: 9,
+                            cursor:       "pointer",
+                            textAlign:    "left",
+                            fontFamily:   "inherit",
+                            transition:   "background 0.1s",
+                          }}
+                          onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = c.hover; }}
+                          onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                        >
+                          <span style={{
+                            width:        10,
+                            height:       10,
+                            borderRadius: "50%",
+                            background:   b.color,
+                            flexShrink:   0,
+                            boxShadow:    isActive ? `0 0 8px ${b.color}99` : "none",
+                          }} />
+                          <span style={{ flex: 1 }}>
+                            <span style={{
+                              display:    "block",
+                              fontSize:   13,
+                              fontWeight: isActive ? 700 : 400,
+                              color:      isActive ? c.accent : c.text,
+                            }}>
+                              {b.short}
+                            </span>
+                            <span style={{ display: "block", fontSize: 11, color: c.muted }}>
+                              {b.name}
+                            </span>
+                          </span>
+                          {isActive && (
+                            <span style={{ fontSize: 13, color: c.accent, fontWeight: 700 }}>✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    <div style={{ height: 1, background: c.border, margin: "6px 0" }} />
+                    <button
+                      onClick={() => { setBranch(null); setBranchMenuOpen(false); }}
+                      style={{
+                        width:        "100%",
+                        display:      "flex",
+                        alignItems:   "center",
+                        gap:          8,
+                        padding:      "8px 10px",
+                        background:   "transparent",
+                        border:       "none",
+                        borderRadius: 9,
+                        cursor:       "pointer",
+                        fontSize:     12,
+                        color:        c.sub,
+                        fontFamily:   "inherit",
+                        transition:   "background 0.1s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = c.hover}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      ← Back to branch picker
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* ── Tab strip ───────────────────────────────────────── */}
+            <div
+              className="no-scrollbar navbar-tabs-scroll"
+              style={{
+                display:        "flex",
+                alignItems:     "stretch",
+                overflowX:      "auto",
+                flex:           1,
+                gap:            0,
+                justifyContent: "space-evenly",
+              }}
+            >
+              {TABS.map(t => {
+                const isActive  = tab === t.key;
+                const showBadge = t.key === "backlogs" && totalBacklogs > 0;
+                return (
+                  <button
+                    key={t.key}
+                    type="button"
+                    className="navbar-tab-btn"
+                    onClick={e => { e.currentTarget.blur(); setTab(t.key); }}
+                    style={{
+                      display:        "flex",
+                      alignItems:     "center",
+                      justifyContent: "center",
+                      flex:           1,
+                      minWidth:       "fit-content",
+                      gap:            5,
+                      padding:        "0 14px",
+                      height:         44,
+                      background:     isActive
+                        ? dark ? "rgba(129,140,248,0.14)" : "rgba(109,40,217,0.08)"
+                        : "transparent",
+                      border:         "none",
+                      borderBottom:   isActive
+                        ? `2px solid ${c.accent}`
+                        : "2px solid transparent",
+                      cursor:         "pointer",
+                      color:          isActive ? c.accent : c.sub,
+                      fontSize:       13,
+                      fontWeight:     isActive ? 700 : 400,
+                      whiteSpace:     "nowrap",
+                      flexShrink:     0,
+                      fontFamily:     "inherit",
+                      transition:     "all 0.2s",
+                      outline:        "none",
+                      boxShadow:      "none",
+                    }}
+                  >
+                    <span className="tab-icon" style={{ fontSize: 13 }}>{t.icon}</span>
+                    {t.label}
+                    {showBadge && (
+                      <span style={{
+                        fontSize:     9,
+                        background:   c.bad,
+                        color:        "#fff",
+                        borderRadius: 99,
+                        padding:      "1px 5px",
+                        fontWeight:   700,
+                        marginLeft:   2,
+                        lineHeight:   1.6,
+                      }}>
+                        {totalBacklogs}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile profile bottom sheet ─────────────────────── */}
       {showProfileSheet && (
         <>
