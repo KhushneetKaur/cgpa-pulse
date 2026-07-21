@@ -84,8 +84,8 @@ function AppLayout() {
     setUser, setBranch,
   } = useAppData();
 
-  const [showOnboarding,    setShowOnboarding]    = useState(false);
-  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [showOnboarding,     setShowOnboarding]     = useState(false);
+  const [showUsernameModal,  setShowUsernameModal]  = useState(false);
   const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
 
   useEffect(() => {
@@ -95,59 +95,45 @@ function AppLayout() {
     }
   }, [user]);
 
- async function handleOnboardingDone(chosenUsername, chosenBranch) {
+  async function handleOnboardingDone(chosenUsername, chosenBranch) {
     setShowOnboarding(false);
-    // Refresh user from context — username and branch now set
-    // Reload user data by updating context
     try {
       const { apiGetProfile } = await import("./services/user.api.js");
       const updatedUser = await apiGetProfile();
       setUser(updatedUser);
       setBranch(chosenBranch);
     } catch {
-      // User data will refresh on next app load
+      // will refresh on next load
     }
-  }
-
-  function handleUsernameDone(updatedUser) {
-    setShowUsernameModal(false);
-    if (updatedUser) setUser(updatedUser);  // ← update context immediately
   }
 
   return (
     <div style={{
-      minHeight: "100vh",
-      background: c.bg,
-      color: c.text,
-      display: "flex",
+      minHeight:     "100vh",
+      background:    c.bg,
+      color:         c.text,
+      display:       "flex",
       flexDirection: "column",
     }}>
 
-      {/* Toast container */}
       <Toaster
         position="top-right"
         toastOptions={{
           style: {
             borderRadius: "12px",
-            fontFamily: "inherit",
-            fontSize: "15px",
-            padding: "14px 18px",
-            fontWeight: 500,
-            background: dark ? "#0f1424" : "#fff",
-            color: dark ? "#eceef8" : "#1e1b4b",
-            border: `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
-            boxShadow: dark
+            fontFamily:   "inherit",
+            fontSize:     "15px",
+            padding:      "14px 18px",
+            fontWeight:   500,
+            background:   dark ? "#0f1424" : "#fff",
+            color:        dark ? "#eceef8" : "#1e1b4b",
+            border:       `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
+            boxShadow:    dark
               ? "0 8px 32px rgba(0,0,0,0.4)"
               : "0 8px 32px rgba(109,40,217,0.1)",
           },
-          success: {
-            iconTheme: { primary: "#10b981", secondary: "#fff" },
-            duration: 3000,
-          },
-          error: {
-            iconTheme: { primary: "#ef4444", secondary: "#fff" },
-            duration: 4000,
-          },
+          success: { iconTheme: { primary: "#10b981", secondary: "#fff" }, duration: 3000 },
+          error:   { iconTheme: { primary: "#ef4444", secondary: "#fff" }, duration: 4000 },
         }}
       />
 
@@ -155,7 +141,19 @@ function AppLayout() {
       <QuickSGPAModal />
       <NavBar />
 
-      {/* Username setup for new Google users */}
+      {/* Onboarding — new Google users only, first login */}
+      {showOnboarding && (
+        <OnboardingModal
+          dark={dark}
+          c={c}
+          btn={btn}
+          inp={inp}
+          user={user}
+          onDone={handleOnboardingDone}
+        />
+      )}
+
+      {/* Username change — existing users via navbar */}
       {showUsernameModal && (
         <UsernameSetupModal
           dark={dark}
@@ -163,16 +161,20 @@ function AppLayout() {
           btn={btn}
           inp={inp}
           user={user}
-          onDone={handleUsernameDone}
-          isChange={false}
+          onDone={updatedUser => {
+            setShowUsernameModal(false);
+            if (updatedUser) setUser(updatedUser);
+          }}
+          isChange={true}
         />
       )}
+
       <main style={{
-        flex: 1,
+        flex:     1,
         maxWidth: 1080,
-        margin: "0 auto",
-        width: "100%",
-        padding: "1.5rem 1.25rem 2rem",
+        margin:   "0 auto",
+        width:    "100%",
+        padding:  "1.5rem 1.25rem 2rem",
       }}>
         {!branch ? (
           <BranchSelect />
@@ -185,34 +187,12 @@ function AppLayout() {
           </>
         )}
       </main>
+
       <BottomTabBar />
     </div>
   );
 }
 
-{/* Onboarding — new Google users only */}
-      {showOnboarding && (
-        <OnboardingModal
-          dark={dark}
-          c={c}
-          btn={btn}
-          inp={inp}
-          user={user}
-          onDone={handleOnboardingDone}
-        />
-      )}
-
-      {/* Username change modal — existing users */}
-      {showUsernameModal && (
-        <UsernameSetupModal
-          dark={dark} c={c} btn={btn} inp={inp} user={user}
-          onDone={updatedUser => {
-            setShowUsernameModal(false);
-            if (updatedUser) setUser(updatedUser);
-          }}
-          isChange={true}
-        />
-      )}
 
 function TabContent({ tab }) {
   switch (tab) {
