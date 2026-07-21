@@ -25,7 +25,7 @@ export async function googleSignIn(req, res, next) {
     sendResponse(
       res,
       isNewUser ? 201 : 200,
-      { user, isNewUser },
+      { user, isNewUser, accessToken }, // 👈 Added accessToken for mobile/iOS fallback
       "Google sign-in successful"
     );
   } catch (err) {
@@ -46,7 +46,7 @@ export async function signup(req, res, next) {
     
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    sendResponse(res, 201, { user }, "Account created successfully");
+    sendResponse(res, 201, { user, accessToken }, "Account created successfully"); // 👈 Added accessToken
   } catch (err) {
     next(err);
   }
@@ -61,7 +61,7 @@ export async function login(req, res, next) {
     
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    sendResponse(res, 200, { user }, "Login successful");
+    sendResponse(res, 200, { user, accessToken }, "Login successful"); // 👈 Added accessToken
   } catch (err) {
     next(err);
   }
@@ -105,7 +105,7 @@ export async function refresh(req, res, next) {
     
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, newRefreshToken);
-    sendResponse(res, 200, { user }, "Token refreshed successfully");
+    sendResponse(res, 200, { user, accessToken }, "Token refreshed successfully"); // 👈 Added accessToken
   } catch (err) {
     next(err);
   }

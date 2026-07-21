@@ -8,9 +8,7 @@ import {
   updateElectiveName,
   calculateCGPA,
 } from "../services/semester.service.js";
-import {
-  upsertLeaderboardEntry,
-} from "../services/leaderboard.service.js";
+import { upsertLeaderboardEntry } from "../services/leaderboard.service.js";
 import { sendResponse } from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
 import SemesterData from "../models/SemesterData.js";
@@ -22,6 +20,11 @@ const parseSem = (semNumber) => {
     throw ApiError.badRequest("Invalid semester number");
   }
   return parsed;
+};
+
+// Helper to reliably retrieve fallback username
+const getDisplayName = (user) => {
+  return user?.username || user?.name || "Anonymous";
 };
 
 // ── GET /api/semesters/:branch ────────────────────────────────────────────────
@@ -66,14 +69,14 @@ export async function saveSemesterHandler(req, res, next) {
       semNumber: semNum,
     });
 
-    const allSems = await getUserSemesters(userId, normalizedBranch);
-    const cgpa = calculateCGPA(allSems);
+    const allSems = (await getUserSemesters(userId, normalizedBranch)) || [];
+    const cgpa = calculateCGPA(allSems) ?? 0;
 
     // Sync leaderboard entry if user is opted in
-    if (req.user?.lbOptIn && cgpa != null) {
+    if (req.user?.lbOptIn) {
       await upsertLeaderboardEntry({
         userId,
-        username: req.user.username || req.user.name || "Anonymous",
+        username: getDisplayName(req.user),
         branch: normalizedBranch,
         cgpa,
         semCount: allSems.filter((s) => s.sgpa).length,
@@ -108,13 +111,13 @@ export async function saveQuickSgpaHandler(req, res, next) {
     );
 
     // Single DB query to get updated list for both CGPA and Leaderboard sync
-    const allSems = await getUserSemesters(userId, branch);
-    const cgpa = calculateCGPA(allSems);
+    const allSems = (await getUserSemesters(userId, branch)) || [];
+    const cgpa = calculateCGPA(allSems) ?? 0;
 
-    if (req.user.lbOptIn && cgpa != null) {
+    if (req.user?.lbOptIn) {
       await upsertLeaderboardEntry({
         userId,
-        username: req.user.username,
+        username: getDisplayName(req.user),
         branch,
         cgpa,
         semCount: allSems.filter((s) => s.sgpa).length,
@@ -142,15 +145,15 @@ export async function deleteSemesterHandler(req, res, next) {
     const result = await deleteSemester(userId, branch, semNum);
 
     // Recalculate CGPA and update leaderboard after deletion
-    const allSems = await getUserSemesters(userId, branch);
-    const cgpa = calculateCGPA(allSems);
+    const allSems = (await getUserSemesters(userId, branch)) || [];
+    const cgpa = calculateCGPA(allSems) ?? 0;
 
-    if (req.user.lbOptIn) {
+    if (req.user?.lbOptIn) {
       await upsertLeaderboardEntry({
         userId,
-        username: req.user.username,
+        username: getDisplayName(req.user),
         branch,
-        cgpa: cgpa || 0,
+        cgpa,
         semCount: allSems.filter((s) => s.sgpa).length,
       });
     }

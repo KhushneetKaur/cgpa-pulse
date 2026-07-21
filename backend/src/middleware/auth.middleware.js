@@ -1,5 +1,5 @@
-import jwt      from "jsonwebtoken";
-import User     from "../models/User.js";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 
 // ── Verify JWT and attach user to request ─────────────────────────────────────
@@ -21,14 +21,14 @@ export async function protect(req, res, next) {
     }
 
     if (!token) {
-      return next(ApiError.unauthorized());
+      return next(ApiError.unauthorized("Authentication required"));
     }
 
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Fetch the user — confirm they still exist and are active
-    const user = await User.findById(decoded.id).select("-passwordHash").lean();
+    // Fetch full Mongoose document (Do NOT use .lean() here, or user methods like toPublicJSON() fail)
+    const user = await User.findById(decoded.id).select("-passwordHash");
 
     if (!user) {
       return next(ApiError.unauthorized("User no longer exists"));
@@ -38,7 +38,7 @@ export async function protect(req, res, next) {
       return next(ApiError.unauthorized("Your account has been deactivated"));
     }
 
-    // Attach to request — available in all downstream middleware and controllers
+    // Attach to request
     req.user = user;
     next();
 
@@ -51,8 +51,6 @@ export async function protect(req, res, next) {
 }
 
 // ── Optional Authentication ────────────────────────────────────────────────---
-// Attaches user if token exists & is valid, but doesn't block unauthenticated requests
-
 export async function optionalProtect(req, res, next) {
   try {
     let token;
@@ -66,7 +64,7 @@ export async function optionalProtect(req, res, next) {
     if (!token) return next();
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-passwordHash").lean();
+    const user = await User.findById(decoded.id).select("-passwordHash");
 
     if (user?.isActive) {
       req.user = user;
@@ -79,16 +77,19 @@ export async function optionalProtect(req, res, next) {
 }
 
 // ── Restrict to specific roles ────────────────────────────────────────────────
-// Usage: router.delete("/users/:id", protect, requireRole("admin"), controller)
-
 export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) {
-      return next(ApiError.unauthorized());
+      return next(ApiError.unauthorized("Authentication required"));
     }
-    if (!roles.includes(req.user.role)) {
-      return next(ApiError.forbidden());
+    
+    // Default fallback if role isn't explicitly set on user object
+    const userRole = req.user.role || "user";
+
+    if (!roles.includes(userRole)) {
+      return next(ApiError.forbidden("You do not have permission to perform this action"));
     }
+    
     next();
   };
 }

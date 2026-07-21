@@ -35,7 +35,6 @@ export async function googleAuth(accessToken) {
     let counter = 1;
     let created = false;
 
-    // Retry block handles race conditions if 2 users get identical base usernames simultaneously
     while (!created) {
       try {
         user = await User.create({
@@ -67,28 +66,26 @@ export async function googleAuth(accessToken) {
   return { user: user.toPublicJSON(), accessToken: jwtAccess, refreshToken: jwtRefresh, isNewUser };
 }
 
-// ── Set JWT as httpOnly cookie ────────────────────────────────────────────────
+// ── Shared Cookie Configuration ───────────────────────────────────────────────
 
-export function setTokenCookie(res, token) {
+const getCookieOptions = (maxAgeMs) => {
   const isProduction = process.env.NODE_ENV === "production";
-  
-  res.cookie("token", token, {
+
+  return {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+    path: "/", // 👈 CRITICAL: Ensures cookie is attached to /api/user/*, not just /api/auth/*
+    maxAge: maxAgeMs,
+  };
+};
+
+export function setTokenCookie(res, token) {
+  res.cookie("token", token, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 }
 
 export function setRefreshTokenCookie(res, token) {
-  const isProduction = process.env.NODE_ENV === "production";
-  
-  res.cookie("refreshToken", token, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie("refreshToken", token, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 }
 
 // ── Clear cookie on logout ────────────────────────────────────────────────────
@@ -100,6 +97,7 @@ export function clearTokenCookie(res) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
+    path: "/",
     expires: new Date(0),
   };
 
