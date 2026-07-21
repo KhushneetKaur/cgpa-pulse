@@ -82,10 +82,15 @@ function AppLayout() {
   const [showUsernameModal,  setShowUsernameModal]  = useState(false);
   const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
 
+  // 🟢 FIXED TRIGGER: Triggers whenever user has no branch set (brand-new user)
   useEffect(() => {
-    // Triggers for new users who haven't completed onboarding or set a custom username
-    const needsOnboarding = user && user.googleId && (!user.usernameSetAt || !user.isOnboarded);
+    if (!user) return;
+
+    // Brand-new users always have branch: null
+    const needsOnboarding = !user.branch;
+
     if (needsOnboarding && !hasShownOnboarding) {
+      console.log("🚀 User needs onboarding (no branch set):", user);
       setShowOnboarding(true);
       setHasShownOnboarding(true);
     }
@@ -115,26 +120,7 @@ function AppLayout() {
       flexDirection: "column",
     }}>
 
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            borderRadius: "12px",
-            fontFamily:   "inherit",
-            fontSize:     "15px",
-            padding:      "14px 18px",
-            fontWeight:   500,
-            background:   dark ? "#0f1424" : "#fff",
-            color:        dark ? "#eceef8" : "#1e1b4b",
-            border:       `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
-            boxShadow:    dark
-              ? "0 8px 32px rgba(0,0,0,0.4)"
-              : "0 8px 32px rgba(109,40,217,0.1)",
-          },
-          success: { iconTheme: { primary: "#10b981", secondary: "#fff" }, duration: 3000 },
-          error:   { iconTheme: { primary: "#ef4444", secondary: "#fff" }, duration: 4000 },
-        }}
-      />
+      <Toaster position="top-right" />
 
       <DisclaimerModal />
       <QuickSGPAModal />
@@ -176,8 +162,8 @@ function AppLayout() {
         padding:  "1.5rem 1.25rem 2rem",
       }}>
         {/*
-          1. If no branch is selected yet, show BranchSelect.
-          2. Otherwise, display the main app dashboard/calculator.
+          If branch is still null (e.g. user closed modal or skipped), show BranchSelect.
+          Otherwise render the dashboard!
         */}
         {!branch ? (
           <BranchSelect />

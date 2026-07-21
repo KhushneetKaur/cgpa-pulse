@@ -15,17 +15,26 @@ function isValidUsername(u) {
 
 export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   const [step,       setStep]       = useState(1); // 1=username, 2=branch, 3=semester, 4=welcome
-  const [username,   setUsername]   = useState(user?.username || "");
   const [branch,     setBranch]     = useState(user?.branch || null);
   const [currentSem, setCurrentSem] = useState(user?.currentSem || null);
   const [err,        setErr]        = useState("");
   const [loading,    setLoading]    = useState(false);
 
-  // Sync initial state if user prop updates late
+  // 🟢 Single state initialization for username
+  const [username, setUsername] = useState(() => {
+    if (!user?.username) return "";
+    return user.username.replace(/_[a-z0-9]{4}$/i, "");
+  });
+
+  // 🟢 Single consolidated sync effect
   useEffect(() => {
-    if (user?.username && !username) setUsername(user.username);
-    if (user?.branch && !branch)     setBranch(user.branch);
-    if (user?.currentSem && !currentSem) setCurrentSem(user.currentSem);
+    if (user) {
+      if (user.username && !username) {
+        setUsername(user.username.replace(/_[a-z0-9]{4}$/i, ""));
+      }
+      if (user.branch && !branch) setBranch(user.branch);
+      if (user.currentSem && !currentSem) setCurrentSem(user.currentSem);
+    }
   }, [user]);
 
   // Step 1: Save Username
@@ -88,8 +97,8 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
       padding:              "1rem",
     }}>
       <div style={{
-        background:   dark ? "#0f1424" : "#fff",
-        border:       `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
+        background:    dark ? "#0f1424" : "#fff",
+        border:        `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
         borderRadius: 20,
         padding:      "32px 28px",
         maxWidth:     440,
