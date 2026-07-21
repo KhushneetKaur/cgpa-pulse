@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BRANCHES } from "../data/branches";
-import { apiUpdateUsername, apiUpdateBranch, apiUpdateCurrentSem } from "../services/user.api.js";
+import { apiUpdateUsername, apiUpdateBranch} from "../services/user.api.js";
 import toast from "react-hot-toast";
 
 function isValidUsername(u) {
