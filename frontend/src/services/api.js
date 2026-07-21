@@ -4,7 +4,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
   withCredentials: true, // Sends httpOnly cookies on cross-origin requests
-  timeout: 30000,        // Accommodates backend cold starts (e.g., Render/Sleeper)
+  timeout: 30000,        // Accommodates backend cold starts
   headers: {
     "Content-Type": "application/json",
   },
@@ -14,19 +14,31 @@ let csrfToken = null;
 let csrfTokenPromise = null;
 
 /**
+ * Call this function immediately after login/OAuth redirect
+ * so stale CSRF tokens are cleared from memory!
+ */
+export function resetCsrfToken() {
+  csrfToken = null;
+  csrfTokenPromise = null;
+}
+
+/**
  * Thread-safe CSRF fetch that prevents duplicate concurrent token requests.
  */
 async function ensureCsrfToken() {
   if (csrfToken) return csrfToken;
 
-  // Deduplicate inflight token requests
   if (!csrfTokenPromise) {
     csrfTokenPromise = axios
       .get(`${api.defaults.baseURL}/auth/csrf`, {
         withCredentials: true,
       })
       .then((res) => {
-        csrfToken = res.data?.data?.csrfToken || res.data?.csrfToken;
+        // Unwraps response correctly regardless of data structure
+        csrfToken =
+          res.data?.data?.csrfToken ||
+          res.data?.csrfToken ||
+          res.data?.data?.token;
         return csrfToken;
       })
       .catch((err) => {
@@ -47,8 +59,7 @@ api.interceptors.request.use(async (config) => {
 
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
     const url = config.url || "";
-    
-    // Auth routes exempt from requiring explicit CSRF headers
+
     const isExempt = [
       "/auth/logout",
       "/auth/refresh",
@@ -61,7 +72,7 @@ api.interceptors.request.use(async (config) => {
         config.headers = config.headers || {};
         config.headers["x-csrf-token"] = token;
       } catch {
-        // Proceed without header — backend error handling will capture if required
+        // Proceed without header — backend will capture if required
       }
     }
   }
@@ -76,17 +87,16 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const rawMessage =
       error.response?.data?.message || error.message || "Something went wrong";
-      
+
     const isTimeout =
       error.code === "ECONNABORTED" || rawMessage.toLowerCase().includes("timeout");
-      
+
     const message = isTimeout
       ? "Server is waking up. Please try again in a few seconds."
       : rawMessage;
 
     const url = error.config?.url || "";
 
-    // Exclude auth routes from automatic session-expiry redirects
     const isAuthRoute = [
       "/auth/google",
       "/auth/me",
@@ -99,28 +109,25 @@ api.interceptors.response.use(
       error.config._retry = true;
       try {
         await api.post("/auth/refresh");
-        // Retry original request with renewed session
         return api.request(error.config);
       } catch {
-        // Refresh token expired or revoked — notify app to log out user
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
       }
     }
 
-    // Direct 401 on non-auth routes after retry
     if (status === 401 && !isAuthRoute) {
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
 
+    // 🟢 FIX: Case-insensitive check for CSRF errors
+    const isCsrfError =
+      status === 403 && rawMessage.toLowerCase().includes("csrf");
+
     // ── Invalid CSRF Token Retry Routine ────────────────────────────────────
-    if (
-      status === 403 &&
-      message === "Invalid CSRF token" &&
-      !error.config?._csrfRetry
-    ) {
-      csrfToken = null; // Clear stale token
+    if (isCsrfError && !error.config?._csrfRetry) {
+      csrfToken = null; // Clear stale token from memory
       error.config._csrfRetry = true;
-      
+
       try {
         const token = await ensureCsrfToken();
         error.config.headers = error.config.headers || {};
@@ -136,8 +143,7 @@ api.interceptors.response.use(
       }
     }
 
-    // Reset local token cache if CSRF invalidation persists
-    if (status === 403 && message === "Invalid CSRF token") {
+    if (isCsrfError) {
       csrfToken = null;
     }
 
