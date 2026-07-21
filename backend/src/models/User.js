@@ -51,6 +51,12 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+     currentSem: {
+     type:    Number,
+     default: null,
+     min:     1,
+     max:     8,
+     },
     lbOptIn: {
       type: Boolean,
       default: false,
@@ -115,6 +121,7 @@ userSchema.methods.toPublicJSON = function () {
     email: this.email,
     role: this.role,
     branch: this.branch,
+    currentSem: this.currentSem,
     lbOptIn: this.lbOptIn,
     lbOptInDate: this.lbOptInDate,
     hasSetPassword: this.hasSetPassword,

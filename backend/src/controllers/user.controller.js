@@ -118,6 +118,21 @@ export async function updateBranch(req, res, next) {
   }
 }
 
+export async function updateCurrentSem(req, res, next) {
+  try {
+    const { semNumber } = req.body;
+    if (!semNumber || semNumber < 1 || semNumber > 8) {
+      throw ApiError.badRequest("Semester must be between 1 and 8");
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: { currentSem: Number(semNumber) } },
+      { new: true }
+    );
+    sendResponse(res, 200, { user: user.toPublicJSON() }, "Current semester updated");
+  } catch (err) { next(err); }
+}
+
 // ── PUT /api/user/leaderboard ─────────────────────────────────────────────────
 export async function updateLbOptIn(req, res, next) {
   try {

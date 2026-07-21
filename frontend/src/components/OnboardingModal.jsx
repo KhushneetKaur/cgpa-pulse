@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { BRANCHES } from "../data/branches";
-import { apiUpdateUsername, apiUpdateBranch } from "../services/user.api.js";
+import { apiUpdateUsername, apiUpdateBranch, apiUpdateCurrentSem } from "../services/user.api.js";
 
 function isValidUsername(u) {
   const v = u.trim();
@@ -20,7 +20,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   const [err,        setErr]        = useState("");
   const [loading,    setLoading]    = useState(false);
 
-  //  Single state initialization for username
+  // Single state initialization for username
   const [username, setUsername] = useState(() => {
     if (!user?.username) return "";
     return user.username.replace(/_[a-z0-9]{4}$/i, "");
@@ -60,11 +60,23 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
     setStep(3);
   }
 
-  // Step 3: Select Semester locally
-  function handleSemesterNext() {
+  // Step 3: Select & save Semester
+  async function handleSemesterNext() {
     if (!currentSem) { setErr("Please select your current semester"); return; }
     setErr("");
-    setStep(4);
+    setLoading(true);
+    try {
+      if (typeof apiUpdateCurrentSem === "function") {
+        await apiUpdateCurrentSem(currentSem);
+      }
+      setStep(4);
+    } catch (e) {
+      console.error("Error updating current sem:", e);
+      // Non-critical — continue to final step anyway
+      setStep(4);
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Step 4: Save branch to API and finish
@@ -379,18 +391,18 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             <button
               type="button"
               onClick={handleSemesterNext}
-              disabled={!currentSem}
+              disabled={!currentSem || loading}
               style={{
                 ...btn("primary"),
                 width: "100%",
                 padding: "13px",
                 fontSize: 14,
                 justifyContent: "center",
-                opacity: !currentSem ? 0.6 : 1,
-                cursor: !currentSem ? "not-allowed" : "pointer"
+                opacity: (!currentSem || loading) ? 0.6 : 1,
+                cursor: (!currentSem || loading) ? "not-allowed" : "pointer"
               }}
             >
-              Continue →
+              {loading ? "Saving..." : "Continue →"}
             </button>
           </>
         )}

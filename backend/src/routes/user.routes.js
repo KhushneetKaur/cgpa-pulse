@@ -4,6 +4,7 @@ import {
   updateBranch,
   updateLbOptIn,
   updateUsername,
+  updateCurrentSem,
 } from "../controllers/user.controller.js";
 import { protect }      from "../middleware/auth.middleware.js";
 import { validate }     from "../middleware/validate.middleware.js";
@@ -33,6 +34,8 @@ router.put(
   validate(updateBranchSchema),
   updateBranch
 );
+
+router.put("/current-sem", saveLimiter, updateCurrentSem);
 
 // PUT /api/user/leaderboard
 router.put(

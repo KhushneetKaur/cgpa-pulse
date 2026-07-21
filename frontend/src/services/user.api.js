@@ -18,6 +18,11 @@ export async function apiUpdateBranch(branch) {
   return res.branch;
 }
 
+export async function apiUpdateCurrentSem(semNumber) {
+  const res = await api.put("/user/current-sem", { semNumber });
+  return res.data.user;
+}
+
 // ── PUT /api/user/leaderboard ─────────────────────────────────────────────────
 export async function apiUpdateLbOptIn(optIn) {
   const res = await api.put("/user/leaderboard", { optIn });

@@ -192,3 +192,26 @@ button, input, select, textarea, a {
   40%      { transform: translate(-18px,-32px) scale(1.09); }
   80%      { transform: translate(26px,12px) scale(0.94);  }
 }
+/* ── Smooth theme transitions ────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition:
+    background-color 0.12s ease,
+    border-color     0.12s ease,
+    color            0.08s ease,
+    box-shadow       0.12s ease;
+}
+
+/* But don't slow down animations or transforms */
+*[style*="animation"],
+*[style*="transform"],
+button,
+input,
+select {
+  transition:
+    background-color 0.12s ease,
+    border-color     0.12s ease,
+    color            0.08s ease,
+    box-shadow       0.12s ease,
+    transform        0.15s ease,
+    opacity          0.15s ease;
+}
