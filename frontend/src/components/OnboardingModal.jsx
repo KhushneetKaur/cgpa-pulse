@@ -15,7 +15,7 @@ function isValidUsername(u) {
 }
 
 export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
-  const [step,     setStep]     = useState(1); // 1=username, 2=branch, 3=welcome
+  const [step,       setStep]       = useState(1); // 1=username, 2=branch, 3=semester, 4=welcome
   const [username, setUsername] = useState("");
   const [branch,   setBranch]   = useState(null);
   const [err,      setErr]      = useState("");
@@ -270,77 +270,92 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
           </>
         )}
 
+        {/* ── Step 3: Semester selection ───────────────────────── */}
         {step === 3 && (
-  <>
-    <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: c.text, textAlign: "center" }}>
-      Which semester are you in?
-    </h2>
-    <p style={{ margin: "0 0 20px", fontSize: 13, color: c.sub, textAlign: "center", lineHeight: 1.6 }}>
-      We'll open your current semester automatically.
-      For previous semesters, use <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> to
-      enter your known SGPA directly — no need to enter every mark.
-    </p>
+          <>
+            <button
+              onClick={() => { setStep(2); setErr(""); }}
+              style={{
+                background: "none",
+                border: "none",
+                color: c.sub,
+                cursor: "pointer",
+                fontSize: 12,
+                marginBottom: 12,
+                padding: 0,
+              }}
+            >
+              ← Back to branch
+            </button>
+            <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: c.text, textAlign: "center" }}>
+              Which semester are you in?
+            </h2>
+            <p style={{ margin: "0 0 20px", fontSize: 13, color: c.sub, textAlign: "center", lineHeight: 1.6 }}>
+              We'll open your current semester automatically.
+              For previous semesters, use <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> to
+              enter your known SGPA directly — no need to enter every mark.
+            </p>
 
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 }}>
-      {[1,2,3,4,5,6,7,8].map(s => (
-        <button
-          key={s}
-          onClick={() => { setCurrentSem(s); setErr(""); }}
-          style={{
-            padding:      "14px 8px",
-            borderRadius: 12,
-            border:       currentSem === s
-              ? `2px solid ${c.accent}`
-              : `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
-            background:   currentSem === s
-              ? `${c.accent}14`
-              : dark ? "#080c18" : "#f9f8ff",
-            cursor:       "pointer",
-            fontFamily:   "inherit",
-            fontSize:     16,
-            fontWeight:   700,
-            color:        currentSem === s ? c.accent : c.text,
-            transition:   "all 0.15s",
-          }}
-        >
-          {s}
-        </button>
-      ))}
-    </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 }}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+                <button
+                  key={s}
+                  onClick={() => { setCurrentSem(s); setErr(""); }}
+                  style={{
+                    padding:      "14px 8px",
+                    borderRadius: 12,
+                    border:       currentSem === s
+                      ? `2px solid ${c.accent}`
+                      : `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
+                    background:   currentSem === s
+                      ? `${c.accent}14`
+                      : dark ? "#080c18" : "#f9f8ff",
+                    cursor:       "pointer",
+                    fontFamily:   "inherit",
+                    fontSize:     16,
+                    fontWeight:   700,
+                    color:        currentSem === s ? c.accent : c.text,
+                    transition:   "all 0.15s",
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
 
-    {currentSem && currentSem > 1 && (
-      <div style={{
-        padding:      "12px 14px",
-        borderRadius: 10,
-        background:   dark ? "rgba(124,131,245,0.08)" : "rgba(109,40,217,0.05)",
-        border:       `1px solid ${dark ? "rgba(124,131,245,0.2)" : "rgba(109,40,217,0.12)"}`,
-        marginBottom: 16,
-        fontSize:     12,
-        color:        c.sub,
-        lineHeight:   1.6,
-      }}>
-        💡 <strong style={{ color: c.text }}>Tip:</strong> For Semesters 1–{currentSem - 1},
-        use the <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> button inside
-        the Calculator to enter your final SGPA directly. It takes 30 seconds per semester!
-      </div>
-    )}
+            {currentSem && currentSem > 1 && (
+              <div style={{
+                padding:      "12px 14px",
+                borderRadius: 10,
+                background:   dark ? "rgba(124,131,245,0.08)" : "rgba(109,40,217,0.05)",
+                border:       `1px solid ${dark ? "rgba(124,131,245,0.2)" : "rgba(109,40,217,0.12)"}`,
+                marginBottom: 16,
+                fontSize:     12,
+                color:        c.sub,
+                lineHeight:   1.6,
+              }}>
+                💡 <strong style={{ color: c.text }}>Tip:</strong> For Semesters 1–{currentSem - 1},
+                use the <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> button inside
+                the Calculator to enter your final SGPA directly. It takes 30 seconds per semester!
+              </div>
+            )}
 
-    {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad }}>{err}</p>}
+            {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad }}>{err}</p>}
 
-    <button
-      onClick={() => {
-        if (!currentSem) { setErr("Please select your current semester"); return; }
-        setStep(4);
-      }}
-      style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center" }}
-    >
-      Continue →
-    </button>
-  </>
-)}
+            <button
+              onClick={() => {
+                if (!currentSem) { setErr("Please select your current semester"); return; }
+                setStep(4);
+              }}
+              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center" }}
+            >
+              Continue →
+            </button>
+          </>
+        )}
 
         {/* ── Step 4: Welcome ──────────────────────────────────── */}
-        {step === 3 && (
+        {step === 4 && (
           <>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <p style={{ fontSize: 48, margin: "0 0 12px" }}>🎓</p>
@@ -416,7 +431,7 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
             </div>
 
             <button
-              onClick={() => onDone(username, branch)}
+              onClick={() => onDone(username, branch, currentSem)}
               style={{
                 ...btn("primary"),
                 width:          "100%",
