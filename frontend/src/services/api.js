@@ -1,5 +1,11 @@
 import axios from "axios";
 
+// ── Helper to read cookies ───────────────────────────────────────────────────
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? match[2] : null;
+}
+
 // ── Base Axios Instance ──────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
@@ -13,32 +19,42 @@ const api = axios.create({
 let csrfToken = null;
 let csrfTokenPromise = null;
 
-/**
- * Call this function immediately after login/OAuth redirect
- * so stale CSRF tokens are cleared from memory!
- */
 export function resetCsrfToken() {
   csrfToken = null;
   csrfTokenPromise = null;
 }
 
 /**
- * Thread-safe CSRF fetch that prevents duplicate concurrent token requests.
+ * Thread-safe CSRF fetch that reads from cookie first, then falls back to /auth/csrf
  */
-async function ensureCsrfToken() {
-  if (csrfToken) return csrfToken;
+async function ensureCsrfToken(forceFresh = false) {
+  if (forceFresh) {
+    csrfToken = null;
+    csrfTokenPromise = null;
+  }
+
+  // Try reading directly from browser cookie first
+  const cookieVal = getCookie("csrfToken");
+  if (cookieVal && !forceFresh) {
+    csrfToken = cookieVal;
+    return csrfToken;
+  }
+
+  if (csrfToken && !forceFresh) return csrfToken;
 
   if (!csrfTokenPromise) {
     csrfTokenPromise = axios
-      .get(`${api.defaults.baseURL}/auth/csrf`, {
-        withCredentials: true,
-      })
+      .get(`${api.defaults.baseURL}/auth/csrf`, { withCredentials: true })
       .then((res) => {
-        // Unwraps response correctly regardless of data structure
+        // Unwraps correctly regardless of Axios response transformation
+        const payload = res.data;
         csrfToken =
-          res.data?.data?.csrfToken ||
-          res.data?.csrfToken ||
-          res.data?.data?.token;
+          payload?.data?.csrfToken ||
+          payload?.csrfToken ||
+          payload?.data?.token ||
+          payload?.token ||
+          getCookie("csrfToken");
+
         return csrfToken;
       })
       .catch((err) => {
@@ -59,20 +75,19 @@ api.interceptors.request.use(async (config) => {
 
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
     const url = config.url || "";
-
-    const isExempt = [
-      "/auth/logout",
-      "/auth/refresh",
-      "/auth/google",
-    ].some((u) => url.includes(u));
+    const isExempt = ["/auth/logout", "/auth/refresh", "/auth/google"].some((u) =>
+      url.includes(u)
+    );
 
     if (!isExempt) {
       try {
         const token = await ensureCsrfToken();
-        config.headers = config.headers || {};
-        config.headers["x-csrf-token"] = token;
+        if (token) {
+          config.headers = config.headers || {};
+          config.headers["x-csrf-token"] = token;
+        }
       } catch {
-        // Proceed without header — backend will capture if required
+        // Proceed without header — backend will validate if required
       }
     }
   }
@@ -86,7 +101,10 @@ api.interceptors.response.use(
   async (error) => {
     const status = error.response?.status;
     const rawMessage =
-      error.response?.data?.message || error.message || "Something went wrong";
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "Something went wrong";
 
     const isTimeout =
       error.code === "ECONNABORTED" || rawMessage.toLowerCase().includes("timeout");
@@ -119,20 +137,22 @@ api.interceptors.response.use(
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
 
-    // 🟢 FIX: Case-insensitive check for CSRF errors
+    // ── Robust CSRF Error Detection ──────────────────────────────────────────
     const isCsrfError =
-      status === 403 && rawMessage.toLowerCase().includes("csrf");
+      (status === 403 || status === 400) &&
+      rawMessage.toLowerCase().includes("csrf");
 
     // ── Invalid CSRF Token Retry Routine ────────────────────────────────────
     if (isCsrfError && !error.config?._csrfRetry) {
-      csrfToken = null; // Clear stale token from memory
       error.config._csrfRetry = true;
 
       try {
-        const token = await ensureCsrfToken();
+        const newToken = await ensureCsrfToken(true);
         error.config.headers = error.config.headers || {};
-        error.config.headers["x-csrf-token"] = token;
-        return api.request(error.config);
+        error.config.headers["x-csrf-token"] = newToken;
+
+        // Re-issue request with updated instance
+        return axios(error.config);
       } catch (err) {
         console.error("CSRF retry failed:", err);
         return Promise.reject({
@@ -144,7 +164,7 @@ api.interceptors.response.use(
     }
 
     if (isCsrfError) {
-      csrfToken = null;
+      resetCsrfToken();
     }
 
     return Promise.reject({

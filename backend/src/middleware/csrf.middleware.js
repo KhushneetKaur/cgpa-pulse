@@ -3,16 +3,16 @@ import ApiError from "../utils/ApiError.js";
 import { sendResponse } from "../utils/ApiResponse.js";
 
 /**
- * Issues a CSRF token stored in a readable cookie and returned in JSON payload.
- * Client frontend (Axios) reads this token and sends it in the X-CSRF-Token header.
+ * Issues a CSRF token stored in a cookie and returned in JSON payload.
  */
 export function issueCsrfToken(req, res) {
   const token = crypto.randomBytes(32).toString("hex");
+  const isProduction = process.env.NODE_ENV === "production";
 
   res.cookie("csrfToken", token, {
-    httpOnly: false, // Must be readable by client JavaScript
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    httpOnly: false, // Must be readable by client JS
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 60 * 60 * 1000, // 1 hour validity
   });
 
@@ -23,13 +23,26 @@ export function issueCsrfToken(req, res) {
  * Validates the X-CSRF-Token header against the double-submit csrfToken cookie.
  */
 export function csrfProtection(req, res, next) {
-  // Safe HTTP methods do not alter state and are exempt from CSRF validation
+  const isProduction = process.env.NODE_ENV === "production";
+
+  // Auto-issue token cookie on GET/HEAD/OPTIONS if missing
+  if (!req.cookies?.csrfToken) {
+    const freshToken = crypto.randomBytes(32).toString("hex");
+    res.cookie("csrfToken", freshToken, {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      maxAge: 60 * 60 * 1000,
+    });
+  }
+
+  // Safe HTTP methods do not alter state and are exempt
   if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
     return next();
   }
 
   // Exempt auth setup routes from CSRF checks
-  const exemptPaths = ["/api/auth/csrf", "/api/auth/google"];
+  const exemptPaths = ["/api/auth/csrf", "/api/auth/google", "/api/auth/login", "/api/auth/register"];
   if (exemptPaths.some((path) => req.originalUrl?.startsWith(path))) {
     return next();
   }

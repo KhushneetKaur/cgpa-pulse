@@ -20,22 +20,21 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   const [err,        setErr]        = useState("");
   const [loading,    setLoading]    = useState(false);
 
-  // 🟢 Single state initialization for username
+  //  Single state initialization for username
   const [username, setUsername] = useState(() => {
     if (!user?.username) return "";
     return user.username.replace(/_[a-z0-9]{4}$/i, "");
   });
 
-  // 🟢 Single consolidated sync effect
+  // Safe sync effect tied to user ID to avoid overwriting state while typing
   useEffect(() => {
-    if (user) {
-      if (user.username && !username) {
-        setUsername(user.username.replace(/_[a-z0-9]{4}$/i, ""));
-      }
-      if (user.branch && !branch) setBranch(user.branch);
-      if (user.currentSem && !currentSem) setCurrentSem(user.currentSem);
+    if (!user) return;
+    if (user.username) {
+      setUsername(user.username.replace(/_[a-z0-9]{4}$/i, ""));
     }
-  }, [user]);
+    if (user.branch) setBranch(user.branch);
+    if (user.currentSem) setCurrentSem(user.currentSem);
+  }, [user?.id || user?._id]);
 
   // Step 1: Save Username
   async function handleUsernameNext(e) {
@@ -69,7 +68,8 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   }
 
   // Step 4: Save branch to API and finish
-  async function handleFinish() {
+  async function handleFinish(e) {
+    if (e) e.preventDefault();
     setLoading(true);
     try {
       if (typeof apiUpdateBranch === "function") {
@@ -397,7 +397,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
 
         {/* ── Step 4: Welcome & Quick Guide ────────────────────── */}
         {step === 4 && (
-          <>
+          <form onSubmit={handleFinish}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <p style={{ fontSize: 48, margin: "0 0 12px" }}>🎓</p>
               <h2 style={{
@@ -412,7 +412,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
                 Welcome to CGPA Pulse,{" "}
                 <strong style={{ color: c.accent }}>@{username}</strong>!
                 Your branch is set to{" "}
-                <strong style={{ color: c.text }}>{BRANCHES[branch]?.short || "Selected Branch"}</strong>.
+                <strong style={{ color: c.text }}>{BRANCHES[branch]?.short || branch || "Selected Branch"}</strong>.
               </p>
             </div>
 
@@ -471,8 +471,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             </div>
 
             <button
-              type="button"
-              onClick={handleFinish}
+              type="submit"
               disabled={loading}
               style={{
                 ...btn("primary"),
@@ -485,7 +484,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             >
               {loading ? "Finishing..." : "Let's go! 🚀"}
             </button>
-          </>
+          </form>
         )}
       </div>
     </div>
