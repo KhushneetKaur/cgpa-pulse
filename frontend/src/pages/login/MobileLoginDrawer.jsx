@@ -140,7 +140,7 @@ const LINES = [
   { text: "> B.Tech CSE · GZSCCET · MRSPTU Bathinda",  delay: 3200, color: "#a78bfa" },
   { text: "> GitHub / LinkedIn → tap console below",   delay: 3600, color: "#a78bfa" },
   { text: "  ─────────────────────────────────────────", delay: 4000, color: "rgba(236,238,248,0.2)" },
-  { text: "CONSOLE_BTN",                                delay: 4400, color: "console" },
+  { text: "CONSOLE_BTN",                               delay: 4400, color: "console" },
   { text: "  ─────────────────────────────────────────", delay: 4800, color: "rgba(236,238,248,0.2)" },
   { text: "> Tap anywhere to continue →",               delay: 5100, color: "rgba(236,238,248,0.38)" },
 ];
@@ -317,16 +317,16 @@ function Terminal({ onDone, onOpenAbout }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout }) {
   const [phase,         setPhase]         = useState("terminal");
-  const [termFading,    setTermFading]     = useState(false);
+  const [termFading,    setTermFading]    = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [showAbout,     setShowAbout]     = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+  const [isDesktop,     setIsDesktop]     = useState(window.innerWidth > 768);
 
- useEffect(() => {
-  function onResize() { setIsDesktop(window.innerWidth > 768); }
-  window.addEventListener("resize", onResize);
-  return () => window.removeEventListener("resize", onResize);
-}, []);
+  useEffect(() => {
+    function onResize() { setIsDesktop(window.innerWidth > 768); }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   function handleTermDone() {
     setTermFading(true);
@@ -355,7 +355,15 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
 
       {/* ── Main phase ──────────────────────────────────────── */}
       {phase === "main" && (
-        <div style={{ position: "fixed", inset: 0, overflow: "hidden" }}>
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: isDesktop ? "center" : "flex-end",
+        }}>
 
           {/* ── Background ──────────────────────────────────── */}
           <div style={{
@@ -385,281 +393,290 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             }} />
           </div>
 
-          {/* ── Branding — centered, scales for all screens ─── */}
+          {/* ── Content Container (Desktop Flex Layout) ─── */}
           <div style={{
-            position:       "absolute",
-            top:            0, left: 0, right: 0,
-            height:         "54%",
-            zIndex:         10,
-            display:        "flex",
-            flexDirection:  "column",
-            alignItems:     "center",
+            position: "relative",
+            zIndex: 10,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             justifyContent: "center",
-            padding:        "0 clamp(20px,6vw,60px)",
-            textAlign:      "center",
-            pointerEvents:  "none",
-          }}>
-            {/* MRSPTU label */}
-            <p style={{
-              margin:        "0 0 10px",
-              fontSize:      "clamp(10px,1.4vw,13px)",
-              color:         dark ? "rgba(255,255,255,0.35)" : "rgba(30,27,75,0.4)",
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
-              fontWeight:    600,
-            }}>
-              MRSPTU Bathinda
-            </p>
-
-            {/* CGPA */}
-            <h1 style={{
-              margin:        0,
-              fontSize:      "clamp(52px,10vw,108px)",
-              fontWeight:    900,
-              letterSpacing: "clamp(-2px,-0.4vw,-5px)",
-              lineHeight:    1,
-              color:         dark ? "rgba(255,255,255,0.93)" : "#1e1b4b",
-            }}>
-              CGPA
-            </h1>
-
-           {/* PULSE — gradient */}
-           <h1 style={{
-            margin:               "0 0 clamp(14px,2.5vw,24px)",
-            fontSize:             "clamp(52px,10vw,108px)",
-            fontWeight:           900,
-            fontStyle:            "italic",
-            letterSpacing:        "clamp(-2px,-0.4vw,-5px)",
-            lineHeight:           1.1,
-            paddingBottom:        4,
-            paddingRight:         18,
-            backgroundImage:      dark
-            ? "linear-gradient(135deg, #c084fc 0%, #67e8f9 100%)"
-            : "linear-gradient(135deg, #7c3aed 0%, #10b981 100%)",
-             WebkitBackgroundClip: "text",
-            backgroundClip:       "text",
-            WebkitTextFillColor:  "transparent",
-            color:                "transparent",
-            display:              "inline-block",
-            isolation:            "isolate",
-           }}>
-           PULSE
-           </h1>
-
-            {/* Typing tagline */}
-            <p style={{
-              margin:     0,
-              fontSize:   "clamp(13px,1.8vw,18px)",
-              color:      dark ? "rgba(255,255,255,0.5)" : "#5b5687",
-              lineHeight: 1.5,
-              pointerEvents: "auto",
-            }}>
-              The smarter way to <TypingText dark={dark} />
-            </p>
-          </div>
-
-          {/* ── Bottom drawer — max-width centered on desktop ── */}
-          <div style={{
-            position:   isDesktop ? "absolute" : "absolute",
-          bottom:     isDesktop ? "auto" : 0,
-  top:        isDesktop ? "50%" : "auto",
-  left:       "50%",
-  transform:  isDesktop
-    ? drawerVisible
-      ? "translate(-50%, -50%)"
-      : "translate(-50%, calc(-50% + 40px))"
-    : drawerVisible
-      ? "translate(-50%, 0)"
-      : "translate(-50%, 100%)",
-  width:        "100%",
-  maxWidth:     isDesktop ? 420 : "min(100%, 480px)",
-  borderRadius: isDesktop ? 20 : "20px 20px 0 0",
-            zIndex:               20,
-            background:           dark
-              ? "rgba(13,14,26,0.95)"
-              : "rgba(255,255,255,0.95)",
-            backdropFilter:       "blur(32px)",
-            WebkitBackdropFilter: "blur(32px)",
-            border:               `1px solid ${dark
-              ? "rgba(167,139,250,0.18)"
-              : "rgba(124,58,237,0.12)"}`,
-            borderBottom:         "none",
-            padding:              "10px clamp(20px,5vw,36px) clamp(28px,5vw,44px)",
-            boxShadow:            dark
-              ? "0 -20px 60px rgba(0,0,0,0.55)"
-              : "0 -20px 60px rgba(109,40,217,0.12)",
-            transition:           "transform 0.5s cubic-bezier(0.4,0,0.2,1)",
+            gap: isDesktop ? 32 : 0,
+            width: "100%",
+            height: "100%",
+            maxHeight: isDesktop ? "90vh" : "100%",
+            boxSizing: "border-box",
           }}>
 
-            {/* Handle */}
+            {/* ── Branding ─── */}
             <div style={{
-              width:        40, height: 4, borderRadius: 99,
-              background:   dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
-              margin:       "0 auto clamp(14px,2.5vw,22px)",
-            }} />
-
-            {/* Headline */}
-            <p style={{
-              margin:     "0 0 4px",
-              fontSize:   "clamp(17px,2.5vw,22px)",
-              fontWeight: 800,
-              color:      dark ? "rgba(255,255,255,0.92)" : "#1e1b4b",
-              textAlign:  "center",
+              display:        "flex",
+              flexDirection:  "column",
+              alignItems:     "center",
+              justifyContent: "center",
+              padding:        "0 clamp(20px,6vw,60px)",
+              textAlign:      "center",
+              pointerEvents:  "none",
             }}>
-              Sign in to get started
-            </p>
-            <p style={{
-              margin:     "0 0 clamp(14px,2vw,20px)",
-              fontSize:   "clamp(11px,1.4vw,13px)",
-              color:      dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
-              textAlign:  "center",
+              {/* MRSPTU label */}
+              <p style={{
+                margin:        "0 0 8px",
+                fontSize:      "clamp(10px,1.4vw,13px)",
+                color:         dark ? "rgba(255,255,255,0.35)" : "rgba(30,27,75,0.4)",
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                fontWeight:    600,
+              }}>
+                MRSPTU Bathinda
+              </p>
+
+              {/* CGPA */}
+              <h1 style={{
+                margin:        0,
+                fontSize:      isDesktop ? "clamp(48px, 6vw, 80px)" : "clamp(52px,10vw,108px)",
+                fontWeight:    900,
+                letterSpacing: "clamp(-2px,-0.4vw,-5px)",
+                lineHeight:    1,
+                color:         dark ? "rgba(255,255,255,0.93)" : "#1e1b4b",
+              }}>
+                CGPA
+              </h1>
+
+              {/* PULSE — gradient */}
+              <h1 style={{
+                margin:               "0 0 clamp(10px,2vw,18px)",
+                fontSize:             isDesktop ? "clamp(48px, 6vw, 80px)" : "clamp(52px,10vw,108px)",
+                fontWeight:           900,
+                fontStyle:            "italic",
+                letterSpacing:        "clamp(-2px,-0.4vw,-5px)",
+                lineHeight:           1.1,
+                paddingBottom:        4,
+                paddingRight:         18,
+                backgroundImage:      dark
+                  ? "linear-gradient(135deg, #c084fc 0%, #67e8f9 100%)"
+                  : "linear-gradient(135deg, #7c3aed 0%, #10b981 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip:       "text",
+                WebkitTextFillColor:  "transparent",
+                color:                "transparent",
+                display:              "inline-block",
+                isolation:            "isolate",
+              }}>
+                PULSE
+              </h1>
+
+              {/* Typing tagline */}
+              <p style={{
+                margin:        0,
+                fontSize:      "clamp(13px,1.8vw,18px)",
+                color:         dark ? "rgba(255,255,255,0.5)" : "#5b5687",
+                lineHeight:    1.5,
+                pointerEvents: "auto",
+              }}>
+                The smarter way to <TypingText dark={dark} />
+              </p>
+            </div>
+
+            {/* ── Sign-in Drawer / Modal Box ── */}
+            <div style={{
+              position:     isDesktop ? "relative" : "absolute",
+              bottom:       isDesktop ? "auto" : 0,
+              left:         isDesktop ? "auto" : "50%",
+              transform:    isDesktop
+                ? drawerVisible ? "translateY(0)" : "translateY(20px)"
+                : drawerVisible ? "translate(-50%, 0)" : "translate(-50%, 100%)",
+              opacity:      drawerVisible ? 1 : 0,
+              width:        "100%",
+              maxWidth:     isDesktop ? 420 : "min(100%, 480px)",
+              borderRadius: isDesktop ? 24 : "20px 20px 0 0",
+              zIndex:       20,
+              background:   dark
+                ? "rgba(13,14,26,0.95)"
+                : "rgba(255,255,255,0.95)",
+              backdropFilter:       "blur(32px)",
+              WebkitBackdropFilter: "blur(32px)",
+              border:               `1px solid ${dark
+                ? "rgba(167,139,250,0.18)"
+                : "rgba(124,58,237,0.12)"}`,
+              padding:      "20px clamp(20px,5vw,36px) clamp(24px,5vw,32px)",
+              boxShadow:    dark
+                ? isDesktop ? "0 20px 60px rgba(0,0,0,0.6)" : "0 -20px 60px rgba(0,0,0,0.55)"
+                : isDesktop ? "0 20px 60px rgba(109,40,217,0.15)" : "0 -20px 60px rgba(109,40,217,0.12)",
+              transition:   "transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease",
             }}>
-              Your grades, saved securely to your Google account
-            </p>
 
-            {/* Google button */}
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              style={{
-                width:          "100%",
-                padding:        "clamp(12px,1.8vw,16px) 16px",
-                borderRadius:   14,
-                border:         `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "#dadce0"}`,
-                background:     dark ? "rgba(255,255,255,0.08)" : "#fff",
-                color:          dark ? "rgba(255,255,255,0.9)" : "#3c4043",
-                fontSize:       "clamp(14px,1.6vw,16px)",
-                fontWeight:     600,
-                fontFamily:     "inherit",
-                cursor:         "pointer",
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                gap:            12,
-                transition:     "all 0.2s",
-                boxShadow:      dark ? "none" : "0 2px 8px rgba(0,0,0,0.08)",
-                marginBottom:   "clamp(10px,1.5vw,14px)",
-              }}
-              onMouseEnter={e =>
-                e.currentTarget.style.background = dark
-                  ? "rgba(255,255,255,0.13)" : "#f8f9fa"
-              }
-              onMouseLeave={e =>
-                e.currentTarget.style.background = dark
-                  ? "rgba(255,255,255,0.08)" : "#fff"
-              }
-            >
-              <svg width="20" height="20" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-              </svg>
-              Continue with Google
-            </button>
-
-            {/* Developer Console card */}
-            <button
-              onClick={openAbout}
-              style={{
-                width:          "100%",
-                padding:        "clamp(10px,1.5vw,13px) 14px",
-                borderRadius:   12,
-                background:     dark
-                  ? "rgba(16,185,129,0.06)"
-                  : "rgba(16,185,129,0.04)",
-                border:         "1px solid rgba(16,185,129,0.25)",
-                cursor:         "pointer",
-                fontFamily:     "inherit",
-                display:        "flex",
-                alignItems:     "center",
-                gap:            12,
-                textAlign:      "left",
-                transition:     "all 0.2s",
-                animation:      "termGlow 3s ease-in-out infinite",
-                marginBottom:   "clamp(8px,1.2vw,12px)",
-              }}
-              onMouseEnter={e =>
-                e.currentTarget.style.background = "rgba(16,185,129,0.1)"
-              }
-              onMouseLeave={e =>
-                e.currentTarget.style.background = dark
-                  ? "rgba(16,185,129,0.06)"
-                  : "rgba(16,185,129,0.04)"
-              }
-            >
-              {/* KK avatar */}
-              <div style={{
-                width:          "clamp(34px,5vw,42px)",
-                height:         "clamp(34px,5vw,42px)",
-                borderRadius:   "50%",
-                background:     "linear-gradient(135deg,#6d28d9,#a78bfa)",
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                fontSize:       "clamp(11px,1.6vw,14px)",
-                fontWeight:     900,
-                color:          "#fff",
-                flexShrink:     0,
-                boxShadow:      "0 0 12px rgba(109,40,217,0.4)",
-              }}>
-                KK
-              </div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin:   "0 0 1px",
-                  fontSize: "clamp(12px,1.5vw,14px)",
-                  fontWeight: 700,
-                  color:    dark ? "rgba(255,255,255,0.88)" : "#1e1b4b",
-                }}>
-                  Khushneet Kaur
-                </p>
-                <p style={{
-                  margin:   0,
-                  fontSize: "clamp(9px,1.2vw,11px)",
-                  color:    dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
-                }}>
-                  CSE · GZSCCET · MRSPTU Bathinda
-                </p>
-              </div>
-
-              {/* Console badge */}
-              <div style={{
-                display:      "flex",
-                alignItems:   "center",
-                gap:          4,
-                background:   "rgba(16,185,129,0.12)",
-                border:       "1px solid rgba(16,185,129,0.35)",
-                borderRadius: 6,
-                padding:      "4px 8px",
-                flexShrink:   0,
-              }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: "50%",
-                  background: "#10b981",
-                  animation: "consolePulse 1.2s step-end infinite",
-                  boxShadow: "0 0 5px #10b981",
+              {/* Handle — mobile only */}
+              {!isDesktop && (
+                <div style={{
+                  width:        40, height: 4, borderRadius: 99,
+                  background:   dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+                  margin:       "0 auto clamp(14px,2.5vw,22px)",
                 }} />
-                <span style={{
-                  fontSize: 9, fontWeight: 700,
-                  color: "#10b981", fontFamily: "monospace",
-                  letterSpacing: 0.4,
-                }}>
-                  CONSOLE
-                </span>
-              </div>
-            </button>
+              )}
 
-            <p style={{
-              textAlign:  "center",
-              fontSize:   "clamp(8px,1.1vw,10px)",
-              color:      dark ? "rgba(255,255,255,0.16)" : "#c4bfd8",
-              lineHeight: 1.6,
-              margin:     0,
-            }}>
-              Unofficial · Not affiliated with MRSPTU · Free forever
-            </p>
+              {/* Headline */}
+              <p style={{
+                margin:     "0 0 4px",
+                fontSize:   "clamp(17px,2.5vw,22px)",
+                fontWeight: 800,
+                color:      dark ? "rgba(255,255,255,0.92)" : "#1e1b4b",
+                textAlign:  "center",
+              }}>
+                Sign in to get started
+              </p>
+              <p style={{
+                margin:     "0 0 clamp(14px,2vw,20px)",
+                fontSize:   "clamp(11px,1.4vw,13px)",
+                color:      dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
+                textAlign:  "center",
+              }}>
+                Your grades, saved securely to your Google account
+              </p>
+
+              {/* Google button */}
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                style={{
+                  width:          "100%",
+                  padding:        "clamp(12px,1.8vw,16px) 16px",
+                  borderRadius:   14,
+                  border:         `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "#dadce0"}`,
+                  background:     dark ? "rgba(255,255,255,0.08)" : "#fff",
+                  color:          dark ? "rgba(255,255,255,0.9)" : "#3c4043",
+                  fontSize:       "clamp(14px,1.6vw,16px)",
+                  fontWeight:     600,
+                  fontFamily:     "inherit",
+                  cursor:         "pointer",
+                  display:        "flex",
+                  alignItems:     "center",
+                  justifyContent: "center",
+                  gap:            12,
+                  transition:     "all 0.2s",
+                  boxShadow:      dark ? "none" : "0 2px 8px rgba(0,0,0,0.08)",
+                  marginBottom:   "clamp(10px,1.5vw,14px)",
+                }}
+                onMouseEnter={e =>
+                  e.currentTarget.style.background = dark
+                    ? "rgba(255,255,255,0.13)" : "#f8f9fa"
+                }
+                onMouseLeave={e =>
+                  e.currentTarget.style.background = dark
+                    ? "rgba(255,255,255,0.08)" : "#fff"
+                }
+              >
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Continue with Google
+              </button>
+
+              {/* Developer Console card */}
+              <button
+                onClick={openAbout}
+                style={{
+                  width:          "100%",
+                  padding:        "clamp(10px,1.5vw,13px) 14px",
+                  borderRadius:   12,
+                  background:     dark
+                    ? "rgba(16,185,129,0.06)"
+                    : "rgba(16,185,129,0.04)",
+                  border:         "1px solid rgba(16,185,129,0.25)",
+                  cursor:         "pointer",
+                  fontFamily:     "inherit",
+                  display:        "flex",
+                  alignItems:     "center",
+                  gap:            12,
+                  textAlign:      "left",
+                  transition:     "all 0.2s",
+                  animation:      "termGlow 3s ease-in-out infinite",
+                  marginBottom:   "clamp(8px,1.2vw,12px)",
+                }}
+                onMouseEnter={e =>
+                  e.currentTarget.style.background = "rgba(16,185,129,0.1)"
+                }
+                onMouseLeave={e =>
+                  e.currentTarget.style.background = dark
+                    ? "rgba(16,185,129,0.06)"
+                    : "rgba(16,185,129,0.04)"
+                }
+              >
+                {/* KK avatar */}
+                <div style={{
+                  width:          "clamp(34px,5vw,42px)",
+                  height:         "clamp(34px,5vw,42px)",
+                  borderRadius:   "50%",
+                  background:     "linear-gradient(135deg,#6d28d9,#a78bfa)",
+                  display:        "flex",
+                  alignItems:     "center",
+                  justifyContent: "center",
+                  fontSize:       "clamp(11px,1.6vw,14px)",
+                  fontWeight:     900,
+                  color:          "#fff",
+                  flexShrink:     0,
+                  boxShadow:      "0 0 12px rgba(109,40,217,0.4)",
+                }}>
+                  KK
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    margin:   "0 0 1px",
+                    fontSize: "clamp(12px,1.5vw,14px)",
+                    fontWeight: 700,
+                    color:    dark ? "rgba(255,255,255,0.88)" : "#1e1b4b",
+                  }}>
+                    Khushneet Kaur
+                  </p>
+                  <p style={{
+                    margin:   0,
+                    fontSize: "clamp(9px,1.2vw,11px)",
+                    color:    dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
+                  }}>
+                    CSE · GZSCCET · MRSPTU Bathinda
+                  </p>
+                </div>
+
+                {/* Console badge */}
+                <div style={{
+                  display:      "flex",
+                  alignItems:   "center",
+                  gap:          4,
+                  background:   "rgba(16,185,129,0.12)",
+                  border:       "1px solid rgba(16,185,129,0.35)",
+                  borderRadius: 6,
+                  padding:      "4px 8px",
+                  flexShrink:   0,
+                }}>
+                  <span style={{
+                    width: 5, height: 5, borderRadius: "50%",
+                    background: "#10b981",
+                    animation: "consolePulse 1.2s step-end infinite",
+                    boxShadow: "0 0 5px #10b981",
+                  }} />
+                  <span style={{
+                    fontSize: 9, fontWeight: 700,
+                    color: "#10b981", fontFamily: "monospace",
+                    letterSpacing: 0.4,
+                  }}>
+                    CONSOLE
+                  </span>
+                </div>
+              </button>
+
+              <p style={{
+                textAlign:  "center",
+                fontSize:   "clamp(8px,1.1vw,10px)",
+                color:      dark ? "rgba(255,255,255,0.16)" : "#c4bfd8",
+                lineHeight: 1.6,
+                margin:     0,
+              }}>
+                Unofficial · Not affiliated with MRSPTU · Free forever
+              </p>
+            </div>
           </div>
         </div>
       )}
