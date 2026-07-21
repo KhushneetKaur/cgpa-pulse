@@ -95,14 +95,14 @@ function AppLayout() {
     }
   }, [user]);
 
-  async function handleOnboardingDone(chosenUsername, chosenBranch) {
+  async function handleOnboardingDone(chosenUsername, chosenBranch, chosenSem) {
     setShowOnboarding(false);
+    if (chosenBranch) setBranch(chosenBranch);
+    if (chosenSem) selectSem(chosenSem);
     try {
       const { apiGetProfile } = await import("./services/user.api.js");
       const updatedUser = await apiGetProfile();
-      setUser(updatedUser);
-      setBranch(chosenBranch);
-      if (chosenSem) selectSem(chosenSem);
+      if (updatedUser) setUser(updatedUser);
     } catch {
       // will refresh on next load
     }
@@ -193,7 +193,6 @@ function AppLayout() {
     </div>
   );
 }
-
 
 function TabContent({ tab }) {
   switch (tab) {
