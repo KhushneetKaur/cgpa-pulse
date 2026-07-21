@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BRANCHES } from "../data/branches";
-import { apiUpdateUsername, apiUpdateBranch } from "../services/user.api.js";
+import { apiUpdateUsername, apiUpdateBranch, apiUpdateCurrentSem } from "../services/user.api.js";
 import toast from "react-hot-toast";
 
 function isValidUsername(u) {
@@ -22,6 +22,7 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
   const [loading,  setLoading]  = useState(false);
   const [currentSem, setCurrentSem] = useState(null);
 
+  // Step 1: Save Username
   async function handleUsernameNext() {
     const check = isValidUsername(username);
     if (!check.ok) { setErr(check.msg); return; }
@@ -37,6 +38,7 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
     }
   }
 
+  // Step 2: Save Branch
   async function handleBranchNext() {
     if (!branch) { setErr("Please select your branch"); return; }
     setErr("");
@@ -46,6 +48,23 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
       setStep(3);
     } catch (e) {
       setErr(e.message || "Failed to save branch");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Step 3: Save Current Semester (FIXED: Added API call)
+  async function handleSemesterNext() {
+    if (!currentSem) { setErr("Please select your current semester"); return; }
+    setErr("");
+    setLoading(true);
+    try {
+      if (typeof apiUpdateCurrentSem === "function") {
+        await apiUpdateCurrentSem(currentSem);
+      }
+      setStep(4);
+    } catch (e) {
+      setErr(e.message || "Failed to save current semester");
     } finally {
       setLoading(false);
     }
@@ -147,11 +166,11 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
               disabled={loading}
               style={{
                 ...btn("primary"),
-                width:        "100%",
-                padding:      "13px",
-                fontSize:     14,
+                width:          "100%",
+                padding:        "13px",
+                fontSize:       14,
                 justifyContent: "center",
-                opacity:      loading ? 0.7 : 1,
+                opacity:        loading ? 0.7 : 1,
               }}
             >
               {loading ? "Checking..." : "Continue →"}
@@ -340,16 +359,22 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
               </div>
             )}
 
-            {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad }}>{err}</p>}
+            {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad }}>⚠ {err}</p>}
 
             <button
-              onClick={() => {
-                if (!currentSem) { setErr("Please select your current semester"); return; }
-                setStep(4);
+              onClick={handleSemesterNext}
+              disabled={loading || !currentSem}
+              style={{
+                ...btn("primary"),
+                width: "100%",
+                padding: "13px",
+                fontSize: 14,
+                justifyContent: "center",
+                opacity: loading || !currentSem ? 0.6 : 1,
+                cursor: !currentSem ? "not-allowed" : "pointer"
               }}
-              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center" }}
             >
-              Continue →
+              {loading ? "Saving..." : "Continue →"}
             </button>
           </>
         )}
@@ -375,7 +400,7 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
               </p>
             </div>
 
-            {/* Quick tips */}
+            {/* Quick guide */}
             <div style={{
               background:   dark ? "#080c18" : "#f4f3ff",
               borderRadius: 12,
@@ -431,7 +456,7 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
             </div>
 
             <button
-              onClick={() => onDone(username, branch, currentSem)}
+              onClick={() => onDone(username.trim(), branch, currentSem)}
               style={{
                 ...btn("primary"),
                 width:          "100%",

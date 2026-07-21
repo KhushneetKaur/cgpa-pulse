@@ -27,11 +27,6 @@ const BacklogsPage = React.lazy(() => import("./pages/BacklogsPage"));
 const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
 const GradeTablePage = React.lazy(() => import("./pages/GradeTablePage"));
 
-// Background Preloading Utility Function
-const preloadComponent = (importFn) => {
-  importFn().catch(() => {});
-};
-
 export default function App() {
   return (
     <AuthProvider>
@@ -45,7 +40,7 @@ export default function App() {
 }
 
 function Shell() {
-  const { screen, authLoading, user, googleProcessing, c } = useAppData();
+  const { screen, authLoading, user, c } = useAppData();
 
   if (authLoading || (user && screen === "login")) {
     return (
@@ -56,7 +51,6 @@ function Shell() {
         justifyContent: "center",
         background: c.bg,
       }}>
-        {/* Lighter, zero-dependency inline loader definition */}
         <svg width="36" height="36" viewBox="0 0 38 38" stroke="#7c3aed" style={{ animation: "spin 0.8s linear infinite" }}>
           <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
           <g fill="none" fillRule="evenodd">
@@ -88,23 +82,27 @@ function AppLayout() {
   const [showUsernameModal,  setShowUsernameModal]  = useState(false);
   const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
 
+  // FIXED TRIGGER: Triggers for new users who either don't have a custom username set or haven't completed onboarding
   useEffect(() => {
-    if (user && user.googleId && !user.usernameSetAt && !hasShownOnboarding) {
+    const needsOnboarding = user && user.googleId && (!user.usernameSetAt || !user.isOnboarded);
+    if (needsOnboarding && !hasShownOnboarding) {
       setShowOnboarding(true);
       setHasShownOnboarding(true);
     }
-  }, [user]);
+  }, [user, hasShownOnboarding]);
 
   async function handleOnboardingDone(chosenUsername, chosenBranch, chosenSem) {
-    setShowOnboarding(false);
     if (chosenBranch) setBranch(chosenBranch);
     if (chosenSem) selectSem(chosenSem);
+    
     try {
       const { apiGetProfile } = await import("./services/user.api.js");
       const updatedUser = await apiGetProfile();
       if (updatedUser) setUser(updatedUser);
     } catch {
-      // will refresh on next load
+      // fallback
+    } finally {
+      setShowOnboarding(false);
     }
   }
 
@@ -142,7 +140,7 @@ function AppLayout() {
       <QuickSGPAModal />
       <NavBar />
 
-      {/* Onboarding — new Google users only, first login */}
+      {/* Onboarding — new Google users only */}
       {showOnboarding && (
         <OnboardingModal
           dark={dark}
@@ -154,7 +152,7 @@ function AppLayout() {
         />
       )}
 
-      {/* Username change — existing users via navbar */}
+      {/* Username change modal */}
       {showUsernameModal && (
         <UsernameSetupModal
           dark={dark}
@@ -177,7 +175,7 @@ function AppLayout() {
         width:    "100%",
         padding:  "1.5rem 1.25rem 2rem",
       }}>
-        {!branch ? (
+        {!branch && !showOnboarding ? (
           <BranchSelect />
         ) : (
           <>

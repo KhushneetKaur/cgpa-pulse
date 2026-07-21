@@ -1,13 +1,11 @@
-import React ,{ createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { BRANCHES } from "../data/branches";
 import { calcSGPA, calcCGPA, calcTarget } from "../utils/calculations";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { apiGetSemesters }    from "../services/semester.api.js";
-import { apiGetLeaderboard }  from "../services/leaderboard.api.js";
-import { apiUpdateBranch }    from "../services/user.api.js";
 import toast from "react-hot-toast";
 import {
+  apiGetSemesters,
   apiSaveSemester,
   apiSaveQuickSgpa,
   apiDeleteSemester,
@@ -17,7 +15,8 @@ import {
   apiRemoveCustomSubject,
   apiToggleSubjectVisibility,
 } from "../services/semester.api.js";
-import { apiUpdateLbOptIn }   from "../services/user.api.js";
+import { apiGetLeaderboard } from "../services/leaderboard.api.js";
+import { apiUpdateBranch, apiUpdateLbOptIn } from "../services/user.api.js";
 
 const AppDataContext = createContext(null);
 
@@ -38,68 +37,58 @@ export function AppDataProvider({ children }) {
   } = auth;
   const { dark, toggleDark } = useTheme();
 
-  // ── Color tokens (Memoized to prevent children layout rerenders) ─────────────────
+  // ── Color tokens (Memoized to prevent layout rerenders) ─────────────────
   const c = useMemo(() => {
     return dark ? {
-      bg:          "#080c18",        // deep navy — not pure black
-      card:        "#0f1424",        // elevated surface
-      cardAlt:     "#151a2e",        // second level
-      border:      "#1e2540",        // subtle blue-tinted border
+      bg:          "#080c18",
+      card:        "#0f1424",
+      cardAlt:     "#151a2e",
+      border:      "#1e2540",
       borderHover: "#3d4470",
-
-      text:        "#eceef8",        // soft white — not harsh
-      sub:         "#8b90b8",        // blue-gray secondary
-      muted:       "#4a5070",        // dark muted
-
+      text:        "#eceef8",
+      sub:         "#8b90b8",
+      muted:       "#4a5070",
       maroon:      "#6d6af0",
       gold:        "#7c83f5",
-
-      accent:      "#7c83f5",        // softer than #818cf8
+      accent:      "#7c83f5",
       accentAlt:   "#34d399",
-      accentLt:    "#12163a",        // very dark indigo tint
-      accentTxt:   "#a5aeff",        // readable on dark
-
-      ok:          "#2dd4aa",        // teal-green
-      warn:        "#94a3b8",        // burnt orange — no yellow
-      bad:         "#e05c5c",        // muted red
+      accentLt:    "#12163a",
+      accentTxt:   "#a5aeff",
+      ok:          "#2dd4aa",
+      warn:        "#94a3b8",
+      bad:         "#e05c5c",
       purple:      "#c084fc",
-
       hover:       "#131828",
       inBg:        "#0a0e1c",
       inBdr:       "#252a45",
       goldBg:      "#12100a",
     } : {
-      bg:        "#f4f3ff",          // lavender tinted white
-      card:      "#ffffff",          // pure white cards
-      cardAlt:   "#f9f8ff",          // slightly off-white
-      border:    "#e4e2f0",          // soft lavender border
-      borderHover: "#a78bfa",        // violet on hover
-
-      text:      "#1e1b4b",          // deep indigo text
-      sub:       "#5b5687",          // medium purple-gray
-      muted:     "#a09bbf",          // light purple-gray
-
-      maroon:    "#8B1A1A",
-      gold:      "#c9a227",
-
-      accent:    "#6d28d9",          // deep violet
-      accentAlt: "#059669",          // emerald
-      accentLt:  "#ede9fe",          // violet tinted bg
-      accentTxt: "#6d28d9",          // accent text on light bg
-
-      ok:        "#059669",          // success
-      warn:      "#d97706",          // warning
-      bad:       "#dc2626",          // error
-      purple:    "#7c3aed",          // special
-
-      hover:     "#ede9fe",
-      inBg:      "#faf9ff",
-      inBdr:     "#d4d0e8",
-      goldBg:    "#fefce8",
+      bg:          "#f4f3ff",
+      card:        "#ffffff",
+      cardAlt:     "#f9f8ff",
+      border:      "#e4e2f0",
+      borderHover: "#a78bfa",
+      text:        "#1e1b4b",
+      sub:         "#5b5687",
+      muted:       "#a09bbf",
+      maroon:      "#8B1A1A",
+      gold:        "#c9a227",
+      accent:      "#6d28d9",
+      accentAlt:   "#059669",
+      accentLt:    "#ede9fe",
+      accentTxt:   "#6d28d9",
+      ok:          "#059669",
+      warn:        "#d97706",
+      bad:         "#dc2626",
+      purple:      "#7c3aed",
+      hover:       "#ede9fe",
+      inBg:        "#faf9ff",
+      inBdr:       "#d4d0e8",
+      goldBg:      "#fefce8",
     };
   }, [dark]);
 
-  // ── Score color ───────────────────────────────────────────────
+  // ── Style Helpers ───────────────────────────────────────────────
   const scoreClr = useCallback((score) => {
     const n = parseFloat(score);
     if (isNaN(n))  return c.muted;
@@ -109,7 +98,6 @@ export function AppDataProvider({ children }) {
     return c.bad;
   }, [c]);
 
-  // ── Card style ────────────────────────────────────────────────
   const cardSty = useCallback((extra = {}) => ({
     background:   c.card,
     border:       `1px solid ${c.border}`,
@@ -121,7 +109,6 @@ export function AppDataProvider({ children }) {
     ...extra,
   }), [c, dark]);
 
-  // ── Input style ───────────────────────────────────────────────
   const inp = useCallback((extra = {}) => ({
     fontSize:         15,
     padding:          "10px 13px",
@@ -137,7 +124,6 @@ export function AppDataProvider({ children }) {
     ...extra,
   }), [c]);
 
-  // ── Button style ──────────────────────────────────────────────
   const btn = useCallback((type = "ghost", extra = {}) => {
     const styles = {
       primary: {
@@ -193,7 +179,7 @@ export function AppDataProvider({ children }) {
     };
   }, [c, dark]);
 
-  // --- App state
+  // --- App State ---
   const [screen, setScreen] = useState("login");
   const [tab, setTab] = useState("calculator");
   const [saveMsg, setSaveMsg] = useState("");
@@ -221,8 +207,8 @@ export function AppDataProvider({ children }) {
   const [predInt, setPredInt] = useState({});
   const [predDesiredSGPA, setPredDesiredSGPA] = useState("");
 
-  const [customSubjects,  setCustomSubjects]  = useState({}); 
-  const [hiddenSubjects,  setHiddenSubjects]  = useState({}); 
+  const [customSubjects, setCustomSubjects] = useState({}); 
+  const [hiddenSubjects, setHiddenSubjects] = useState({}); 
 
   const bCustomSubjects = useMemo(() => branch ? (customSubjects[branch] || {}) : {}, [branch, customSubjects]);
   const bHiddenSubjects = useMemo(() => branch ? (hiddenSubjects[branch] || {}) : {}, [branch, hiddenSubjects]);
@@ -232,19 +218,18 @@ export function AppDataProvider({ children }) {
     setTimeout(() => setSaveMsg(""), 2500);
   }
 
+  // ── Initial Load Effect ───────────────────────────────────────────
   useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
-      if (screen === "app") {
-        setScreen("login");
-        setHist({});
-        setBacklogs({});
-        setElectiveNames({});
-        setBranchState(null);
-        setSelSem(null);
-        setMarks({});
-      }
+      setScreen("login");
+      setHist({});
+      setBacklogs({});
+      setElectiveNames({});
+      setBranchState(null);
+      setSelSem(null);
+      setMarks({});
       return;
     }
 
@@ -258,9 +243,11 @@ export function AppDataProvider({ children }) {
 
         if (user.branch) {
           const { semesters } = await apiGetSemesters(user.branch);
-          const histMap    = { [user.branch]: {} };
+          const histMap = { [user.branch]: {} };
           const backlogMap = { [user.branch]: {} };
           const electiveMap = { [user.branch]: {} };
+          const customMap = { [user.branch]: {} };
+          const hiddenMap = { [user.branch]: {} };
 
           for (const sem of semesters) {
             const marksObj = {};
@@ -268,22 +255,18 @@ export function AppDataProvider({ children }) {
               marksObj[m.code] = { int: m.int, ext: m.ext };
             }
             const electiveNamesObj = sem.electiveNames
-              ? (sem.electiveNames instanceof Map
-                  ? Object.fromEntries(sem.electiveNames)
-                  : sem.electiveNames)
+              ? (sem.electiveNames instanceof Map ? Object.fromEntries(sem.electiveNames) : sem.electiveNames)
               : {};
 
             histMap[user.branch][sem.semNumber] = {
-              marks:         marksObj,
-              sgpa:          sem.sgpa,
-              credits:       sem.credits,
-              isPartial:     sem.isPartial,
-              mode:          sem.mode,
-              savedAt:       sem.savedAt
-                ? new Date(sem.savedAt).toLocaleDateString("en-IN")
-                : "",
+              marks: marksObj,
+              sgpa: sem.sgpa,
+              credits: sem.credits,
+              isPartial: sem.isPartial,
+              mode: sem.mode,
+              savedAt: sem.savedAt ? new Date(sem.savedAt).toLocaleDateString("en-IN") : "",
               electiveNames: electiveNamesObj,
-              backlogs:      sem.backlogs || [],
+              backlogs: sem.backlogs || [],
             };
 
             backlogMap[user.branch][sem.semNumber] = sem.backlogs || [];
@@ -291,26 +274,21 @@ export function AppDataProvider({ children }) {
             for (const [code, name] of Object.entries(electiveNamesObj)) {
               electiveMap[user.branch][code] = name;
             }
-          }
 
-          const customMap = { [user.branch]: {} };
-          const hiddenMap = { [user.branch]: {} };
-          for (const sem of semesters) {
             customMap[user.branch][sem.semNumber] = sem.customSubjects || [];
             hiddenMap[user.branch][sem.semNumber] = sem.hiddenSubjects || [];
           }
+
           setCustomSubjects(customMap);
           setHiddenSubjects(hiddenMap);
-
           setHist(histMap);
           setBacklogs(backlogMap);
           setElectiveNames(electiveMap);
         }
 
-        await Promise.allSettled([
-          user.branch ? apiGetSemesters(user.branch) : Promise.resolve(null),
-          apiGetLeaderboard("ALL"),
-        ]);
+        // Fetch leaderboard only
+        const lbRes = await apiGetLeaderboard("ALL");
+        if (lbRes?.entries) setLbData(lbRes.entries);
 
         setScreen("app");
       } catch (err) {
@@ -320,7 +298,7 @@ export function AppDataProvider({ children }) {
     }
 
     loadUserData();
-  }, [user, authLoading, screen]);
+  }, [user, authLoading]); // Screen dependency removed to prevent recalculation cycles
 
   async function setBranch(key) {
     if (!BRANCHES[key]) return;
@@ -332,47 +310,35 @@ export function AppDataProvider({ children }) {
     try {
       await apiUpdateBranch(key);
       const { semesters } = await apiGetSemesters(key);
-      const histMap = {};
-      histMap[key] = {};
+      const histMap = { [key]: {} };
+      const electiveMapForBranch = {};
+
       for (const sem of semesters) {
         const electiveNamesObj = sem.electiveNames
-          ? (sem.electiveNames instanceof Map
-              ? Object.fromEntries(sem.electiveNames)
-              : sem.electiveNames)
+          ? (sem.electiveNames instanceof Map ? Object.fromEntries(sem.electiveNames) : sem.electiveNames)
           : {};
 
         histMap[key][sem.semNumber] = {
-          marks:     Object.fromEntries(
-            (sem.marks || []).map(m => [m.code, { int: m.int, ext: m.ext }])
-          ),
-          sgpa:          sem.sgpa,
-          credits:       sem.credits,
-          isPartial:     sem.isPartial,
-          mode:          sem.mode,
-          savedAt:       sem.savedAt
-            ? new Date(sem.savedAt).toLocaleDateString("en-IN")
-            : "",
+          marks: Object.fromEntries((sem.marks || []).map(m => [m.code, { int: m.int, ext: m.ext }])),
+          sgpa: sem.sgpa,
+          credits: sem.credits,
+          isPartial: sem.isPartial,
+          mode: sem.mode,
+          savedAt: sem.savedAt ? new Date(sem.savedAt).toLocaleDateString("en-IN") : "",
           electiveNames: electiveNamesObj,
-          backlogs:      sem.backlogs || [],
+          backlogs: sem.backlogs || [],
         };
-      }
-      const electiveMapForBranch = {};
-      for (const sem of semesters) {
-        const names = sem.electiveNames
-          ? (sem.electiveNames instanceof Map
-              ? Object.fromEntries(sem.electiveNames)
-              : sem.electiveNames)
-          : {};
-        for (const [code, name] of Object.entries(names)) {
+
+        for (const [code, name] of Object.entries(electiveNamesObj)) {
           electiveMapForBranch[code] = name;
         }
       }
+
       setElectiveNames(prev => ({
         ...prev,
         [key]: { ...(prev[key] || {}), ...electiveMapForBranch },
       }));
       setHist(prev => ({ ...prev, ...histMap }));
-
     } catch (err) {
       console.error("setBranch error:", err);
     }
@@ -385,7 +351,7 @@ export function AppDataProvider({ children }) {
     setSaveMsg("");
   }
 
-  function changeMark(code, field, val, type) {
+  function changeMark(code, field, val) {
     let sub = (selSem && branch)
       ? BRANCHES[branch].semesters[selSem].subjects.find((s) => s.code === code)
       : null;
@@ -442,14 +408,12 @@ export function AppDataProvider({ children }) {
       const newBranchHist = {
         ...(hist[branch] || {}),
         [selSem]: {
-          marks:     Object.fromEntries(
-            marksArray.map(m => [m.code, { int: m.int, ext: m.ext }])
-          ),
-          sgpa:      semester.sgpa,
-          credits:   semester.credits,
+          marks: Object.fromEntries(marksArray.map(m => [m.code, { int: m.int, ext: m.ext }])),
+          sgpa: semester.sgpa,
+          credits: semester.credits,
           isPartial: semester.isPartial,
-          mode:      "detailed",
-          savedAt:   new Date(semester.savedAt).toLocaleDateString("en-IN"),
+          mode: "detailed",
+          savedAt: new Date(semester.savedAt).toLocaleDateString("en-IN"),
         },
       };
       setHist(prev => ({ ...prev, [branch]: newBranchHist }));
@@ -466,19 +430,13 @@ export function AppDataProvider({ children }) {
   async function deleteSemRecord(sem = selSem) {
     if (!branch || !sem) return;
 
-    const oldBranchHist = hist[branch] || {};
-    const newBranchHist = { ...oldBranchHist };
-
-    delete newBranchHist[sem];
-
-    const newHist = {
-      ...hist,
-      [branch]: newBranchHist,
-    };
-
     try {
       await apiDeleteSemester(branch, sem);
-      setHist(newHist);
+      setHist(prev => {
+        const branchHist = { ...(prev[branch] || {}) };
+        delete branchHist[sem];
+        return { ...prev, [branch]: branchHist };
+      });
       setMarks({});
       toast.success("Semester deleted");
     } catch (err) {
@@ -519,12 +477,12 @@ export function AppDataProvider({ children }) {
       const newBranchHist = {
         ...(hist[branch] || {}),
         [qSem]: {
-          marks:     hist[branch]?.[qSem]?.marks || {},
-          sgpa:      semester.sgpa,
-          credits:   semester.credits,
+          marks: hist[branch]?.[qSem]?.marks || {},
+          sgpa: semester.sgpa,
+          credits: semester.credits,
           isPartial: false,
-          mode:      "quick",
-          savedAt:   new Date(semester.savedAt).toLocaleDateString("en-IN"),
+          mode: "quick",
+          savedAt: new Date(semester.savedAt).toLocaleDateString("en-IN"),
         },
       };
       setHist(prev => ({ ...prev, [branch]: newBranchHist }));
@@ -540,19 +498,13 @@ export function AppDataProvider({ children }) {
   async function deleteQuick() {
     if (!branch || !qSem) return;
 
-    const oldBranchHist = hist[branch] || {};
-    const newBranchHist = { ...oldBranchHist };
-
-    delete newBranchHist[qSem];
-
-    const newHist = {
-      ...hist,
-      [branch]: newBranchHist,
-    };
-
     try {
       await apiDeleteSemester(branch, qSem);
-      setHist(newHist);
+      setHist(prev => {
+        const branchHist = { ...(prev[branch] || {}) };
+        delete branchHist[qSem];
+        return { ...prev, [branch]: branchHist };
+      });
       closeQuick();
       flashSave("SGPA deleted!");
     } catch (err) {
@@ -595,7 +547,7 @@ export function AppDataProvider({ children }) {
 
   async function toggleLbOptIn() {
     try {
-      const next   = !lbOptIn;
+      const next = !lbOptIn;
       await apiUpdateLbOptIn(next);
       setLbOptInState(next);
 
@@ -684,18 +636,16 @@ export function AppDataProvider({ children }) {
   }
 
   async function toggleHiddenSubject(semNumber, code, hidden) {
-    const getUpdatedHidden = (prev) => {
+    setHiddenSubjects(prev => {
       const current = prev[branch]?.[semNumber] || [];
-      const updated  = hidden
+      const updated = hidden
         ? [...current.filter(c => c !== code), code]
         : current.filter(c => c !== code);
       return {
         ...prev,
         [branch]: { ...(prev[branch] || {}), [semNumber]: updated },
       };
-    };
-
-    setHiddenSubjects(prev => getUpdatedHidden(prev));
+    });
 
     if (bHist[semNumber]?.marks) {
       const newHiddenCodes = hidden
