@@ -1,21 +1,21 @@
-// Standard response wrapper used in every controller
-// Keeps all API responses consistent
+// Standard response wrapper used across controllers to guarantee uniform response contracts
 
 class ApiResponse {
-  constructor(statusCode, data, message = "Success") {
+  constructor(statusCode, data = null, message = "Success") {
+    this.success = statusCode < 400;
     this.statusCode = statusCode;
-    this.success    = statusCode < 400;
-    this.message    = message;
-    this.data       = data;
+    this.message = message;
+    this.data = data;
   }
 }
 
-// ── Helper function used in controllers ───────────────────────────────────────
-// res.status(200).json(new ApiResponse(200, data, "Fetched"))
-// or use the shorthand:
-// sendResponse(res, 200, data, "Fetched")
-
-export function sendResponse(res, statusCode, data, message) {
+/**
+ Shorthand helper for sending standardized JSON responses in controllers
+ * 
+ * @example
+ * sendResponse(res, 200, { user }, "User profile updated");
+ */
+export function sendResponse(res, statusCode, data = null, message = "Success") {
   return res
     .status(statusCode)
     .json(new ApiResponse(statusCode, data, message));

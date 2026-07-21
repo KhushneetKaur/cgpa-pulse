@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 
@@ -8,103 +9,107 @@ export default function BacklogsPage() {
     bBacklogs,
     bElectiveNames,
     toggleBacklog,
-    c, cardSty,
+    c,
+    cardSty,
   } = useAppData();
 
-  const totalBacklogs = Object.values(bBacklogs)
-    .reduce((a, arr) => a + (arr?.length || 0), 0);
+  // Memoize total backlog count to avoid unnecessary array iterations on re-renders
+  const totalBacklogs = useMemo(() => {
+    return Object.values(bBacklogs).reduce((acc, arr) => acc + (arr?.length || 0), 0);
+  }, [bBacklogs]);
+
+  const currentBranchData = BRANCHES[branch];
 
   return (
     <div style={cardSty()}>
-
       {/* Header */}
       <p style={{
-        margin:     "0 0 4px",
-        fontSize:   15,
+        margin: "0 0 4px",
+        fontSize: 15,
         fontWeight: 600,
-        color:      c.text,
+        color: c.text,
       }}>
         ⚠ Backlog Tracker
       </p>
       <p style={{
-        margin:   "0 0 16px",
+        margin: "0 0 16px",
         fontSize: 13,
-        color:    c.sub,
+        color: c.sub,
       }}>
         Subjects marked as backlog across all semesters.
         Mark them cleared once you pass the reappear exam.
       </p>
 
-      {/* No backlogs */}
+      {/* No backlogs state */}
       {totalBacklogs === 0 ? (
         <div style={{
           textAlign: "center",
-          padding:   "2.5rem 0",
+          padding: "2.5rem 0",
         }}>
           <p style={{ fontSize: 40, margin: "0 0 10px" }}>🎉</p>
           <p style={{
-            color:      c.ok,
-            fontSize:   15,
+            color: c.ok,
+            fontSize: 15,
             fontWeight: 600,
-            margin:     0,
+            margin: 0,
           }}>
             No active backlogs!
           </p>
           <p style={{
-            color:   c.muted,
+            color: c.muted,
             fontSize: 12,
-            margin:  "6px 0 0",
+            margin: "6px 0 0",
           }}>
             Keep it up.
           </p>
         </div>
       ) : (
         <div style={{
-          display:       "flex",
+          display: "flex",
           flexDirection: "column",
-          gap:           12,
+          gap: 12,
         }}>
           {semKeys.map(s => {
             const semBLs = bBacklogs[s] || [];
             if (!semBLs.length) return null;
 
-            const subs = BRANCHES[branch].semesters[s].subjects;
+            const semesterData = currentBranchData?.semesters?.[s];
+            const subs = semesterData?.subjects || [];
 
             return (
               <div
                 key={s}
                 style={{
-                  border:       `1px solid ${c.bad}44`,
+                  border: `1px solid ${c.bad}44`,
                   borderRadius: 10,
-                  padding:      "12px 14px",
-                  background:   `${c.bad}06`,
+                  padding: "12px 14px",
+                  background: `${c.bad}06`,
                 }}
               >
                 {/* Semester heading */}
                 <p style={{
-                  margin:     "0 0 10px",
-                  fontSize:   14,
+                  margin: "0 0 10px",
+                  fontSize: 14,
                   fontWeight: 600,
-                  color:      c.bad,
+                  color: c.bad,
                 }}>
-                  ⚠ {BRANCHES[branch].semesters[s].name} —{" "}
-                  {semBLs.length} backlog
-                  {semBLs.length > 1 ? "s" : ""}
+                  ⚠ {semesterData?.name || `Semester ${s}`} —{" "}
+                  {semBLs.length} backlog{semBLs.length > 1 ? "s" : ""}
                 </p>
 
                 {/* Backlog subjects */}
                 <div style={{
-                  display:       "flex",
+                  display: "flex",
                   flexDirection: "column",
-                  gap:           8,
+                  gap: 8,
                 }}>
                   {subs
                     .filter(sub => semBLs.includes(sub.code))
                     .map(sub => {
+                      const customName = bElectiveNames[sub.code];
                       const displayName =
-                        bElectiveNames[sub.code] &&
-                        bElectiveNames[sub.code] !== "__other__"
-                          ? bElectiveNames[sub.code]
+                        customName && customName !== "__other__"
+                          ? customName
                           : sub.name;
 
                       return (
@@ -112,29 +117,29 @@ export default function BacklogsPage() {
                           key={sub.code}
                           className="backlog-subject-row"
                           style={{
-                          display:        "flex",
-                          justifyContent: "space-between",
-                          alignItems:     "center",
-                          padding:        "10px 12px",
-                          background:     c.card,
-                          borderRadius:   8,
-                          border:         `1px solid ${c.bad}22`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "10px 12px",
+                            background: c.card,
+                            borderRadius: 8,
+                            border: `1px solid ${c.bad}22`,
                           }}
-                          >
+                        >
                           {/* Subject info */}
                           <div>
                             <p style={{
-                              margin:     0,
-                              fontSize:   13,
-                              color:      c.text,
+                              margin: 0,
+                              fontSize: 13,
+                              color: c.text,
                               fontWeight: 500,
                             }}>
                               {displayName}
                             </p>
                             <p style={{
-                              margin:   0,
+                              margin: 0,
                               fontSize: 11,
-                              color:    c.muted,
+                              color: c.muted,
                             }}>
                               {sub.code} · {sub.credits} cr ·{" "}
                               {sub.type === "lab" ? "Lab / Practical" : "Theory"}
@@ -143,22 +148,23 @@ export default function BacklogsPage() {
 
                           {/* Clear button */}
                           <button
-  onClick={() => toggleBacklog(s, sub.code)}
-  className="backlog-clear-btn"
-  style={{
-    padding:      "5px 14px",
-    background:   `${c.ok}18`,
-    border:       `1px solid ${c.ok}`,
-    borderRadius: 8,
-    color:        c.ok,
-    fontSize:     12,
-    fontWeight:   600,
-    cursor:       "pointer",
-    whiteSpace:   "nowrap",
-  }}
->
-  ✓ Mark Cleared
-</button>
+                            onClick={() => toggleBacklog(s, sub.code)}
+                            aria-label={`Mark ${displayName} as cleared`}
+                            className="backlog-clear-btn"
+                            style={{
+                              padding: "5px 14px",
+                              background: `${c.ok}18`,
+                              border: `1px solid ${c.ok}`,
+                              borderRadius: 8,
+                              color: c.ok,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            ✓ Mark Cleared
+                          </button>
                         </div>
                       );
                     })}
@@ -171,18 +177,18 @@ export default function BacklogsPage() {
 
       {/* How to add backlogs tip */}
       <div style={{
-        marginTop:    16,
-        padding:      "10px 14px",
-        background:   c.hover,
+        marginTop: 16,
+        padding: "10px 14px",
+        background: c.hover,
         borderRadius: 8,
-        border:       `1px solid ${c.border}`,
-        fontSize:     13,
-        color:        c.sub,
-        lineHeight:   1.6,
+        border: `1px solid ${c.border}`,
+        fontSize: 13,
+        color: c.sub,
+        lineHeight: 1.6,
       }}>
         <strong style={{ color: c.text }}>How to mark a backlog:</strong>{" "}
         Go to the <strong style={{ color: c.text }}>Calculator</strong> tab
-        → select the semester → click the{" "}
+        {" "}→ select the semester → click the{" "}
         <strong style={{ color: c.bad }}>!</strong> button
         on the right side of any subject row.
       </div>

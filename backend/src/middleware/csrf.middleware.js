@@ -1,31 +1,40 @@
 import crypto from "crypto";
 
-// CSRF is only meaningful for routes that don't already use JWT auth.
-// All our protected routes use httpOnly JWT cookies which are
-// already immune to CSRF by definition — a cross-origin page
-// cannot read or set httpOnly cookies.
-// We keep CSRF only for the public auth routes as a belt-and-braces measure.
-
-const CSRF_PROTECTED = new Set([
-  // Only protect public endpoints that don't require JWT
-  // Currently none — all our sensitive routes require JWT
-  // Leave this set empty to disable CSRF checks globally
-]);
-
+/**
+ * Issues a CSRF token as an un-httpOnly cookie and JSON response.
+ * Client frontend reads this token and returns it in the X-CSRF-Token header.
+ */
 export function issueCsrfToken(req, res) {
   const token = crypto.randomBytes(32).toString("hex");
+
   res.cookie("csrfToken", token, {
-    httpOnly: false,          // must be readable by JS
-    secure:   process.env.NODE_ENV === "production",
+    httpOnly: false, // Must be readable by client JS
+    secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge:   60 * 60 * 1000, // 1 hour
+    maxAge: 60 * 60 * 1000, // 1 hour
   });
+
   res.json({ success: true, data: { token } });
 }
 
+/**
+ * Validates the X-CSRF-Token header against the csrfToken cookie.
+ */
 export function csrfProtection(req, res, next) {
-  // Skip CSRF entirely — JWT httpOnly cookies already prevent CSRF
-  // In cross-domain production setup (Vercel+Render) CSRF cookies
-  // don't work reliably anyway
-  return next();
+  // Skip safe HTTP methods
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
+    return next();
+  }
+
+  const cookieToken = req.cookies?.csrfToken;
+  const headerToken = req.headers["x-csrf-token"];
+
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    return res.status(403).json({
+      success: false,
+      message: "Invalid or missing CSRF token",
+    });
+  }
+
+  next();
 }

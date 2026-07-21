@@ -1,57 +1,44 @@
 import { Router } from "express";
 import {
-  signup,
-  login,
+  googleSignIn,
   logout,
-  getMe, 
+  getMe,
   refresh,
 } from "../controllers/auth.controller.js";
-import { protect }          from "../middleware/auth.middleware.js";
-import { validate }         from "../middleware/validate.middleware.js";
-import {
-  authLimiter,
-  authIdentifierLimiter, 
-} from "../middleware/rateLimit.middleware.js";
-import {
-  signupSchema,
-  loginSchema,
-} from "../utils/validators.js";
+import { protect } from "../middleware/auth.middleware.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { authLimiter } from "../middleware/rateLimit.middleware.js";
+import { googleAuthSchema } from "../utils/validators.js";
 import { issueCsrfToken } from "../middleware/csrf.middleware.js";
-import { googleSignIn } from "../controllers/auth.controller.js";
 
 const router = Router();
 
+// CSRF Token endpoint (if applicable for your cross-origin setup)
 router.get("/csrf", issueCsrfToken);
 
-// ── Public routes — no auth needed ───────────────────────────────────────────
+// ── Public Authentication Routes ─────────────────────────────────────────────
 
-// POST /api/auth/signup
+// POST /api/auth/google
+// Primary login/signup mechanism via Google OAuth ID tokens
 router.post(
-  "/signup",
-  authLimiter,              // max 10 attempts per 15 min per IP
-  authIdentifierLimiter,
-  validate(signupSchema),   // validate body before hitting controller
-  signup
-);
-
-// POST /api/auth/login
-router.post(
-  "/login",
+  "/google",
   authLimiter,
-  authIdentifierLimiter,
-  validate(loginSchema),
-  login
+  validate(googleAuthSchema),
+  googleSignIn
 );
+
+// POST /api/auth/refresh
+// Issues a fresh access token using the httpOnly refresh token cookie
+router.post("/refresh", refresh);
 
 // POST /api/auth/logout
+// Clears session cookies
 router.post("/logout", logout);
 
-// ── Protected routes — must be logged in ─────────────────────────────────────
+// ── Protected Routes ─────────────────────────────────────────────────────────
 
 // GET /api/auth/me
-// Called on every app load to restore session from cookie
+// Restores user session on app launch
 router.get("/me", protect, getMe);
-router.post("/refresh",         refresh);
-router.post("/google", authLimiter, googleSignIn);
 
 export default router;

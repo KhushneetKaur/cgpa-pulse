@@ -5,25 +5,39 @@ import LeaderboardOptInModal from "../components/LeaderboardOptInModal";
 
 export default function LeaderboardPage() {
   const {
-    user, branch, cgpa,
-    lbData, lbOptIn, toggleLbOptIn,
-    c, cardSty, btn, scoreClr, dark,
+    user,
+    branch,
+    cgpa,
+    lbData,
+    lbOptIn,
+    toggleLbOptIn,
+    c,
+    cardSty,
+    btn,
+    scoreClr,
+    dark,
   } = useAppData();
 
   const [showOptInModal, setShowOptInModal] = useState(false);
   const [optOutErr, setOptOutErr] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const pageContainerStyle = useMemo(() => cardSty(), [cardSty]);
 
   async function handleToggle() {
+    if (isSubmitting) return;
+
     if (!lbOptIn) {
       setShowOptInModal(true);
     } else {
       try {
+        setIsSubmitting(true);
         setOptOutErr("");
         await toggleLbOptIn();
       } catch (err) {
-        setOptOutErr(err?.message || "Cannot opt out yet");
+        setOptOutErr(err?.message || "Cannot opt out right now");
+      } finally {
+        setIsSubmitting(false);
       }
     }
   }
@@ -31,65 +45,74 @@ export default function LeaderboardPage() {
   async function handleConfirmOptIn() {
     setShowOptInModal(false);
     try {
+      setIsSubmitting(true);
+      setOptOutErr("");
       await toggleLbOptIn();
     } catch (err) {
       setOptOutErr(err?.message || "Failed to opt in");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
     <div style={pageContainerStyle}>
-
       {/* Header row */}
       <div
         className="lb-header-row"
         style={{
-          display:        "flex",
+          display: "flex",
           justifyContent: "space-between",
-          alignItems:     "flex-start",
-          marginBottom:   16,
-          flexWrap:       "wrap",
-          gap:            10,
+          alignItems: "flex-start",
+          marginBottom: 16,
+          flexWrap: "wrap",
+          gap: 10,
         }}
       >
         <div>
           <p style={{
-            margin:     0,
-            fontSize:   15,
+            margin: 0,
+            fontSize: 15,
             fontWeight: 600,
-            color:      c.text,
+            color: c.text,
           }}>
             🏆 CGPA Leaderboard
           </p>
           <p style={{
-            margin:   0,
+            margin: 0,
             fontSize: 13,
-            color:    c.sub,
+            color: c.sub,
           }}>
-            Anonymous opt-in 
+            Anonymous opt-in ranking
           </p>
         </div>
 
         <div>
           <button
             onClick={handleToggle}
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
             style={{
               ...btn("ghost"),
-              fontSize:    12,
+              fontSize: 12,
               borderColor: lbOptIn ? c.ok : c.border,
-              color:       lbOptIn ? c.ok : c.sub,
-              fontWeight:  lbOptIn ? 600 : 400,
+              color: lbOptIn ? c.ok : c.sub,
+              fontWeight: lbOptIn ? 600 : 400,
+              opacity: isSubmitting ? 0.6 : 1,
+              cursor: isSubmitting ? "not-allowed" : "pointer",
             }}
           >
-            {lbOptIn
+            {isSubmitting
+              ? "Updating..."
+              : lbOptIn
               ? "✓ You're on the board · Opt out"
               : "Add my CGPA to the board"}
           </button>
           {optOutErr && (
             <p style={{
-              margin:     "6px 0 0",
-              fontSize:   11,
-              color:      c.bad,
+              margin: "6px 0 0",
+              fontSize: 11,
+              color: c.bad,
               fontWeight: 500,
             }}>
               {optOutErr}
@@ -103,38 +126,38 @@ export default function LeaderboardPage() {
         <div
           className="lb-your-standing"
           style={{
-            padding:      "10px 14px",
-            background:   c.accentLt,
-            border:       `1px solid ${c.accentTxt}44`,
+            padding: "10px 14px",
+            background: c.accentLt,
+            border: `1px solid ${c.accentTxt}44`,
             borderRadius: 8,
             marginBottom: 14,
-            display:      "flex",
-            alignItems:   "center",
-            gap:          12,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
           }}
         >
           <div>
             <p style={{
-              margin:   0,
+              margin: 0,
               fontSize: 11,
-              color:    c.sub,
+              color: c.sub,
             }}>
-              Your CGPA ({BRANCHES[branch]?.short})
+              Your CGPA ({BRANCHES[branch]?.short || branch})
             </p>
             <p style={{
-              margin:     0,
-              fontSize:   22,
+              margin: 0,
+              fontSize: 22,
               fontWeight: 700,
-              color:      scoreClr(cgpa),
+              color: scoreClr(cgpa),
             }}>
               {cgpa}
             </p>
           </div>
           <p style={{
-            margin:   0,
+            margin: 0,
             fontSize: 12,
-            color:    c.sub,
-            flex:     1,
+            color: c.sub,
+            flex: 1,
           }}>
             {lbOptIn
               ? "Your score is visible on the leaderboard below."
@@ -147,33 +170,32 @@ export default function LeaderboardPage() {
       {lbData.length === 0 ? (
         <div style={{
           textAlign: "center",
-          padding:   "2rem 0",
+          padding: "2rem 0",
         }}>
           <p style={{ fontSize: 32, margin: "0 0 8px" }}>🏅</p>
           <p style={{
-            color:   c.sub,
+            color: c.sub,
             fontSize: 13,
-            margin:  0,
+            margin: 0,
           }}>
             No entries yet.
           </p>
           <p style={{
-            color:   c.muted,
+            color: c.muted,
             fontSize: 12,
-            margin:  "4px 0 0",
+            margin: "4px 0 0",
           }}>
             Be the first to opt in!
           </p>
         </div>
       ) : (
         <div style={{
-          display:       "flex",
+          display: "flex",
           flexDirection: "column",
-          gap:           6,
-        }}
-      >
+          gap: 6,
+        }}>
           {lbData.map((entry, idx) => {
-            const isMe  = entry.username === user?.username;
+            const isMe = entry.username === user?.username;
             const medal = idx === 0 ? "🥇"
                         : idx === 1 ? "🥈"
                         : idx === 2 ? "🥉"
@@ -181,7 +203,7 @@ export default function LeaderboardPage() {
 
             return (
               <LeaderboardRow
-                key={`${entry.username}-${entry.branch}`}
+                key={entry.id || `${entry.username}-${entry.branch}-${idx}`}
                 entry={entry}
                 idx={idx}
                 isMe={isMe}
@@ -189,11 +211,11 @@ export default function LeaderboardPage() {
                 c={c}
                 scoreClr={scoreClr}
               />
-            ); 
+            );
           })}
         </div>
       )}
-      
+
       {showOptInModal && (
         <LeaderboardOptInModal
           dark={dark}
@@ -207,82 +229,94 @@ export default function LeaderboardPage() {
   );
 }
 
-// ─── Individual leaderboard row (Memoized for high render efficiency) ───────────
-const LeaderboardRow = React.memo(function LeaderboardRow({ entry, idx, isMe, medal, c, scoreClr }) {
+// ─── Individual leaderboard row (Memoized) ───────────────────────────────────
+const LeaderboardRow = React.memo(function LeaderboardRow({
+  entry,
+  idx,
+  isMe,
+  medal,
+  c,
+  scoreClr,
+}) {
   const branchInfo = BRANCHES[entry.branch];
 
   return (
     <div
       className="lb-row"
       style={{
-        display:             "grid",
+        display: "grid",
         gridTemplateColumns: "40px 1fr auto auto",
-        gap:                 12,
-        alignItems:          "center",
-        padding:             "10px 14px",
-        background:          isMe ? c.accentLt : c.hover,
-        borderRadius:        8,
-        border:              `1px solid ${isMe ? `${c.accentTxt}44` : c.border}`,
+        gap: 12,
+        alignItems: "center",
+        padding: "10px 14px",
+        background: isMe ? c.accentLt : c.hover,
+        borderRadius: 8,
+        border: `1px solid ${isMe ? `${c.accentTxt}44` : c.border}`,
       }}
     >
       {/* Rank */}
-      <span className="lb-rank" style={{
-        fontSize:   medal ? 18 : 13,
-        textAlign:  "center",
-        color:      medal ? undefined : c.muted,
-        fontWeight: medal ? undefined : 600,
-      }}>
+      <span
+        className="lb-rank"
+        aria-label={`Rank ${idx + 1}`}
+        style={{
+          fontSize: medal ? 18 : 13,
+          textAlign: "center",
+          color: medal ? undefined : c.muted,
+          fontWeight: medal ? undefined : 600,
+        }}
+      >
         {medal || `#${idx + 1}`}
       </span>
 
       {/* Username + branch */}
       <div className="lb-info">
         <p style={{
-          margin:     0,
-          fontSize:   13,
+          margin: 0,
+          fontSize: 13,
           fontWeight: isMe ? 700 : 400,
-          color:      isMe ? c.accentTxt : c.text,
+          color: isMe ? c.accentTxt : c.text,
         }}>
           {entry.username}
           {isMe && (
             <span style={{
-              fontSize:     10,
-              color:        c.accentTxt,
-              marginLeft:   6,
-              fontWeight:   400,
+              fontSize: 10,
+              color: c.accentTxt,
+              marginLeft: 6,
+              fontWeight: 400,
             }}>
               (you)
             </span>
           )}
         </p>
         <p style={{
-          margin:   0,
+          margin: 0,
           fontSize: 11,
-          color:    c.muted,
+          color: c.muted,
         }}>
-          {branchInfo?.name || entry.branch} · updated {entry.updatedAt}
+          {branchInfo?.name || entry.branch}
+          {entry.updatedAt ? ` · updated ${entry.updatedAt}` : ""}
         </p>
       </div>
 
       {/* Branch badge */}
       <span className="lb-badge" style={{
-        fontSize:     11,
-        color:        branchInfo?.color || c.sub,
-        background:   `${branchInfo?.color || c.border}18`,
-        border:       `1px solid ${branchInfo?.color || c.border}44`,
+        fontSize: 11,
+        color: branchInfo?.color || c.sub,
+        background: `${branchInfo?.color || c.border}18`,
+        border: `1px solid ${branchInfo?.color || c.border}44`,
         borderRadius: 6,
-        padding:      "2px 8px",
-        fontWeight:   600,
-        whiteSpace:   "nowrap",
+        padding: "2px 8px",
+        fontWeight: 600,
+        whiteSpace: "nowrap",
       }}>
         {branchInfo?.short || entry.branch}
       </span>
 
       {/* CGPA */}
       <span className="lb-cgpa" style={{
-        fontSize:   18,
+        fontSize: 18,
         fontWeight: 700,
-        color:      scoreClr(entry.cgpa),
+        color: scoreClr(entry.cgpa),
       }}>
         {entry.cgpa}
       </span>

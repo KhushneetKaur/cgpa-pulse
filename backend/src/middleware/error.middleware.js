@@ -58,9 +58,9 @@ export function errorMiddleware(err, req, res, next) {
   }
 
   res.status(error.statusCode).json({
-    success:    false,
-    message:    error.message,
-    errors:     error.errors.length ? error.errors : undefined,
+    success: false,
+    message: error.message,
+    errors:  error.errors?.length ? error.errors : undefined,
     // Only show stack trace in development
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });

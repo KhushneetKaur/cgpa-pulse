@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
 import SkeletonCard from "./SkeletonCard";
+
+// Pre-compute static branch entries outside the render loop
+const BRANCH_ENTRIES = Object.entries(BRANCHES);
+const SKELETON_ITEMS = [1, 2, 3, 4, 5, 6];
 
 export default function BranchSelect() {
   const { setBranch, hist, c, dark, cardSty, authLoading } = useAppData();
@@ -12,43 +16,43 @@ export default function BranchSelect() {
       <div style={{ ...cardSty(), padding: "2.5rem 2rem" }}>
         {/* Fake heading bars */}
         <div style={{
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          gap:            10,
-          marginBottom:   28,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 28,
         }}>
           <div style={{
-            width:        56,
-            height:       56,
+            width: 56,
+            height: 56,
             borderRadius: "50%",
-            background:   dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
+            background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
           }} />
           <div style={{
-            width:        180,
-            height:       16,
+            width: 180,
+            height: 16,
             borderRadius: 8,
-            background:   dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
+            background: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)",
           }} />
           <div style={{
-            width:        280,
-            height:       12,
+            width: 280,
+            height: 12,
             borderRadius: 6,
-            background:   dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+            background: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
           }} />
         </div>
 
         {/* Fake branch cards grid */}
         <div style={{
-          display:             "grid",
+          display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))",
-          gap:                 10,
-          maxWidth:            620,
-          margin:              "0 auto",
-          position:            "relative",
-          overflow:            "hidden",
+          gap: 10,
+          maxWidth: 620,
+          margin: "0 auto",
+          position: "relative",
+          overflow: "hidden",
         }}>
-          {[1, 2, 3, 4, 5, 6].map(i => (
+          {SKELETON_ITEMS.map(i => (
             <SkeletonCard key={i} dark={dark} rows={2} height={100} />
           ))}
         </div>
@@ -60,7 +64,7 @@ export default function BranchSelect() {
     <div style={{
       ...cardSty(),
       textAlign: "center",
-      padding:   "2.5rem 2rem",
+      padding: "2.5rem 2rem",
     }}>
       {/* Logo */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
@@ -68,19 +72,19 @@ export default function BranchSelect() {
       </div>
 
       {/* Heading */}
-      <p style={{
-        fontSize:   16,
+      <h2 style={{
+        fontSize: 18,
         fontWeight: 600,
-        color:      c.text,
-        margin:     "0 0 6px",
+        color: c.text,
+        margin: "0 0 6px",
       }}>
         Select Your Branch
-      </p>
+      </h2>
       <p style={{
-        fontSize:     13,
-        color:        c.sub,
-        margin:       "0 0 28px",
-        lineHeight:   1.5,
+        fontSize: 13,
+        color: c.sub,
+        margin: "0 0 28px",
+        lineHeight: 1.5,
       }}>
         Choose your engineering discipline to load the correct subjects and marks scheme.
       </p>
@@ -89,16 +93,17 @@ export default function BranchSelect() {
       <div
         className="branch-select-grid"
         style={{
-          display:             "grid",
+          display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))",
-          gap:                 10,
-          maxWidth:            620,
-          margin:              "0 auto",
+          gap: 10,
+          maxWidth: 620,
+          margin: "0 auto",
         }}
       >
-        {Object.entries(BRANCHES).map(([key, b]) => {
-          const savedSems = hist[key]
-            ? Object.values(hist[key]).filter(s => s.sgpa).length
+        {BRANCH_ENTRIES.map(([key, b]) => {
+          const branchHist = hist[key];
+          const savedSems = branchHist
+            ? Object.values(branchHist).filter(s => s?.sgpa).length
             : 0;
 
           const totalSems = Object.keys(b.semesters).length;
@@ -106,7 +111,6 @@ export default function BranchSelect() {
           return (
             <BranchCard
               key={key}
-              branchKey={key}
               branch={b}
               savedSems={savedSems}
               totalSems={totalSems}
@@ -119,9 +123,9 @@ export default function BranchSelect() {
 
       {/* Footer note */}
       <p style={{
-        fontSize:   11,
-        color:      c.muted,
-        marginTop:  24,
+        fontSize: 11,
+        color: c.muted,
+        marginTop: 24,
         lineHeight: 1.5,
       }}>
         You can switch between branches anytime from the top bar. Progress is saved separately for each branch.
@@ -130,48 +134,61 @@ export default function BranchSelect() {
   );
 }
 
-// ─── Individual branch card ───────────────────────────────────────────────────
-function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
+// ─── Individual memoized branch card ─────────────────────────────────────────
+const BranchCard = memo(function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
   const [isHovered, setIsHovered] = useState(false);
 
   const hasProgress = savedSems > 0;
-  const isComplete  = savedSems === totalSems;
-  const progress    = Math.round((savedSems / totalSems) * 100);
+  const isComplete = savedSems === totalSems;
+  const progress = Math.round((savedSems / totalSems) * 100);
+
+  const cardLabel = `${branch.name} (${branch.short}). ${
+    hasProgress
+      ? isComplete
+        ? "All semesters saved."
+        : `${savedSems} of ${totalSems} semesters saved.`
+      : "No semesters saved."
+  }`;
 
   return (
     <button
       onClick={onSelect}
+      aria-label={cardLabel}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
       style={{
-        padding:       "16px 12px",
-        background:    isHovered ? `${branch.color}11` : c.hover,
-        border:        `2px solid ${isHovered ? branch.color : c.border}`,
-        borderRadius:  10,
-        cursor:        "pointer",
-        display:       "flex",
+        padding: "16px 12px",
+        background: isHovered ? `${branch.color}11` : c.hover,
+        border: `2px solid ${isHovered ? branch.color : c.border}`,
+        borderRadius: 10,
+        cursor: "pointer",
+        display: "flex",
         flexDirection: "column",
-        alignItems:    "center",
-        gap:           6,
-        transition:    "border-color 0.15s, background 0.15s",
-        width:         "100%",
+        alignItems: "center",
+        gap: 6,
+        transition: "border-color 0.15s, background 0.15s, transform 0.15s",
+        transform: isHovered ? "translateY(-2px)" : "none",
+        width: "100%",
+        outline: "none",
       }}
     >
       {/* Branch short name */}
       <span style={{
-        fontSize:   22,
+        fontSize: 22,
         fontWeight: 700,
-        color:      branch.color,
+        color: branch.color,
       }}>
         {branch.short}
       </span>
 
       {/* Full branch name */}
       <span style={{
-        fontSize:   11,
-        color:      c.sub,
+        fontSize: 11,
+        color: c.sub,
         lineHeight: 1.3,
-        textAlign:  "center",
+        textAlign: "center",
       }}>
         {branch.name}
       </span>
@@ -180,26 +197,32 @@ function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
       {hasProgress && (
         <div style={{ width: "100%", marginTop: 4 }}>
           {/* Progress bar */}
-          <div style={{
-            height:       4,
-            background:   c.border,
-            borderRadius: 2,
-            overflow:     "hidden",
-            marginBottom: 4,
-          }}>
-            <div style={{
-              height:       "100%",
-              width:        `${progress}%`,
-              background:   isComplete ? c.ok : branch.color,
+          <div
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            style={{
+              height: 4,
+              background: c.border,
               borderRadius: 2,
-              transition:   "width 0.3s ease",
+              overflow: "hidden",
+              marginBottom: 4,
+            }}
+          >
+            <div style={{
+              height: "100%",
+              width: `${progress}%`,
+              background: isComplete ? c.ok : branch.color,
+              borderRadius: 2,
+              transition: "width 0.3s ease",
             }} />
           </div>
 
           {/* Saved count */}
           <span style={{
-            fontSize:   10,
-            color:      isComplete ? c.ok : c.muted,
+            fontSize: 10,
+            color: isComplete ? c.ok : c.muted,
             fontWeight: isComplete ? 600 : 400,
           }}>
             {isComplete
@@ -210,4 +233,4 @@ function BranchCard({ branch, savedSems, totalSems, onSelect, c }) {
       )}
     </button>
   );
-}
+});

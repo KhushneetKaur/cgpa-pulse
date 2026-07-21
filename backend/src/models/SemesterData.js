@@ -5,92 +5,92 @@ import mongoose from "mongoose";
 
 const subjectMarksSchema = new mongoose.Schema(
   {
-    code:   { type: String, required: true },  // e.g. "BCSES1-302"
-    int:    { type: Number, default: null, min: 0, max: 60 },
-    ext:    { type: Number, default: null, min: 0, max: 60 },
+    code: { type: String, required: true }, // e.g. "BCSES1-302"
+    int:  { type: Number, default: null, min: 0, max: 60 },
+    ext:  { type: Number, default: null, min: 0, max: 60 },
   },
-  { _id: false }  // no separate _id for subdocuments
+  { _id: false } // no separate _id for subdocuments
 );
 
 const semesterDataSchema = new mongoose.Schema(
   {
     userId: {
-      type:     mongoose.Schema.Types.ObjectId,
-      ref:      "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
 
     branch: {
-      type:     String,
+      type: String,
       required: true,
-      enum:     ["CSE","AIML", "ECE", "EE", "ME", "CIVIL", "TE"],
+      enum: ["CSE", "AIML", "ECE", "EE", "ME", "CIVIL", "TE"],
     },
 
     semNumber: {
-      type:     Number,
+      type: Number,
       required: true,
-      min:      1,
-      max:      8,
+      min: 1,
+      max: 8,
     },
 
     // Array of subject marks — one entry per subject in the semester
     marks: {
-      type:    [subjectMarksSchema],
+      type: [subjectMarksSchema],
       default: [],
     },
 
     // Calculated SGPA — stored so we don't recalculate on every fetch
     sgpa: {
-      type:    Number,
+      type: Number,
       default: null,
-      min:     0,
-      max:     10,
+      min: 0,
+      max: 10,
     },
 
     // Total credits for this semester
     credits: {
-      type:    Number,
+      type: Number,
       default: 0,
     },
 
     // true if not all subjects were filled when saved
     isPartial: {
-      type:    Boolean,
+      type: Boolean,
       default: false,
     },
 
     // "detailed" = marks entered, "quick" = SGPA entered directly
     mode: {
-      type:    String,
-      enum:    ["detailed", "quick"],
+      type: String,
+      enum: ["detailed", "quick"],
       default: "detailed",
     },
 
     // Elective name overrides — { "BCSED1-51X": "Machine Learning" }
     electiveNames: {
-      type:    Map,
-      of:      String,
+      type: Map,
+      of: String,
       default: {},
     },
 
     // Subject codes marked as backlog
     backlogs: {
-      type:    [String],
+      type: [String],
       default: [],
     },
 
     savedAt: {
-      type:    Date,
+      type: Date,
       default: Date.now,
     },
 
     customSubjects: [
       {
-        code:    { type: String, required: true },
-        name:    { type: String, required: true },
+        code: { type: String, required: true },
+        name: { type: String, required: true },
         credits: { type: Number, min: 0, max: 10, required: true },
-        type:    { type: String, enum: ["theory", "lab"], default: "theory" },
-      }
+        type: { type: String, enum: ["theory", "lab"], default: "theory" },
+      },
     ],
 
     hiddenSubjects: [{ type: String }],
@@ -101,19 +101,38 @@ const semesterDataSchema = new mongoose.Schema(
 );
 
 // ── Compound unique index ─────────────────────────────────────────────────────
-// One document per user per branch per semester — no duplicates
+// The compound index handles both single user+branch lookups and exact semester lookups via leftmost prefixing.
 semesterDataSchema.index(
   { userId: 1, branch: 1, semNumber: 1 },
   { unique: true }
 );
 
-// For fetching all sems far a user + branch quickly
-semesterDataSchema.index({ userId: 1, branch: 1 });
+// ── Validate SGPA before save / findOneAndUpdate ──────────────────────────────
+function validateSgpa(sgpa) {
+  if (sgpa !== null && sgpa !== undefined) {
+    if (typeof sgpa !== "number" || sgpa < 0 || sgpa > 10) {
+      throw new Error("SGPA must be between 0 and 10");
+    }
+  }
+}
 
-// ── Validate SGPA before save ─────────────────────────────────────────────────
 semesterDataSchema.pre("save", function (next) {
-  if (this.sgpa !== null && (this.sgpa < 0 || this.sgpa > 10)) {
-    return next(new Error("SGPA must be between 0 and 10"));
+  try {
+    validateSgpa(this.sgpa);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+semesterDataSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate();
+  if (update?.$set?.sgpa !== undefined) {
+    try {
+      validateSgpa(update.$set.sgpa);
+    } catch (err) {
+      return next(err);
+    }
   }
   next();
 });

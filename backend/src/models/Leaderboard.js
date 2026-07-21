@@ -6,12 +6,14 @@ const leaderboardSchema = new mongoose.Schema(
       type:     mongoose.Schema.Types.ObjectId,
       ref:      "User",
       required: true,
+      unique:   true, // Ensures one leaderboard record per user
     },
 
-    // Stored directly for fast reads without joining User collection
+    // Stored directly for fast reads without joining the User collection
     username: {
       type:     String,
       required: true,
+      trim:     true,
     },
 
     branch: {
@@ -31,30 +33,20 @@ const leaderboardSchema = new mongoose.Schema(
     semCount: {
       type:    Number,
       default: 0,
-    },
-
-    updatedAt: {
-      type:    Date,
-      default: Date.now,
+      min:     0,
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Automatically manages createdAt and updatedAt
   }
 );
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
 
-// One entry per user per branch
-leaderboardSchema.index(
-  { userId: 1, branch: 1 },
-  { unique: true }
-);
+// Compound index for branch leaderboards with tie-breaking for stable sorting
+leaderboardSchema.index({ branch: 1, cgpa: -1, updatedAt: 1 });
 
-// Fast sorted queries — get top CGPAs per branch
-leaderboardSchema.index({ branch: 1, cgpa: -1 });
-
-// Fast sorted queries — get top CGPAs overall
-leaderboardSchema.index({ cgpa: -1 });
+// Compound index for global leaderboards with tie-breaking
+leaderboardSchema.index({ cgpa: -1, updatedAt: 1 });
 
 export default mongoose.model("Leaderboard", leaderboardSchema);

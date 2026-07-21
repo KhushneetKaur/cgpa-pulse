@@ -12,19 +12,26 @@ import {
   upsertLeaderboardEntry,
 } from "../services/leaderboard.service.js";
 import { sendResponse } from "../utils/ApiResponse.js";
-import ApiError         from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError.js";
 import SemesterData from "../models/SemesterData.js";
 
-// ── GET /api/semesters/:branch ────────────────────────────────────────────────
-// Returns all saved semesters for a branch
+// Helper to reliably parse semester numbers
+const parseSem = (semNumber) => {
+  const parsed = parseInt(semNumber, 10);
+  if (isNaN(parsed) || parsed < 1) {
+    throw ApiError.badRequest("Invalid semester number");
+  }
+  return parsed;
+};
 
+// ── GET /api/semesters/:branch ────────────────────────────────────────────────
 export async function getAllSemesters(req, res, next) {
   try {
-    const { branch }  = req.params;
-    const userId      = req.user._id;
+    const { branch } = req.params;
+    const userId = req.user._id.toString();
 
     const semesters = await getUserSemesters(userId, branch);
-    const cgpa      = calculateCGPA(semesters);
+    const cgpa = calculateCGPA(semesters);
 
     sendResponse(res, 200, { semesters, cgpa }, "Semesters fetched");
   } catch (err) {
@@ -33,13 +40,12 @@ export async function getAllSemesters(req, res, next) {
 }
 
 // ── GET /api/semesters/:branch/:semNumber ─────────────────────────────────────
-
 export async function getOneSemesterHandler(req, res, next) {
   try {
     const { branch, semNumber } = req.params;
-    const userId                = req.user._id;
+    const userId = req.user._id.toString();
 
-    const sem = await getOneSemester(userId, branch, Number(semNumber));
+    const sem = await getOneSemester(userId, branch, parseSem(semNumber));
     sendResponse(res, 200, { semester: sem }, "Semester fetched");
   } catch (err) {
     next(err);
@@ -47,35 +53,35 @@ export async function getOneSemesterHandler(req, res, next) {
 }
 
 // ── POST /api/semesters/:branch/:semNumber ────────────────────────────────────
-// Save or update a semester with full marks detail
-
 export async function saveSemesterHandler(req, res, next) {
   try {
     const { branch, semNumber } = req.params;
-    const userId                = req.user._id;
+    const userId = req.user._id.toString();
+    const semNum = parseSem(semNumber);
 
     const saved = await saveSemester(userId, {
       ...req.body,
       branch,
-      semNumber: Number(semNumber),
+      semNumber: semNum,
     });
 
     const allSems = await getUserSemesters(userId, branch);
-    const cgpa    = calculateCGPA(allSems);
+    const cgpa = calculateCGPA(allSems);
 
-    // Recalculate CGPA and update leaderboard if opted in
+    // Sync leaderboard entry if user is opted in
     if (req.user.lbOptIn) {
-        await upsertLeaderboardEntry({
-          userId,
-          username: req.user.username,
-          branch,
-          cgpa,
-          semCount: allSems.filter(s => s.sgpa).length,
-        });
-      }
+      await upsertLeaderboardEntry({
+        userId,
+        username: req.user.username,
+        branch,
+        cgpa,
+        semCount: allSems.filter((s) => s.sgpa).length,
+      });
+    }
 
     sendResponse(
-      res, 200,
+      res,
+      200,
       { semester: saved, cgpa },
       "Semester saved"
     );
@@ -85,42 +91,38 @@ export async function saveSemesterHandler(req, res, next) {
 }
 
 // ── POST /api/semesters/:branch/:semNumber/quick ──────────────────────────────
-// Save just SGPA directly without individual marks
-
 export async function saveQuickSgpaHandler(req, res, next) {
   try {
     const { branch, semNumber } = req.params;
-    const { sgpa, credits }     = req.body;
-    const userId                = req.user._id;
+    const { sgpa, credits } = req.body;
+    const userId = req.user._id.toString();
+    const semNum = parseSem(semNumber);
 
     const saved = await saveQuickSgpa(
       userId,
       branch,
-      Number(semNumber),
+      semNum,
       sgpa,
       credits
     );
 
-    // Update leaderboard if opted in
-    if (req.user.lbOptIn) {
-      const allSems = await getUserSemesters(userId, branch);
-      const cgpa    = calculateCGPA(allSems);
-      if (cgpa) {
-        await upsertLeaderboardEntry({
-          userId,
-          username: req.user.username,
-          branch,
-          cgpa,
-          semCount: allSems.filter(s => s.sgpa).length,
-        });
-      }
+    // Single DB query to get updated list for both CGPA and Leaderboard sync
+    const allSems = await getUserSemesters(userId, branch);
+    const cgpa = calculateCGPA(allSems);
+
+    if (req.user.lbOptIn && cgpa != null) {
+      await upsertLeaderboardEntry({
+        userId,
+        username: req.user.username,
+        branch,
+        cgpa,
+        semCount: allSems.filter((s) => s.sgpa).length,
+      });
     }
 
-    const allSems = await getUserSemesters(userId, branch);
-    const cgpa    = calculateCGPA(allSems);
-
     sendResponse(
-      res, 200,
+      res,
+      200,
       { semester: saved, cgpa },
       "SGPA saved"
     );
@@ -130,37 +132,49 @@ export async function saveQuickSgpaHandler(req, res, next) {
 }
 
 // ── DELETE /api/semesters/:branch/:semNumber ──────────────────────────────────
-
 export async function deleteSemesterHandler(req, res, next) {
   try {
     const { branch, semNumber } = req.params;
-    const userId                = req.user._id;
+    const userId = req.user._id.toString();
+    const semNum = parseSem(semNumber);
 
-    const result = await deleteSemester(userId, branch, Number(semNumber));
+    const result = await deleteSemester(userId, branch, semNum);
 
-    sendResponse(res, 200, result, "Semester deleted");
+    // Recalculate CGPA and update leaderboard after deletion
+    const allSems = await getUserSemesters(userId, branch);
+    const cgpa = calculateCGPA(allSems);
+
+    if (req.user.lbOptIn) {
+      await upsertLeaderboardEntry({
+        userId,
+        username: req.user.username,
+        branch,
+        cgpa: cgpa || 0,
+        semCount: allSems.filter((s) => s.sgpa).length,
+      });
+    }
+
+    sendResponse(res, 200, { ...result, cgpa }, "Semester deleted");
   } catch (err) {
     next(err);
   }
 }
 
 // ── PUT /api/semesters/:branch/:semNumber/backlog ─────────────────────────────
-// Toggle a subject as backlog
-
 export async function toggleBacklogHandler(req, res, next) {
   try {
-    const { branch, semNumber }  = req.params;
-    const { subjectCode }        = req.body;
-    const userId                 = req.user._id;
+    const { branch, semNumber } = req.params;
+    const { subjectCode } = req.body;
+    const userId = req.user._id.toString();
 
     if (!subjectCode) {
-      return next(ApiError.badRequest("subjectCode is required"));
+      throw ApiError.badRequest("subjectCode is required");
     }
 
     const updated = await toggleBacklog(
       userId,
       branch,
-      Number(semNumber),
+      parseSem(semNumber),
       subjectCode
     );
 
@@ -171,29 +185,28 @@ export async function toggleBacklogHandler(req, res, next) {
 }
 
 // ── PUT /api/semesters/:branch/:semNumber/elective ────────────────────────────
-// Update elective subject name
-
 export async function updateElectiveHandler(req, res, next) {
   try {
-    const { branch, semNumber }   = req.params;
-    const { subjectCode, name }   = req.body;
-    const userId                  = req.user._id;
+    const { branch, semNumber } = req.params;
+    const { subjectCode, name } = req.body;
+    const userId = req.user._id.toString();
 
     if (!subjectCode || !name) {
-      return next(ApiError.badRequest("subjectCode and name are required"));
+      throw ApiError.badRequest("subjectCode and name are required");
     }
 
     const updated = await updateElectiveName(
       userId,
       branch,
-      Number(semNumber),
+      parseSem(semNumber),
       subjectCode,
       name
     );
 
     sendResponse(
-      res, 200,
-      { electiveNames: Object.fromEntries(updated.electiveNames) },
+      res,
+      200,
+      { electiveNames: Object.fromEntries(updated.electiveNames || new Map()) },
       "Elective name updated"
     );
   } catch (err) {
@@ -201,59 +214,69 @@ export async function updateElectiveHandler(req, res, next) {
   }
 }
 
+// ── Custom Subject Management ─────────────────────────────────────────────────
 export async function addCustomSubject(req, res, next) {
   try {
     const { branch, semNumber } = req.params;
     const { name, credits, type } = req.body;
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
-    // Generate a unique code for the custom subject
+    if (!name || !credits) {
+      throw ApiError.badRequest("Name and credits are required");
+    }
+
     const code = `CUSTOM_${Date.now()}`;
 
     const sem = await SemesterData.findOneAndUpdate(
-      { userId, branch, semNumber: Number(semNumber) },
+      { userId, branch, semNumber: parseSem(semNumber) },
       {
-        $push: { customSubjects: { code, name, credits, type } },
-        $setOnInsert: { userId, branch, semNumber: Number(semNumber) },
+        $push: { customSubjects: { code, name, credits: Number(credits), type } },
+        $setOnInsert: { userId, branch, semNumber: parseSem(semNumber) },
       },
       { upsert: true, new: true }
     );
 
     sendResponse(res, 200, { customSubjects: sem.customSubjects }, "Subject added");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 export async function removeCustomSubject(req, res, next) {
   try {
     const { branch, semNumber, code } = req.params;
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
     const sem = await SemesterData.findOneAndUpdate(
-      { userId, branch, semNumber: Number(semNumber) },
+      { userId, branch, semNumber: parseSem(semNumber) },
       { $pull: { customSubjects: { code } } },
       { new: true }
     );
 
     sendResponse(res, 200, { customSubjects: sem?.customSubjects || [] }, "Subject removed");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 export async function toggleSubjectVisibility(req, res, next) {
   try {
     const { branch, semNumber, code } = req.params;
     const { hidden } = req.body;
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
 
     const update = hidden
       ? { $addToSet: { hiddenSubjects: code } }
-      : { $pull:     { hiddenSubjects: code } };
+      : { $pull: { hiddenSubjects: code } };
 
     const sem = await SemesterData.findOneAndUpdate(
-      { userId, branch, semNumber: Number(semNumber) },
-      { ...update, $setOnInsert: { userId, branch, semNumber: Number(semNumber) } },
+      { userId, branch, semNumber: parseSem(semNumber) },
+      { ...update, $setOnInsert: { userId, branch, semNumber: parseSem(semNumber) } },
       { upsert: true, new: true }
     );
 
-    sendResponse(res, 200, { hiddenSubjects: sem.hiddenSubjects || [] }, "Visibility updated");
-  } catch (err) { next(err); }
+    sendResponse(res, 200, { hiddenSubjects: sem?.hiddenSubjects || [] }, "Visibility updated");
+  } catch (err) {
+    next(err);
+  }
 }

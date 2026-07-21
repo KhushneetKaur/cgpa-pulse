@@ -1,5 +1,5 @@
-import User           from "../models/User.js";
-import ApiError       from "../utils/ApiError.js";
+import User from "../models/User.js";
+import ApiError from "../utils/ApiError.js";
 import { sendResponse } from "../utils/ApiResponse.js";
 import {
   upsertLeaderboardEntry,
@@ -10,8 +10,13 @@ import {
   calculateCGPA,
 } from "../services/semester.service.js";
 
-// ── GET /api/user/profile ─────────────────────────────────────────────────────
+// Helper to calculate days passed
+const getDaysSince = (date) => {
+  if (!date) return Infinity;
+  return Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+};
 
+// ── GET /api/user/profile ─────────────────────────────────────────────────────
 export async function getProfile(req, res, next) {
   try {
     sendResponse(res, 200, { user: req.user.toPublicJSON() }, "Profile fetched");
@@ -19,52 +24,93 @@ export async function getProfile(req, res, next) {
     next(err);
   }
 }
+
+// ── PUT /api/user/username ───────────────────────────────────────────────────
 export async function updateUsername(req, res, next) {
   try {
-    const { username } = req.body;
-    const user         = await User.findById(req.user._id);
+    const rawUsername = req.body?.username;
+    if (!rawUsername || typeof rawUsername !== "string" || !rawUsername.trim()) {
+      throw ApiError.badRequest("Valid username is required");
+    }
+
+    const username = rawUsername.trim();
+    const userId = req.user._id.toString();
+    const user = await User.findById(userId);
 
     if (!user) throw ApiError.notFound("User not found");
 
     // Check 30-day cooldown
-    if (user.usernameSetAt) {
-      const daysSince = Math.floor(
-        (Date.now() - new Date(user.usernameSetAt).getTime())
-        / (1000 * 60 * 60 * 24)
+    const daysSince = getDaysSince(user.usernameSetAt);
+    if (daysSince < 30) {
+      const daysLeft = 30 - daysSince;
+      throw ApiError.badRequest(
+        `You can change your username in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
       );
-      if (daysSince < 30) {
-        const daysLeft = 30 - daysSince;
-        throw ApiError.badRequest(
-          `You can change your username in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
-        );
-      }
     }
 
-    // Check uniqueness
+    // Check uniqueness (case-insensitive check is recommended)
     const existing = await User.findOne({
-      username: username.trim(),
-      _id:      { $ne: user._id },
+      username: { $regex: new RegExp(`^${username}$`, "i") },
+      _id: { $ne: userId },
     });
     if (existing) throw ApiError.conflict("Username is already taken");
 
-    user.username      = username.trim();
+    user.username = username;
     user.usernameSetAt = new Date();
-    await user.save({ validateBeforeSave: false });
+    await user.save();
+
+    // Sync updated username to leaderboard if opted in
+    if (user.lbOptIn && user.branch) {
+      const allSems = await getUserSemesters(userId, user.branch);
+      const cgpa = calculateCGPA(allSems);
+      if (cgpa != null) {
+        await upsertLeaderboardEntry({
+          userId,
+          username: user.username,
+          branch: user.branch,
+          cgpa,
+          semCount: allSems.filter((s) => s.sgpa).length,
+        });
+      }
+    }
 
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Username updated");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
-// ── PUT /api/user/branch ──────────────────────────────────────────────────────
 
+// ── PUT /api/user/branch ──────────────────────────────────────────────────────
 export async function updateBranch(req, res, next) {
   try {
     const { branch } = req.body;
+    if (!branch || typeof branch !== "string") {
+      throw ApiError.badRequest("Branch is required");
+    }
 
+    const userId = req.user._id.toString();
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      userId,
       { $set: { branch } },
       { new: true, runValidators: true }
     );
+
+    if (!user) throw ApiError.notFound("User not found");
+
+    // Sync new branch to leaderboard if opted in
+    if (user.lbOptIn) {
+      const allSems = await getUserSemesters(userId, user.branch);
+      const cgpa = calculateCGPA(allSems);
+      if (cgpa != null) {
+        await upsertLeaderboardEntry({
+          userId,
+          username: user.username,
+          branch: user.branch,
+          cgpa,
+          semCount: allSems.filter((s) => s.sgpa).length,
+        });
+      }
+    }
 
     sendResponse(res, 200, { branch: user.branch }, "Branch updated");
   } catch (err) {
@@ -73,44 +119,63 @@ export async function updateBranch(req, res, next) {
 }
 
 // ── PUT /api/user/leaderboard ─────────────────────────────────────────────────
-// Toggle leaderboard opt-in / opt-out
-
 export async function updateLbOptIn(req, res, next) {
   try {
     const { optIn } = req.body;
-    const user      = await User.findById(req.user._id);
+    if (typeof optIn !== "boolean") {
+      throw ApiError.badRequest("optIn must be a boolean value");
+    }
+
+    const userId = req.user._id.toString();
+    const user = await User.findById(userId);
 
     if (!user) throw ApiError.notFound("User not found");
 
     // Opting OUT — check 30-day lock
     if (!optIn && user.lbOptIn) {
-      const optInDate = user.lbOptInDate
-        ? new Date(user.lbOptInDate)
-        : new Date();
+      const daysSinceOptIn = getDaysSince(user.lbOptInDate);
 
-      if (optInDate) {
-        const daysSinceOptIn = Math.floor(
-          (Date.now() - optInDate.getTime()) / (1000 * 60 * 60 * 24)
+      if (daysSinceOptIn < 30) {
+        const daysLeft = 30 - daysSinceOptIn;
+        throw ApiError.badRequest(
+          `You can opt out in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
         );
+      }
 
-        console.log(`Days since opt-in: ${daysSinceOptIn}`); // ← add this
-  console.log(`lbOptInDate: ${user.lbOptInDate}`);     // ← add this
+      // Remove row from leaderboard database immediately
+      await removeLeaderboardEntry(userId);
+    }
 
-        if (daysSinceOptIn < 30) {
-          const daysLeft = 30 - daysSinceOptIn;
-          throw ApiError.badRequest(
-            `You can opt out in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
-          );
+    // Opting IN — add or update row in leaderboard database immediately
+    if (optIn && !user.lbOptIn) {
+      user.lbOptInDate = new Date();
+
+      if (user.branch) {
+        const allSems = await getUserSemesters(userId, user.branch);
+        const cgpa = calculateCGPA(allSems);
+
+        if (cgpa != null) {
+          await upsertLeaderboardEntry({
+            userId,
+            username: user.username,
+            branch: user.branch,
+            cgpa,
+            semCount: allSems.filter((s) => s.sgpa).length,
+          });
         }
       }
     }
 
-    // Opting IN — record date
     user.lbOptIn = optIn;
-    if (optIn) user.lbOptInDate = new Date();
+    await user.save();
 
-    await user.save({ validateBeforeSave: false });
-
-    sendResponse(res, 200, { user: user.toPublicJSON() }, "Leaderboard preference updated");
-  } catch (err) { next(err); }
+    sendResponse(
+      res,
+      200,
+      { user: user.toPublicJSON() },
+      "Leaderboard preference updated"
+    );
+  } catch (err) {
+    next(err);
+  }
 }

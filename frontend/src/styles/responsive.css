@@ -403,3 +403,25 @@ html, body {
     max-width: 560px !important;
   }
 }
+@media (max-width: 640px) {
+  .predictor-top-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .predictor-col-headers {
+    display: none !important; /* Hide column headers on mobile */
+  }
+
+  .predictor-row-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .pr-name {
+    grid-column: 1 / -1;
+  }
+
+  .pr-chips {
+    grid-column: 1 / -1;
+  }
+}

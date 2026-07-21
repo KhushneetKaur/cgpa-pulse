@@ -28,7 +28,7 @@ export async function protect(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Fetch the user — confirm they still exist and are active
-    const user = await User.findById(decoded.id).select("-passwordHash");
+    const user = await User.findById(decoded.id).select("-passwordHash").lean();
 
     if (!user) {
       return next(ApiError.unauthorized("User no longer exists"));
@@ -47,8 +47,8 @@ export async function protect(req, res, next) {
   }
 }
 
-// ── Restrict to specific roles ────────────────────────────────────────────────
-// Usage: router.delete("/users/:id", protect, requireRole("admin"), controller)
+// ── Optional Authentication ────────────────────────────────────────────────---
+// Attaches user if token exists & is valid, but doesn't block unauthenticated requests
 
 export async function optionalProtect(req, res, next) {
   try {
@@ -63,7 +63,7 @@ export async function optionalProtect(req, res, next) {
     if (!token) return next();
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-passwordHash");
+    const user = await User.findById(decoded.id).select("-passwordHash").lean();
 
     if (user?.isActive) {
       req.user = user;
@@ -74,6 +74,9 @@ export async function optionalProtect(req, res, next) {
     next();
   }
 }
+
+// ── Restrict to specific roles ────────────────────────────────────────────────
+// Usage: router.delete("/users/:id", protect, requireRole("admin"), controller)
 
 export function requireRole(...roles) {
   return (req, res, next) => {

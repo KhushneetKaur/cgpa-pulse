@@ -12,23 +12,26 @@ import { sendResponse } from "../utils/ApiResponse.js";
 
 export async function getLeaderboardHandler(req, res, next) {
   try {
-    const { branch, limit } = req.query;
+    const selectedBranch = req.query.branch || "ALL";
+    const limit = Math.max(1, parseInt(req.query.limit, 10) || 50);
 
-    const entries = await getLeaderboard(
-      branch || "ALL",
-      Number(limit)  || 50
-    );
+    const entries = await getLeaderboard(selectedBranch, limit);
 
-    // Find where the current user ranks if they are opted in
+    // Compute user's rank matching the current filter view if opted-in
     let myRank = null;
-    if (req.user?.lbOptIn && req.user?.branch) {
-      myRank = await getUserRank(req.user._id, req.user.branch);
+    if (req.user?.lbOptIn && req.user?._id) {
+      myRank = await getUserRank(req.user._id, selectedBranch);
     }
 
     sendResponse(
-      res, 200,
-      { entries, myRank, total: entries.length },
-      "Leaderboard fetched"
+      res,
+      200,
+      {
+        entries,
+        myRank,
+        count: entries.length,
+      },
+      "Leaderboard fetched successfully"
     );
   } catch (err) {
     next(err);
@@ -46,9 +49,10 @@ export async function getStatsHandler(req, res, next) {
     ]);
 
     sendResponse(
-      res, 200,
+      res,
+      200,
       { branchStats, overall },
-      "Stats fetched"
+      "Stats fetched successfully"
     );
   } catch (err) {
     next(err);

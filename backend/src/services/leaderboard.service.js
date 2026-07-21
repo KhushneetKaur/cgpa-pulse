@@ -1,5 +1,5 @@
 import Leaderboard from "../models/Leaderboard.js";
-import ApiError    from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError.js";
 
 // ── Get leaderboard ───────────────────────────────────────────────────────────
 // branch = "ALL" returns across all branches
@@ -8,9 +8,10 @@ import ApiError    from "../utils/ApiError.js";
 export async function getLeaderboard(branch = "ALL", limit = 50) {
   const filter = branch === "ALL" ? {} : { branch };
 
+  // Secondary tie-breaker on updatedAt ensures stable, deterministic ranking
   const entries = await Leaderboard.find(filter)
-    .sort({ cgpa: -1 })         // highest first
-    .limit(Math.min(limit, 100))  // cap at 100
+    .sort({ cgpa: -1, updatedAt: 1 })
+    .limit(Math.min(limit, 100))
     .lean();
 
   return entries;
@@ -30,17 +31,19 @@ export async function upsertLeaderboardEntry({
     throw ApiError.badRequest("Invalid CGPA value");
   }
 
+  // Lookup strictly by userId so branch switches update the row rather than duplicating it
   const entry = await Leaderboard.findOneAndUpdate(
-    { userId, branch },
+    { userId },
     {
       $set: {
         username,
+        branch,
         cgpa,
         semCount,
         updatedAt: new Date(),
       },
     },
-    { new: true, upsert: true }
+    { new: true, upsert: true, setDefaultsOnInsert: true }
   );
 
   return entry;
@@ -49,30 +52,35 @@ export async function upsertLeaderboardEntry({
 // ── Remove a leaderboard entry ────────────────────────────────────────────────
 // Called when user opts out
 
-export async function removeLeaderboardEntry(userId, branch) {
-  const result = await Leaderboard.findOneAndDelete({ userId, branch });
+export async function removeLeaderboardEntry(userId) {
+  // Querying by userId guarantees complete removal across branch switches
+  const result = await Leaderboard.findOneAndDelete({ userId });
 
-  // Not throwing if not found — opt-out of non-existent entry is fine
   return { removed: !!result };
 }
 
 // ── Get user's own rank ───────────────────────────────────────────────────────
 
-export async function getUserRank(userId, branch) {
-  const entry = await Leaderboard.findOne({ userId, branch });
+export async function getUserRank(userId, branch = "ALL") {
+  const entry = await Leaderboard.findOne({ userId }).lean();
   if (!entry) return null;
 
-  // Count how many entries have a higher CGPA
-  const rank = await Leaderboard.countDocuments({
-    branch,
+  // Handle global vs branch-specific rank queries accurately
+  const filter = {
     cgpa: { $gt: entry.cgpa },
-  });
+  };
+
+  if (branch !== "ALL") {
+    filter.branch = branch;
+  }
+
+  const rank = await Leaderboard.countDocuments(filter);
 
   return {
-    rank:     rank + 1,   // 1-indexed
-    cgpa:     entry.cgpa,
+    rank: rank + 1, // 1-indexed
+    cgpa: entry.cgpa,
     username: entry.username,
-    branch,
+    branch: entry.branch,
   };
 }
 
@@ -82,11 +90,20 @@ export async function getBranchStats() {
   const stats = await Leaderboard.aggregate([
     {
       $group: {
-        _id:     "$branch",
+        _id: "$branch",
         avgCGPA: { $avg: "$cgpa" },
         maxCGPA: { $max: "$cgpa" },
         minCGPA: { $min: "$cgpa" },
-        count:   { $sum: 1 },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        avgCGPA: { $round: ["$avgCGPA", 2] },
+        maxCGPA: 1,
+        minCGPA: 1,
+        count: 1,
       },
     },
     { $sort: { avgCGPA: -1 } },
@@ -101,10 +118,18 @@ export async function getOverallStats() {
   const [result] = await Leaderboard.aggregate([
     {
       $group: {
-        _id:          null,
+        _id: null,
         totalStudents: { $sum: 1 },
-        avgCGPA:      { $avg: "$cgpa" },
-        maxCGPA:      { $max: "$cgpa" },
+        avgCGPA: { $avg: "$cgpa" },
+        maxCGPA: { $max: "$cgpa" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalStudents: 1,
+        avgCGPA: { $round: ["$avgCGPA", 2] },
+        maxCGPA: 1,
       },
     },
   ]);

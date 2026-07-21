@@ -1,5 +1,4 @@
-// Custom error class that carries an HTTP status code so the global error
-// middleware can respond consistently without if/else chains everywhere.
+// Custom error class carrying HTTP status codes for standardized API error handling.
 
 class ApiError extends Error {
   constructor(
@@ -10,10 +9,10 @@ class ApiError extends Error {
   ) {
     super(message);
 
+    this.name = "ApiError";
     this.statusCode = statusCode;
     this.success = false;
     this.errors = errors;
-    this.message = message;
 
     if (stack) {
       this.stack = stack;
@@ -21,21 +20,35 @@ class ApiError extends Error {
       Error.captureStackTrace(this, this.constructor);
     }
   }
-}
 
-ApiError.badRequest = (msg, errors = []) =>
-  new ApiError(400, msg, errors);
-ApiError.unauthorized = (msg = "Unauthorized - please log in") =>
-  new ApiError(401, msg);
-ApiError.forbidden = (msg = "You do not have permission to do this") =>
-  new ApiError(403, msg);
-ApiError.notFound = (msg = "Resource not found") =>
-  new ApiError(404, msg);
-ApiError.conflict = (msg = "Resource already exists") =>
-  new ApiError(409, msg);
-ApiError.tooMany = (msg = "Too many requests") =>
-  new ApiError(429, msg);
-ApiError.internal = (msg = "Internal server error") =>
-  new ApiError(500, msg);
+  // Static Factory Helpers
+  static badRequest(msg = "Bad Request", errors = []) {
+    return new ApiError(400, msg, errors);
+  }
+
+  static unauthorized(msg = "Unauthorized - please log in") {
+    return new ApiError(401, msg);
+  }
+
+  static forbidden(msg = "You do not have permission to do this") {
+    return new ApiError(403, msg);
+  }
+
+  static notFound(msg = "Resource not found") {
+    return new ApiError(404, msg);
+  }
+
+  static conflict(msg = "Resource already exists") {
+    return new ApiError(409, msg);
+  }
+
+  static tooMany(msg = "Too many requests - please try again later") {
+    return new ApiError(429, msg);
+  }
+
+  static internal(msg = "Internal server error") {
+    return new ApiError(500, msg);
+  }
+}
 
 export default ApiError;
