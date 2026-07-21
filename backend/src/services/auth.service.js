@@ -218,5 +218,3 @@ export async function refreshAccessToken(refreshToken) {
 
   return { user: user.toPublicJSON(), accessToken: newAccessToken, refreshToken: newRefreshToken };
 }
-
-
