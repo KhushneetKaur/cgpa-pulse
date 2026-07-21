@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BRANCHES } from "../data/branches";
 import { apiUpdateUsername, apiUpdateBranch} from "../services/user.api.js";
 import toast from "react-hot-toast";
@@ -14,13 +14,20 @@ function isValidUsername(u) {
   return { ok: true };
 }
 
-export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
+export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   const [step,       setStep]       = useState(1); // 1=username, 2=branch, 3=semester, 4=welcome
-  const [username, setUsername] = useState("");
-  const [branch,   setBranch]   = useState(null);
-  const [err,      setErr]      = useState("");
-  const [loading,  setLoading]  = useState(false);
-  const [currentSem, setCurrentSem] = useState(null);
+  const [username,   setUsername]   = useState(user?.username || "");
+  const [branch,     setBranch]     = useState(user?.branch || null);
+  const [currentSem, setCurrentSem] = useState(user?.currentSem || null);
+  const [err,        setErr]        = useState("");
+  const [loading,    setLoading]    = useState(false);
+
+  // Sync initial state if user prop updates late
+  useEffect(() => {
+    if (user?.username && !username) setUsername(user.username);
+    if (user?.branch && !branch)     setBranch(user.branch);
+    if (user?.currentSem && !currentSem) setCurrentSem(user.currentSem);
+  }, [user]);
 
   // Step 1: Save Username
   async function handleUsernameNext() {
@@ -44,16 +51,20 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
     setErr("");
     setLoading(true);
     try {
-      await apiUpdateBranch(branch);
+      if (typeof apiUpdateBranch === "function") {
+        await apiUpdateBranch(branch);
+      }
       setStep(3);
     } catch (e) {
-      setErr(e.message || "Failed to save branch");
+      console.error("Branch save error:", e);
+      // Soft fallback to let user proceed even if network drops
+      setStep(3);
     } finally {
       setLoading(false);
     }
   }
 
-  // Step 3: Save Current Semester (FIXED: Added API call)
+  // Step 3: Save Current Semester
   async function handleSemesterNext() {
     if (!currentSem) { setErr("Please select your current semester"); return; }
     setErr("");
@@ -64,7 +75,8 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
       }
       setStep(4);
     } catch (e) {
-      setErr(e.message || "Failed to save current semester");
+      console.error("Semester save error:", e);
+      setStep(4);
     } finally {
       setLoading(false);
     }
@@ -205,7 +217,7 @@ export default function OnboardingModal({ dark, c, btn, inp, onDone }) {
               margin: "0 0 20px", fontSize: 13, color: c.sub,
               textAlign: "center", lineHeight: 1.6,
             }}>
-              Hey <strong style={{ color: c.accent }}>@{username}</strong>! 🎉
+              Hey <strong style={{ color: c.accent }}>@{username || "there"}</strong>! 🎉
               Now select your engineering branch so we can load the right subjects.
             </p>
 
