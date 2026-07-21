@@ -5,10 +5,13 @@ export async function apiGetProfile() {
   const res = await api.get("/user/profile");
   return res.user;
 }
+
+// ── PUT /api/user/username ────────────────────────────────────────────────────
 export async function apiUpdateUsername(username) {
   const res = await api.put("/user/username", { username });
-  return res.data.user;
+  return res.user;
 }
+
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
 export async function apiUpdateBranch(branch) {
   const res = await api.put("/user/branch", { branch });

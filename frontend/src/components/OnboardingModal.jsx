@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { BRANCHES } from "../data/branches";
-import { apiUpdateUsername, apiUpdateBranch} from "../services/user.api.js";
-import toast from "react-hot-toast";
+import { apiUpdateUsername, apiUpdateBranch } from "../services/user.api.js";
 
 function isValidUsername(u) {
   const v = u.trim();
@@ -30,7 +29,8 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   }, [user]);
 
   // Step 1: Save Username
-  async function handleUsernameNext() {
+  async function handleUsernameNext(e) {
+    if (e) e.preventDefault();
     const check = isValidUsername(username);
     if (!check.ok) { setErr(check.msg); return; }
     setErr("");
@@ -45,40 +45,32 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
     }
   }
 
-  // Step 2: Save Branch
-  async function handleBranchNext() {
+  // Step 2: Select Branch locally
+  function handleBranchNext() {
     if (!branch) { setErr("Please select your branch"); return; }
     setErr("");
+    setStep(3);
+  }
+
+  // Step 3: Select Semester locally
+  function handleSemesterNext() {
+    if (!currentSem) { setErr("Please select your current semester"); return; }
+    setErr("");
+    setStep(4);
+  }
+
+  // Step 4: Save branch to API and finish
+  async function handleFinish() {
     setLoading(true);
     try {
       if (typeof apiUpdateBranch === "function") {
         await apiUpdateBranch(branch);
       }
-      setStep(3);
     } catch (e) {
-      console.error("Branch save error:", e);
-      // Soft fallback to let user proceed even if network drops
-      setStep(3);
+      console.error("Error completing onboarding:", e);
     } finally {
       setLoading(false);
-    }
-  }
-
-  // Step 3: Save Current Semester
-  async function handleSemesterNext() {
-    if (!currentSem) { setErr("Please select your current semester"); return; }
-    setErr("");
-    setLoading(true);
-    try {
-      if (typeof apiUpdateCurrentSem === "function") {
-        await apiUpdateCurrentSem(currentSem);
-      }
-      setStep(4);
-    } catch (e) {
-      console.error("Semester save error:", e);
-      setStep(4);
-    } finally {
-      setLoading(false);
+      onDone(username.trim(), branch, currentSem);
     }
   }
 
@@ -86,8 +78,8 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
     <div style={{
       position:             "fixed",
       inset:                0,
-      zIndex:               600,
-      background:           "rgba(0,0,0,0.75)",
+      zIndex:               9999,
+      background:           "rgba(0,0,0,0.85)",
       backdropFilter:       "blur(18px)",
       WebkitBackdropFilter: "blur(18px)",
       display:              "flex",
@@ -130,7 +122,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
 
         {/* ── Step 1: Username ──────────────────────────────────── */}
         {step === 1 && (
-          <>
+          <form onSubmit={handleUsernameNext}>
             <p style={{ margin: "0 0 6px", fontSize: 24, textAlign: "center" }}>👋</p>
             <h2 style={{
               margin: "0 0 6px", fontSize: 20, fontWeight: 800,
@@ -153,7 +145,6 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
               type="text"
               value={username}
               onChange={e => { setUsername(e.target.value); setErr(""); }}
-              onKeyDown={e => e.key === "Enter" && handleUsernameNext()}
               placeholder="e.g. khushneet_k"
               style={{
                 ...inp(),
@@ -174,7 +165,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             )}
 
             <button
-              onClick={handleUsernameNext}
+              type="submit"
               disabled={loading}
               style={{
                 ...btn("primary"),
@@ -187,13 +178,14 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             >
               {loading ? "Checking..." : "Continue →"}
             </button>
-          </>
+          </form>
         )}
 
         {/* ── Step 2: Branch ───────────────────────────────────── */}
         {step === 2 && (
           <>
             <button
+              type="button"
               onClick={() => { setStep(1); setErr(""); }}
               style={{
                 background: "none",
@@ -232,6 +224,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
                 return (
                   <button
                     key={key}
+                    type="button"
                     onClick={() => { setBranch(key); setErr(""); }}
                     style={{
                       padding:      "12px 10px",
@@ -284,19 +277,20 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             )}
 
             <button
+              type="button"
               onClick={handleBranchNext}
-              disabled={loading || !branch}
+              disabled={!branch}
               style={{
                 ...btn("primary"),
                 width:          "100%",
                 padding:        "13px",
                 fontSize:       14,
                 justifyContent: "center",
-                opacity:        loading || !branch ? 0.6 : 1,
+                opacity:        !branch ? 0.6 : 1,
                 cursor:         !branch ? "not-allowed" : "pointer",
               }}
             >
-              {loading ? "Saving..." : "Continue →"}
+              Continue →
             </button>
           </>
         )}
@@ -305,6 +299,7 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
         {step === 3 && (
           <>
             <button
+              type="button"
               onClick={() => { setStep(2); setErr(""); }}
               style={{
                 background: "none",
@@ -323,14 +318,13 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             </h2>
             <p style={{ margin: "0 0 20px", fontSize: 13, color: c.sub, textAlign: "center", lineHeight: 1.6 }}>
               We'll open your current semester automatically.
-              For previous semesters, use <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> to
-              enter your known SGPA directly — no need to enter every mark.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 }}>
               {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
                 <button
                   key={s}
+                  type="button"
                   onClick={() => { setCurrentSem(s); setErr(""); }}
                   style={{
                     padding:      "14px 8px",
@@ -367,31 +361,32 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
               }}>
                 💡 <strong style={{ color: c.text }}>Tip:</strong> For Semesters 1–{currentSem - 1},
                 use the <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> button inside
-                the Calculator to enter your final SGPA directly. It takes 30 seconds per semester!
+                the Calculator to enter your final SGPA directly.
               </div>
             )}
 
             {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad }}>⚠ {err}</p>}
 
             <button
+              type="button"
               onClick={handleSemesterNext}
-              disabled={loading || !currentSem}
+              disabled={!currentSem}
               style={{
                 ...btn("primary"),
                 width: "100%",
                 padding: "13px",
                 fontSize: 14,
                 justifyContent: "center",
-                opacity: loading || !currentSem ? 0.6 : 1,
+                opacity: !currentSem ? 0.6 : 1,
                 cursor: !currentSem ? "not-allowed" : "pointer"
               }}
             >
-              {loading ? "Saving..." : "Continue →"}
+              Continue →
             </button>
           </>
         )}
 
-        {/* ── Step 4: Welcome ──────────────────────────────────── */}
+        {/* ── Step 4: Welcome & Quick Guide ────────────────────── */}
         {step === 4 && (
           <>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -412,7 +407,6 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
               </p>
             </div>
 
-            {/* Quick guide */}
             <div style={{
               background:   dark ? "#080c18" : "#f4f3ff",
               borderRadius: 12,
@@ -468,16 +462,19 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             </div>
 
             <button
-              onClick={() => onDone(username.trim(), branch, currentSem)}
+              type="button"
+              onClick={handleFinish}
+              disabled={loading}
               style={{
                 ...btn("primary"),
                 width:          "100%",
                 padding:        "14px",
                 fontSize:       15,
                 justifyContent: "center",
+                opacity:        loading ? 0.7 : 1,
               }}
             >
-              Let's go! 🚀
+              {loading ? "Finishing..." : "Let's go! 🚀"}
             </button>
           </>
         )}
