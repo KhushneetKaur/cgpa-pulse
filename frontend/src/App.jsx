@@ -82,8 +82,8 @@ function AppLayout() {
   const [showUsernameModal,  setShowUsernameModal]  = useState(false);
   const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
 
-  // FIXED TRIGGER: Triggers for new users who either don't have a custom username set or haven't completed onboarding
   useEffect(() => {
+    // Triggers for new users who haven't completed onboarding or set a custom username
     const needsOnboarding = user && user.googleId && (!user.usernameSetAt || !user.isOnboarded);
     if (needsOnboarding && !hasShownOnboarding) {
       setShowOnboarding(true);
@@ -94,13 +94,13 @@ function AppLayout() {
   async function handleOnboardingDone(chosenUsername, chosenBranch, chosenSem) {
     if (chosenBranch) setBranch(chosenBranch);
     if (chosenSem) selectSem(chosenSem);
-    
+
     try {
       const { apiGetProfile } = await import("./services/user.api.js");
       const updatedUser = await apiGetProfile();
       if (updatedUser) setUser(updatedUser);
-    } catch {
-      // fallback
+    } catch (e) {
+      console.error("Failed to refetch user profile after onboarding:", e);
     } finally {
       setShowOnboarding(false);
     }
@@ -140,7 +140,7 @@ function AppLayout() {
       <QuickSGPAModal />
       <NavBar />
 
-      {/* Onboarding — new Google users only */}
+      {/* Onboarding Overlay */}
       {showOnboarding && (
         <OnboardingModal
           dark={dark}
@@ -175,7 +175,11 @@ function AppLayout() {
         width:    "100%",
         padding:  "1.5rem 1.25rem 2rem",
       }}>
-        {!branch && !showOnboarding ? (
+        {/*
+          1. If no branch is selected yet, show BranchSelect.
+          2. Otherwise, display the main app dashboard/calculator.
+        */}
+        {!branch ? (
           <BranchSelect />
         ) : (
           <>
