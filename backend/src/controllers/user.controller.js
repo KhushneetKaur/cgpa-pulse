@@ -142,11 +142,10 @@ export async function updateLbOptIn(req, res, next) {
         );
       }
 
-      // Remove row from leaderboard database immediately
       await removeLeaderboardEntry(userId);
     }
 
-    // Opting IN — add or update row in leaderboard database immediately
+    // Opting IN — immediately calculate CGPA and insert entry
     if (optIn && !user.lbOptIn) {
       user.lbOptInDate = new Date();
 
@@ -157,8 +156,8 @@ export async function updateLbOptIn(req, res, next) {
         if (cgpa != null) {
           await upsertLeaderboardEntry({
             userId,
-            username: user.username,
-            branch: user.branch,
+            username: user.username || user.name || "Anonymous", // Safe fallback for OAuth users
+            branch: user.branch, // Uses your pre-saved branch code directly
             cgpa,
             semCount: allSems.filter((s) => s.sgpa).length,
           });

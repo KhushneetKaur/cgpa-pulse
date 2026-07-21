@@ -81,7 +81,7 @@ function AppLayout() {
   const {
     user, branch, tab,
     c, dark, inp, btn,
-    setUser, setBranch,
+    setUser, setBranch, selectSem,
   } = useAppData();
 
   const [showOnboarding,     setShowOnboarding]     = useState(false);
@@ -102,6 +102,7 @@ function AppLayout() {
       const updatedUser = await apiGetProfile();
       setUser(updatedUser);
       setBranch(chosenBranch);
+      if (chosenSem) selectSem(chosenSem);
     } catch {
       // will refresh on next load
     }

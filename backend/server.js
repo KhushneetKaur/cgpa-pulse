@@ -3,7 +3,6 @@ import app from "./src/app.js";
 import { connectDB } from "./src/config/db.js";
 import { validateEnv } from "./src/config/env.js";
 import { logger } from "./src/config/logger.js";
-import { verifyEmailTransport } from "./src/services/email.service.js";
 
 // Validate all required env vars before anything starts
 validateEnv();
@@ -14,8 +13,6 @@ async function startServer() {
   try {
     // Connect to MongoDB first, then start listening
     await connectDB();
-
-    await verifyEmailTransport();
 
     const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
@@ -42,17 +39,17 @@ async function startServer() {
     };
 
     process.on("SIGTERM", () => shutdown("SIGTERM"));
-    process.on("SIGINT",  () => shutdown("SIGINT"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
 
     process.on("uncaughtException", (err) => {
-  logger.error("Uncaught Exception:", err);
-  process.exit(1);
-});
+      logger.error("Uncaught Exception:", err);
+      process.exit(1);
+    });
 
-process.on("unhandledRejection", (reason) => {
-  logger.error("Unhandled Rejection:", reason);
-  process.exit(1);
-});
+    process.on("unhandledRejection", (reason) => {
+      logger.error("Unhandled Rejection:", reason);
+      process.exit(1);
+    });
 
   } catch (err) {
     logger.error("Failed to start server:", err);
@@ -61,7 +58,3 @@ process.on("unhandledRejection", (reason) => {
 }
 
 startServer();
-
-
-
-

@@ -1,15 +1,13 @@
 /* ── Responsive Breakpoints for CGPA Pulse ──────────────────────────────── */
 
-/* Hide scrollbar but keep scroll functionality */
+/* Base Utilities & Globals */
+.no-scrollbar { 
+  scrollbar-width: none; 
+}
 .no-scrollbar::-webkit-scrollbar { 
   display: none; 
 }
-.no-scrollbar { 
-  -ms-overflow-style: none; 
-  scrollbar-width: none; 
-}
 
-/* Base Globals */
 html, body {
   background: #080c18;
   overscroll-behavior: none;
@@ -22,20 +20,15 @@ html, body {
   }
 }
 
-.bottom-tab-bar {
+/* Default Component Visibility States */
+.bottom-tab-bar,
+.navbar-mobile-user,
+.mobile-marks-layout {
   display: none !important;
 }
 
 .navbar-desktop-user {
   display: flex !important;
-}
-
-.navbar-mobile-user {
-  display: none !important;
-}
-
-.mobile-marks-layout {
-  display: none !important;
 }
 
 .desktop-marks-layout {
@@ -44,11 +37,16 @@ html, body {
 
 /* ── Desktop & Large Tablet Rules (≥641px) ──────────────────────────────── */
 @media (min-width: 641px) {
-  .bottom-tab-bar {
-    display: none !important;
-  }
+  .bottom-tab-bar,
   .mobile-sem-pills {
     display: none !important;
+  }
+  
+  /* Centered drawer positioning on desktop */
+  .login-drawer-wrap {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    max-width: 560px !important;
   }
 }
 
@@ -65,9 +63,7 @@ html, body {
     grid-template-columns: auto 1fr auto !important;
     gap: 8px !important;
   }
-  .navbar-center-pills {
-    display: none !important;
-  }
+  .navbar-center-pills,
   .navbar-username-text {
     display: none !important;
   }
@@ -86,40 +82,33 @@ html, body {
   .bottom-tab-bar {
     display: flex !important;
   }
-  .navbar-second-bar {
+  .navbar-second-bar,
+  .navbar-desktop-user,
+  .desktop-marks-layout,
+  .calc-sidebar-wrap,
+  .calc-column-headers,
+  .navbar-brand-subtitle,
+  .navbar-signout-text,
+  .predictor-col-headers {
     display: none !important;
   }
-  .mobile-sem-pills {
-    display: block !important;
-  }
-  .navbar-desktop-user {
-    display: none !important;
-  }
-  .navbar-mobile-user {
-    display: block !important;
-  }
+  .mobile-sem-pills,
+  .navbar-mobile-user,
   .mobile-marks-layout {
     display: block !important;
   }
-  .desktop-marks-layout {
-    display: none !important;
+  .navbar-signout-icon-only {
+    display: inline !important;
   }
 
-  /* Core Layout Overrides */
-  .calc-grid {
+  /* Core Layout & Action Controls */
+  .calc-grid,
+  .marks-scheme-grid,
+  .target-input-row,
+  .target-result-grid,
+  .predictor-top-grid {
     grid-template-columns: 1fr !important;
   }
-  .calc-sidebar-wrap {
-    display: none !important;
-  }
-  .calc-column-headers {
-    display: none !important;
-  }
-  .marks-scheme-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Action Buttons */
   .calc-action-row {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -135,23 +124,12 @@ html, body {
     justify-content: center !important;
   }
 
-  /* Header Optimization */
+  /* Header Optimization & Nav Spacing */
   .navbar-top-grid {
     height: 48px !important;
     padding: 0 12px !important;
     gap: 8px !important;
   }
-  .navbar-brand-subtitle {
-    display: none !important;
-  }
-  .navbar-signout-text {
-    display: none !important;
-  }
-  .navbar-signout-icon-only {
-    display: inline !important;
-  }
-
-  /* Navigation Item Spacing */
   .navbar-second-bar-inner {
     padding: 0 0.5rem !important;
   }
@@ -172,7 +150,8 @@ html, body {
   }
 
   /* Component Layout Reflows */
-  .branch-select-grid {
+  .branch-select-grid,
+  .target-pct-table {
     grid-template-columns: repeat(2, 1fr) !important;
   }
   .customise-modal-card {
@@ -240,11 +219,7 @@ html, body {
   .subject-row-grid > .sr-gp    { grid-area: gp; }
 
   /* Target & Predictor Configurations */
-  .target-input-row {
-    grid-template-columns: 1fr !important;
-  }
   .target-result-grid {
-    grid-template-columns: 1fr !important;
     gap: 14px !important;
   }
   .target-result-grid > div {
@@ -253,28 +228,20 @@ html, body {
   .target-cgpa-highlight {
     flex-wrap: wrap !important;
   }
-  .target-pct-table {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
 
-  .predictor-top-grid {
-    grid-template-columns: 1fr !important;
-  }
   .predictor-row-grid {
-    grid-template-columns: 1fr 50px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
     grid-template-areas:
       "name  type"
       "int   int"
       "chips chips" !important;
     row-gap: 6px !important;
   }
-  .predictor-row-grid > .pr-name  { grid-area: name; }
+  .predictor-row-grid > .pr-name  { grid-area: name; grid-column: 1 / -1; }
   .predictor-row-grid > .pr-type  { grid-area: type; }
   .predictor-row-grid > .pr-int   { grid-area: int; }
-  .predictor-row-grid > .pr-chips { grid-area: chips; }
-  .predictor-col-headers {
-    display: none !important;
-  }
+  .predictor-row-grid > .pr-chips { grid-area: chips; grid-column: 1 / -1; }
 
   /* History Configuration */
   .history-summary-row {
@@ -301,14 +268,14 @@ html, body {
     align-self: stretch !important;
     text-align: center !important;
   }
-  .hero-btn-text {
+  .hero-btn-text,
+  .grade-table-header,
+  .gt-gp,
+  .gt-pct {
     display: none !important;
   }
 
   /* Grade Table Re-flow */
-  .grade-table-header {
-    display: none !important;
-  }
   .grade-table-row {
     display: grid !important;
     grid-template-columns: 1fr auto !important;
@@ -320,8 +287,6 @@ html, body {
   }
   .gt-marks { grid-column: 1; grid-row: 1; }
   .gt-grade { grid-column: 2; grid-row: 1; justify-self: end; }
-  .gt-gp    { display: none !important; }
-  .gt-pct   { display: none !important; }
   .gt-perf  {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -392,36 +357,5 @@ html, body {
   }
   .qsgpa-actions button {
     flex: 1 1 100% !important;
-  }
-}
-/* ── Login drawer — desktop centering ───────────────────────────────────── */
-@media (min-width: 641px) {
-  /* Add left/right margin so drawer feels like a centered card not a full strip */
-  .login-drawer-wrap {
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    max-width: 560px !important;
-  }
-}
-@media (max-width: 640px) {
-  .predictor-top-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .predictor-col-headers {
-    display: none !important; /* Hide column headers on mobile */
-  }
-
-  .predictor-row-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
-  }
-
-  .pr-name {
-    grid-column: 1 / -1;
-  }
-
-  .pr-chips {
-    grid-column: 1 / -1;
   }
 }

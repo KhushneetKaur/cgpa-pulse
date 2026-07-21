@@ -27,6 +27,7 @@ export default function NavBar() {
   const [mobileBranchOpen, setMobileBranchOpen] = useState(false);
 
   return (
+  <>
     <header style={{
       position: "sticky",
       top: 0,
@@ -729,7 +730,9 @@ export default function NavBar() {
         </div>
       )}
 
-      {/* ── Mobile profile bottom sheet ─────────────────────── */}
+    </header>
+    
+    {/* ── Mobile profile bottom sheet ─────────────────────── */}
       {showProfileSheet && (
         <>
           {/* Backdrop */}
@@ -806,45 +809,38 @@ export default function NavBar() {
                 )}
               </div>
             </div>
+             <div style={{ padding: "8px 12px" }}>
 
-            <div style={{ padding: "8px 12px" }}>
-
-              {/* Branch switcher */}
-              <p style={{
-                margin: "8px 0 6px 4px", fontSize: 10, fontWeight: 700,
-                color: c.muted, textTransform: "uppercase", letterSpacing: 0.8,
-              }}>
-                Current Branch
-              </p>
-              <button
-                onClick={() => setMobileBranchOpen(v => !v)}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "11px 14px",
-                  borderRadius: 10,
-                  border: `1px solid ${mobileBranchOpen ? c.accent : c.border}`,
-                  background: mobileBranchOpen ? `${c.accent}10` : c.hover,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                  marginBottom: 4,
-                }}
-              >
-                <span style={{
-                  width: 10, height: 10, borderRadius: "50%",
-                  background: BRANCHES[branch]?.color || c.accent, flexShrink: 0,
-                  boxShadow: `0 0 6px ${BRANCHES[branch]?.color || c.accent}88`,
-                }} />
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: c.text, textAlign: "left" }}>
-                  {BRANCHES[branch]?.name || "Select Branch"}
-                </span>
-                <span style={{ fontSize: 10, color: c.muted }}>
-                  {mobileBranchOpen ? "▴" : "▾"}
-                </span>
-              </button>
+            {/* Branch switcher */}
+            <p style={{
+              margin: "8px 0 6px 4px", fontSize: 10, fontWeight: 700,
+              color: c.muted, textTransform: "uppercase", letterSpacing: 0.8,
+            }}>
+              Current Branch
+            </p>
+            <button
+              onClick={() => setMobileBranchOpen(v => !v)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center",
+                gap: 10, padding: "11px 14px", borderRadius: 10,
+                border: `1px solid ${mobileBranchOpen ? c.accent : c.border}`,
+                background: mobileBranchOpen ? `${c.accent}10` : c.hover,
+                cursor: "pointer", fontFamily: "inherit",
+                transition: "all 0.15s", marginBottom: 4,
+              }}
+            >
+              <span style={{
+                width: 10, height: 10, borderRadius: "50%",
+                background: BRANCHES[branch]?.color || c.accent, flexShrink: 0,
+                boxShadow: `0 0 6px ${BRANCHES[branch]?.color || c.accent}88`,
+              }} />
+              <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: c.text, textAlign: "left" }}>
+                {BRANCHES[branch]?.name || "Select Branch"}
+              </span>
+              <span style={{ fontSize: 10, color: c.muted }}>
+                {mobileBranchOpen ? "▴" : "▾"}
+              </span>
+            </button>
 
               {mobileBranchOpen && (
                 <div style={{
@@ -1016,6 +1012,11 @@ export default function NavBar() {
         </>
       )}
 
+      {/* About modal */}
+      {showAbout && (
+        <AboutModal onClose={() => setShowAbout(false)} dark={dark} />
+      )}
+
       {/* Username modal */}
       {showUsernameModal && (
         <UsernameSetupModal
@@ -1027,11 +1028,6 @@ export default function NavBar() {
           isChange={true}
         />
       )}
-
-      {/* About modal */}
-      {showAbout && (
-        <AboutModal onClose={() => setShowAbout(false)} dark={dark} />
-      )}
-    </header>
+   </>
   );
 }

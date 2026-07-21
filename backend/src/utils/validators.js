@@ -99,7 +99,9 @@ export const quickSgpaSchema = Joi.object({
 
 export const updateBranchSchema = Joi.object({
   branch: Joi.string()
-    .valid(...validBranches, null)
+    .uppercase()
+    .valid(...validBranches)
+    .allow(null)
     .required()
     .messages({
       "any.only": "Invalid branch selected",
@@ -114,6 +116,7 @@ export const updateLbOptInSchema = Joi.object({
 
 export const leaderboardQuerySchema = Joi.object({
   branch: Joi.string()
+    .uppercase()
     .valid(...validBranches, "ALL")
     .default("ALL"),
 

@@ -43,7 +43,10 @@ export async function protect(req, res, next) {
     next();
 
   } catch (err) {
-    next(err);  // JWT errors caught by error.middleware
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return next(ApiError.unauthorized("Session expired or invalid token"));
+    }
+    next(err);
   }
 }
 

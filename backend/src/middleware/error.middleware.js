@@ -9,28 +9,38 @@ export function errorMiddleware(err, req, res, next) {
 
   // If it's not already an ApiError, convert it
   if (!(error instanceof ApiError)) {
-    // Mongoose validation error
-    if (err.name === "ValidationError") {
-      const errors = Object.values(err.errors).map(e => ({
+
+    // 1. Joi Validation Error (from Request Body/Query Validation)
+    if (err.isJoi || err.details) {
+      const errors = err.details?.map(d => ({
+        field:   d.path.join("."),
+        message: d.message.replace(/"/g, ""), // clean quotes for user-friendly UI alerts
+      }));
+      error = ApiError.badRequest(err.message || "Validation failed", errors);
+    }
+
+    // 2. Mongoose Schema Validation Error
+    else if (err.name === "ValidationError") {
+      const errors = Object.values(err.errors || {}).map(e => ({
         field:   e.path,
         message: e.message,
       }));
-      error = ApiError.badRequest("Validation failed", errors);
+      error = ApiError.badRequest("Database validation failed", errors);
     }
 
-    // Mongoose duplicate key error (e.g. username already taken)
+    // 3. Mongoose Duplicate Key Error (e.g., username or email already taken)
     else if (err.code === 11000) {
       const field = Object.keys(err.keyValue || {})[0] || "Field";
       const label = field.charAt(0).toUpperCase() + field.slice(1);
       error = ApiError.conflict(`${label} is already taken`);
     }
 
-    // Mongoose bad ObjectId
+    // 4. Mongoose Bad ObjectId
     else if (err.name === "CastError") {
       error = ApiError.badRequest(`Invalid ${err.path}: ${err.value}`);
     }
 
-    // JWT errors
+    // 5. JWT Errors
     else if (err.name === "JsonWebTokenError") {
       error = ApiError.unauthorized("Invalid token — please log in again");
     }
@@ -38,7 +48,7 @@ export function errorMiddleware(err, req, res, next) {
       error = ApiError.unauthorized("Token expired — please log in again");
     }
 
-    // Catch-all
+    // 6. Catch-all for unexpected internal crashes
     else {
       error = ApiError.internal(
         process.env.NODE_ENV === "development"
@@ -48,7 +58,7 @@ export function errorMiddleware(err, req, res, next) {
     }
   }
 
-  // Log server errors (5xx) — don't log client errors (4xx) to keep logs clean
+  // Log server errors (5xx) — don't clutter logs with expected client errors (4xx)
   if (error.statusCode >= 500) {
     logger.error(`${error.statusCode} — ${error.message}`, {
       stack:  err.stack,

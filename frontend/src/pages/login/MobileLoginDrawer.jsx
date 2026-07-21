@@ -320,6 +320,13 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
   const [termFading,    setTermFading]     = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [showAbout,     setShowAbout]     = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+
+ useEffect(() => {
+  function onResize() { setIsDesktop(window.innerWidth > 768); }
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, []);
 
   function handleTermDone() {
     setTermFading(true);
@@ -453,21 +460,26 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
 
           {/* ── Bottom drawer — max-width centered on desktop ── */}
           <div style={{
-            position:             "absolute",
-            bottom:               0,
-            left:                 "50%",
-            transform:            drawerVisible
-              ? "translate(-50%, 0)"
-              : "translate(-50%, 100%)",
-            width:                "100%",
-            maxWidth:             "min(100%, 560px)",   // ← centered card on desktop
+            position:   isDesktop ? "absolute" : "absolute",
+          bottom:     isDesktop ? "auto" : 0,
+  top:        isDesktop ? "50%" : "auto",
+  left:       "50%",
+  transform:  isDesktop
+    ? drawerVisible
+      ? "translate(-50%, -50%)"
+      : "translate(-50%, calc(-50% + 40px))"
+    : drawerVisible
+      ? "translate(-50%, 0)"
+      : "translate(-50%, 100%)",
+  width:        "100%",
+  maxWidth:     isDesktop ? 420 : "min(100%, 480px)",
+  borderRadius: isDesktop ? 20 : "20px 20px 0 0",
             zIndex:               20,
             background:           dark
               ? "rgba(13,14,26,0.95)"
               : "rgba(255,255,255,0.95)",
             backdropFilter:       "blur(32px)",
             WebkitBackdropFilter: "blur(32px)",
-            borderRadius:         "clamp(16px,3vw,24px) clamp(16px,3vw,24px) 0 0",
             border:               `1px solid ${dark
               ? "rgba(167,139,250,0.18)"
               : "rgba(124,58,237,0.12)"}`,

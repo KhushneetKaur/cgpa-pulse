@@ -3,51 +3,50 @@ import { useAppData } from "../../context/AppDataContext";
 import MobileLoginDrawer from "./MobileLoginDrawer";
 import AboutModal from "./AboutModal";
 import DisclaimerModal from "../../components/DisclaimerModal";
-import { useGoogleLogin } from "@react-oauth/google";
-import toast from "react-hot-toast";
 
 export default function LoginPage() {
-  const { dark, toggleDark, clearForm, googleLogin } = useAppData();
+  const { dark, toggleDark, clearForm } = useAppData();
   const [showAbout, setShowAbout] = useState(false);
 
-  useEffect(() => { clearForm(); }, []);
+  useEffect(() => {
+    clearForm();
+  }, [clearForm]);
 
   function handleGoogleLogin() {
     const params = new URLSearchParams({
-      client_id:     import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      redirect_uri:  window.location.origin,
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      redirect_uri: window.location.origin,
       response_type: "token",
-      scope:         "openid email profile",
-      prompt:        "select_account",
+      scope: "openid email profile",
+      prompt: "select_account",
     });
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   }
 
   return (
     <div style={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
-
       {/* Dark toggle — floats top right on all screens */}
       <button
         onClick={toggleDark}
         style={{
-          position:       "fixed",
-          top:            16,
-          right:          16,
-          zIndex:         400,
-          width:          36,
-          height:         36,
-          borderRadius:   "50%",
-          background:     dark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.7)",
-          border:         `1px solid ${dark ? "rgba(255,255,255,0.2)" : "rgba(124,58,237,0.2)"}`,
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 400,
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          background: dark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.7)",
+          border: `1px solid ${dark ? "rgba(255,255,255,0.2)" : "rgba(124,58,237,0.2)"}`,
           backdropFilter: "blur(12px)",
-          color:          dark ? "rgba(255,255,255,0.8)" : "#7c3aed",
-          fontSize:       15,
-          cursor:         "pointer",
-          display:        "flex",
-          alignItems:     "center",
+          color: dark ? "rgba(255,255,255,0.8)" : "#7c3aed",
+          fontSize: 15,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
           justifyContent: "center",
-          fontFamily:     "inherit",
-          transition:     "all 0.2s",
+          fontFamily: "inherit",
+          transition: "all 0.2s",
         }}
       >
         {dark ? "☀" : "☾"}
@@ -68,9 +67,11 @@ export default function LoginPage() {
   );
 }
 
-function FormModal({ signupSuccess, onClose, handleGoogleLogin }) {
+export function FormModal({ signupSuccess, onClose, handleGoogleLogin }) {
   useEffect(() => {
-    function onKey(e) { if (e.key === "Escape") onClose(); }
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -93,7 +94,7 @@ function FormModal({ signupSuccess, onClose, handleGoogleLogin }) {
       }}
     >
       <div
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
           maxWidth: "min(440px, 96vw)",
@@ -104,7 +105,7 @@ function FormModal({ signupSuccess, onClose, handleGoogleLogin }) {
         <LoginForm
           mounted={true}
           signupSuccess={signupSuccess}
-          handleGoogleLogin={handleGoogleLogin} 
+          handleGoogleLogin={handleGoogleLogin}
         />
       </div>
     </div>

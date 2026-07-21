@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema(
       ],
     },
 
-    // Optional password field in case you want to allow password setup later
     passwordHash: {
       type: String,
       required: false,
@@ -68,6 +67,7 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false,
       sparse: true,
+      unique: true,
     },
 
     isActive: {
@@ -80,7 +80,6 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Refresh token session hash
     refreshTokenHash: {
       type: String,
       select: false,
@@ -95,6 +94,18 @@ const userSchema = new mongoose.Schema(
 // ── Indexes ───────────────────────────────────────────────────────────────────
 userSchema.index({ role: 1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ branch: 1 }); // Added index for fast leaderboard branch lookups
+
+// ── Pre-Validate Hook: Auto-generate fallback username if missing ────────────
+userSchema.pre("validate", function (next) {
+  if (!this.username && this.email) {
+    // Generate a default username from email prefix (e.g. alex_8a3f)
+    const prefix = this.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    this.username = `${prefix.slice(0, 20)}_${randomSuffix}`;
+  }
+  next();
+});
 
 // ── Instance method: safe public profile ──────────────────────────────────────
 userSchema.methods.toPublicJSON = function () {

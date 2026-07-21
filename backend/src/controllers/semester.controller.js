@@ -58,22 +58,23 @@ export async function saveSemesterHandler(req, res, next) {
     const { branch, semNumber } = req.params;
     const userId = req.user._id.toString();
     const semNum = parseSem(semNumber);
+    const normalizedBranch = branch.toUpperCase().trim();
 
     const saved = await saveSemester(userId, {
       ...req.body,
-      branch,
+      branch: normalizedBranch,
       semNumber: semNum,
     });
 
-    const allSems = await getUserSemesters(userId, branch);
+    const allSems = await getUserSemesters(userId, normalizedBranch);
     const cgpa = calculateCGPA(allSems);
 
     // Sync leaderboard entry if user is opted in
-    if (req.user.lbOptIn) {
+    if (req.user?.lbOptIn && cgpa != null) {
       await upsertLeaderboardEntry({
         userId,
-        username: req.user.username,
-        branch,
+        username: req.user.username || req.user.name || "Anonymous",
+        branch: normalizedBranch,
         cgpa,
         semCount: allSems.filter((s) => s.sgpa).length,
       });

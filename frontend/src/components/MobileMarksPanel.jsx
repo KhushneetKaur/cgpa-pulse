@@ -506,53 +506,102 @@ export default function MobileMarksPanel({ branch, selSem }) {
           </button>
         </div>
 
-        {/* Footer quick links */}
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          flexWrap: "wrap",
-          gap: 10,
-          marginTop: 8,
-        }}>
-          <button
-            onClick={() => openQuick(selSem)}
-            style={{
-              background: "transparent", border: "none",
-              fontSize: 11, color: c.muted,
-              cursor: "pointer", fontFamily: "inherit", padding: "4px 8px",
-            }}
-          >
-            ⚡ Quick SGPA
-          </button>
+        {/* Action buttons — in a card */}
+<div style={{
+  marginTop:    10,
+  padding:      "10px 12px",
+  borderRadius: 10,
+  background:   dark ? "rgba(255,255,255,0.03)" : "rgba(109,40,217,0.03)",
+  border:       `1px solid ${c.border}`,
+  display:      "flex",
+  alignItems:   "center",
+  justifyContent: "space-around",
+  gap:          6,
+  flexWrap:     "wrap",
+}}>
+  <button
+    onClick={() => openQuick(selSem)}
+    style={{
+      display:        "flex",
+      flexDirection:  "column",
+      alignItems:     "center",
+      gap:            3,
+      background:     "transparent",
+      border:         "none",
+      cursor:         "pointer",
+      fontFamily:     "inherit",
+      padding:        "6px 10px",
+      borderRadius:   8,
+      transition:     "background 0.15s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.background = c.hover}
+    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+  >
+    <span style={{ fontSize: 16 }}>⚡</span>
+    <span style={{ fontSize: 9, color: c.muted, fontWeight: 600, whiteSpace: "nowrap" }}>
+      Quick SGPA
+    </span>
+  </button>
 
-          <button
-            onClick={() => setShowCustomise(true)}
-            style={{
-              background: "transparent", border: "none",
-              fontSize: 11, color: c.muted,
-              cursor: "pointer", fontFamily: "inherit", padding: "4px 8px",
-            }}
-          >
-            ✏️ Customise
-          </button>
+  <div style={{ width: 1, height: 28, background: c.border, flexShrink: 0 }} />
 
-          {bHist[selSem] && (
-            <button
-              onClick={() => {
-                if (window.confirm("Delete records for this semester?")) {
-                  deleteSemRecord(selSem);
-                }
-              }}
-              style={{
-                background: "transparent", border: "none",
-                fontSize: 11, color: c.bad,
-                cursor: "pointer", fontFamily: "inherit", padding: "4px 8px",
-              }}
-            >
-              Delete records
-            </button>
-          )}
-        </div>
+  <button
+    onClick={() => setShowCustomise(true)}
+    style={{
+      display:        "flex",
+      flexDirection:  "column",
+      alignItems:     "center",
+      gap:            3,
+      background:     "transparent",
+      border:         "none",
+      cursor:         "pointer",
+      fontFamily:     "inherit",
+      padding:        "6px 10px",
+      borderRadius:   8,
+      transition:     "background 0.15s",
+    }}
+    onMouseEnter={e => e.currentTarget.style.background = c.hover}
+    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+  >
+    <span style={{ fontSize: 16 }}>✏️</span>
+    <span style={{ fontSize: 9, color: c.muted, fontWeight: 600, whiteSpace: "nowrap" }}>
+      Customise
+    </span>
+  </button>
+
+  {bHist[selSem] && (
+    <>
+      <div style={{ width: 1, height: 28, background: c.border, flexShrink: 0 }} />
+      <button
+        onClick={() => {
+          if (window.confirm("Delete records for this semester?")) {
+            deleteSemRecord(selSem);
+          }
+        }}
+        style={{
+          display:       "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          gap:           3,
+          background:    "transparent",
+          border:        "none",
+          cursor:        "pointer",
+          fontFamily:    "inherit",
+          padding:       "6px 10px",
+          borderRadius:  8,
+          transition:    "background 0.15s",
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = `${c.bad}14`}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+      >
+        <span style={{ fontSize: 16 }}>🗑️</span>
+        <span style={{ fontSize: 9, color: c.bad, fontWeight: 600, whiteSpace: "nowrap" }}>
+          Delete
+        </span>
+      </button>
+    </>
+  )}
+</div>
       </div>
 
       {/* Customise Modal */}

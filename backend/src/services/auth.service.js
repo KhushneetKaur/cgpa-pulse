@@ -46,7 +46,6 @@ export async function googleAuth(accessToken) {
           isEmailVerified: true,
           hasSetPassword: false,
           role: "student",
-          usernameSetAt: new Date(),
         });
         created = true;
       } catch (err) {
