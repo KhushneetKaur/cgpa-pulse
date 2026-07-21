@@ -16,7 +16,7 @@ function isValidUsername(u) {
 }
 
 export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
-  const [step,     setStep]     = useState(1); 
+  const [step,     setStep]     = useState(1); // 1=username, 2=branch, 3=welcome
   const [username, setUsername] = useState("");
   const [branch,   setBranch]   = useState(null);
   const [err,      setErr]      = useState("");
