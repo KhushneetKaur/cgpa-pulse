@@ -2,6 +2,19 @@ import { useState } from "react";
 import { BRANCHES } from "../data/branches";
 import toast from "react-hot-toast";
 
+const GLASS_CARD_STYLE = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 400,
+  background: "rgba(0,0,0,0.6)",
+  backdropFilter: "blur(14px)",
+  WebkitBackdropFilter: "blur(14px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "1rem",
+};
+
 export default function CustomiseSubjectsModal({
   dark, c, inp, btn,
   branch, selSem,
@@ -9,117 +22,146 @@ export default function CustomiseSubjectsModal({
   addCustomSubject, removeCustomSubject, toggleHiddenSubject,
   onClose,
 }) {
-  const [name,    setName]    = useState("");
+  const [name, setName] = useState("");
   const [credits, setCredits] = useState("");
-  const [type,    setType]    = useState("theory");
-  const [err,     setErr]     = useState("");
+  const [type, setType] = useState("theory");
+  const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const hardcoded  = BRANCHES[branch].semesters[selSem].subjects;
-  const custom     = bCustomSubjects[selSem] || [];
-  const hiddenCodes = bHiddenSubjects[selSem] || [];
+  // Safe navigation prevents app crash if branch/selSem is undefined
+  const hardcoded = BRANCHES[branch]?.semesters?.[selSem]?.subjects || [];
+  const custom = bCustomSubjects?.[selSem] || [];
+  const hiddenCodes = bHiddenSubjects?.[selSem] || [];
 
-  async function handleAdd() {
-    if (!name.trim())                    { setErr("Subject name required"); return; }
-    if (!credits || isNaN(Number(credits))
-        || Number(credits) < 1
-        || Number(credits) > 10)         { setErr("Credits must be 1–10"); return; }
+  async function handleAdd(e) {
+    if (e) e.preventDefault();
+    
+    const trimmedName = name.trim();
+    const parsedCredits = Number(credits);
+
+    if (!trimmedName) {
+      setErr("Subject name required");
+      return;
+    }
+    if (!credits || isNaN(parsedCredits) || parsedCredits < 1 || parsedCredits > 10) {
+      setErr("Credits must be 1–10");
+      return;
+    }
+
     setErr("");
     setLoading(true);
+
     try {
       await addCustomSubject(selSem, {
-        name:    name.trim(),
-        credits: Number(credits),
+        name: trimmedName,
+        credits: parsedCredits,
         type,
       });
+      toast.success("Subject added successfully");
       setName("");
       setCredits("");
       setType("theory");
     } catch {
       setErr("Failed to add subject");
+      toast.error("Could not add subject");
     } finally {
       setLoading(false);
     }
   }
 
-  const glassCard = {
-    position:             "fixed",
-    inset:                0,
-    zIndex:               400,
-    background:           "rgba(0,0,0,0.6)",
-    backdropFilter:       "blur(14px)",
-    WebkitBackdropFilter: "blur(14px)",
-    display:              "flex",
-    alignItems:           "center",
-    justifyContent:       "center",
-    padding:              "1rem",
-  };
+  async function handleToggleHide(subCode, isHidden) {
+    try {
+      setActionLoading(true);
+      await toggleHiddenSubject(selSem, subCode, !isHidden);
+      toast.success(isHidden ? "Subject restored" : "Subject hidden");
+    } catch {
+      toast.error("Failed to update subject visibility");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleRemoveCustom(subCode) {
+    try {
+      setActionLoading(true);
+      await removeCustomSubject(selSem, subCode);
+      toast.success("Custom subject removed");
+    } catch {
+      toast.error("Failed to remove subject");
+    } finally {
+      setActionLoading(false);
+    }
+  }
 
   return (
-    <div className="customise-modal-backdrop" style={glassCard} onClick={onClose}>
-     <div
-  className="customise-modal-card"
-  onClick={e => e.stopPropagation()}
-  style={{
-    background:      c.card,
-    border:          `1px solid ${c.border}`,
-    borderRadius:    16,
-    padding:         "24px",
-    maxWidth:        480,
-    width:           "100%",
-    maxHeight:       "85vh",
-    overflowY:       "auto",
-    scrollbarWidth:  "none",
-    msOverflowStyle: "none",
-    boxShadow:       dark
-      ? "0 20px 60px rgba(0,0,0,0.6)"
-      : "0 20px 60px rgba(109,40,217,0.15)",
-  }}
->
-  <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+    <div className="customise-modal-backdrop" style={GLASS_CARD_STYLE} onClick={onClose}>
+      <div
+        className="customise-modal-card"
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: c.card,
+          border: `1px solid ${c.border}`,
+          borderRadius: 16,
+          padding: "24px",
+          maxWidth: 480,
+          width: "100%",
+          maxHeight: "85vh",
+          overflowY: "auto",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          boxShadow: dark
+            ? "0 20px 60px rgba(0,0,0,0.6)"
+            : "0 20px 60px rgba(109,40,217,0.15)",
+        }}
+      >
+        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
         
         {/* Header */}
         <div style={{
-          display:        "flex",
+          display: "flex",
           justifyContent: "space-between",
-          alignItems:     "center",
-          marginBottom:   20,
+          alignItems: "center",
+          marginBottom: 20,
         }}>
           <div>
             <p style={{
-              margin:     0,
-              fontSize:   15,
+              margin: 0,
+              fontSize: 15,
               fontWeight: 700,
-              color:      c.text,
+              color: c.text,
             }}>
               ✏️ Customise Subjects
             </p>
             <p style={{
-              margin:   0,
+              margin: 0,
               fontSize: 12,
-              color:    c.sub,
+              color: c.sub,
             }}>
               Semester {selSem} — hide removed subjects or add new ones
             </p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close modal"
             style={{
               background: "transparent",
-              border:     "none",
-              fontSize:   20,
-              color:      c.sub,
-              cursor:     "pointer",
+              border: "none",
+              fontSize: 20,
+              color: c.sub,
+              cursor: "pointer",
             }}
-          >×</button>
+          >
+            ×
+          </button>
         </div>
 
         {/* Existing subjects — toggle visibility */}
         <p style={{
-          margin:        "0 0 8px",
-          fontSize:      11,
-          fontWeight:    700,
-          color:         c.muted,
+          margin: "0 0 8px",
+          fontSize: 11,
+          fontWeight: 700,
+          color: c.muted,
           textTransform: "uppercase",
           letterSpacing: 0.5,
         }}>
@@ -127,58 +169,50 @@ export default function CustomiseSubjectsModal({
         </p>
 
         <div style={{
-          display:       "flex",
+          display: "flex",
           flexDirection: "column",
-          gap:           6,
-          marginBottom:  20,
+          gap: 6,
+          marginBottom: 20,
         }}>
           {hardcoded.map(sub => {
             const isHidden = hiddenCodes.includes(sub.code);
             return (
               <div key={sub.code} style={{
-                display:        "flex",
+                display: "flex",
                 justifyContent: "space-between",
-                alignItems:     "center",
-                padding:        "9px 12px",
-                borderRadius:   8,
-                background:     isHidden
-                  ? `${c.bad}08`
-                  : c.hover,
-                border:         `1px solid ${isHidden
-                  ? `${c.bad}30`
-                  : c.border}`,
-                opacity:        isHidden ? 0.6 : 1,
-                transition:     "all 0.15s",
+                alignItems: "center",
+                padding: "9px 12px",
+                borderRadius: 8,
+                background: isHidden ? `${c.bad}08` : c.hover,
+                border: `1px solid ${isHidden ? `${c.bad}30` : c.border}`,
+                opacity: isHidden ? 0.6 : 1,
+                transition: "all 0.15s",
               }}>
                 <div>
                   <p style={{
-                    margin:          0,
-                    fontSize:        13,
-                    color:           c.text,
-                    textDecoration:  isHidden ? "line-through" : "none",
+                    margin: 0,
+                    fontSize: 13,
+                    color: c.text,
+                    textDecoration: isHidden ? "line-through" : "none",
                   }}>
                     {sub.name}
                   </p>
                   <p style={{
-                    margin:   0,
+                    margin: 0,
                     fontSize: 10,
-                    color:    c.muted,
+                    color: c.muted,
                   }}>
-                     {sub.credits} cr · {sub.type}
+                    {sub.credits} cr · {sub.type}
                   </p>
                 </div>
                 <button
-                 onClick={async () => {
-                try {
-                await toggleHiddenSubject(selSem, sub.code, !isHidden);
-                } catch {
-      // error handled in context
-    }
-  }}
-  style={{
+                  disabled={actionLoading}
+                  onClick={() => handleToggleHide(sub.code, isHidden)}
+                  style={{
                     ...btn(isHidden ? "success" : "danger"),
                     fontSize: 11,
-                    padding:  "4px 10px",
+                    padding: "4px 10px",
+                    opacity: actionLoading ? 0.6 : 1,
                   }}
                 >
                   {isHidden ? "Restore" : "Hide"}
@@ -192,46 +226,55 @@ export default function CustomiseSubjectsModal({
         {custom.length > 0 && (
           <>
             <p style={{
-              margin:        "0 0 8px",
-              fontSize:      11,
-              fontWeight:    700,
-              color:         c.muted,
+              margin: "0 0 8px",
+              fontSize: 11,
+              fontWeight: 700,
+              color: c.muted,
               textTransform: "uppercase",
               letterSpacing: 0.5,
             }}>
               Added Subjects
             </p>
             <div style={{
-              display:       "flex",
+              display: "flex",
               flexDirection: "column",
-              gap:           6,
-              marginBottom:  20,
+              gap: 6,
+              marginBottom: 20,
             }}>
               {custom.map(sub => (
                 <div key={sub.code} style={{
-                  display:        "flex",
+                  display: "flex",
                   justifyContent: "space-between",
-                  alignItems:     "center",
-                  padding:        "9px 12px",
-                  borderRadius:   8,
-                  background:     `${c.ok}08`,
-                  border:         `1px solid ${c.ok}30`,
+                  alignItems: "center",
+                  padding: "9px 12px",
+                  borderRadius: 8,
+                  background: `${c.ok}08`,
+                  border: `1px solid ${c.ok}30`,
                 }}>
                   <div>
                     <p style={{
-                      margin:   0,
+                      margin: 0,
                       fontSize: 13,
-                      color:    c.text,
+                      color: c.text,
                     }}>
                       {sub.name}
                     </p>
+                    <p style={{
+                      margin: 0,
+                      fontSize: 10,
+                      color: c.muted,
+                    }}>
+                      {sub.credits} cr · {sub.type}
+                    </p>
                   </div>
                   <button
-                    onClick={() => removeCustomSubject(selSem, sub.code)}
+                    disabled={actionLoading}
+                    onClick={() => handleRemoveCustom(sub.code)}
                     style={{
                       ...btn("danger"),
                       fontSize: 11,
-                      padding:  "4px 10px",
+                      padding: "4px 10px",
+                      opacity: actionLoading ? 0.6 : 1,
                     }}
                   >
                     Remove
@@ -244,23 +287,20 @@ export default function CustomiseSubjectsModal({
 
         {/* Add new subject form */}
         <p style={{
-          margin:        "0 0 10px",
-          fontSize:      11,
-          fontWeight:    700,
-          color:         c.muted,
+          margin: "0 0 10px",
+          fontSize: 11,
+          fontWeight: 700,
+          color: c.muted,
           textTransform: "uppercase",
           letterSpacing: 0.5,
         }}>
           Add New Subject
         </p>
 
-        <div style={{
-          display:       "flex",
-          flexDirection: "column",
-          gap:           10,
-        }}>
+        <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input
             type="text"
+            autoFocus
             value={name}
             onChange={e => { setName(e.target.value); setErr(""); }}
             placeholder="Subject name e.g. Cloud Computing"
@@ -289,9 +329,9 @@ export default function CustomiseSubjectsModal({
 
           {err && (
             <p style={{
-              margin:     0,
-              fontSize:   12,
-              color:      c.bad,
+              margin: 0,
+              fontSize: 12,
+              color: c.bad,
               fontWeight: 500,
             }}>
               ⚠ {err}
@@ -299,36 +339,32 @@ export default function CustomiseSubjectsModal({
           )}
 
           <button
-            onClick={handleAdd}
+            type="submit"
             disabled={loading}
             style={{
               ...btn("primary"),
-              width:   "100%",
+              width: "100%",
               padding: "10px",
               opacity: loading ? 0.7 : 1,
-              cursor:  loading ? "not-allowed" : "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Adding..." : "+ Add Subject"}
           </button>
-        </div>
+        </form>
 
         {/* Warning */}
         <div style={{
-  marginTop:    16,
-  padding:      "8px 12px",
- background: dark
-  ? "rgba(148,163,184,0.08)"
-  : "rgba(217,119,6,0.06)",
-border: `1px solid ${dark
-  ? "rgba(148,163,184,0.2)"
-  : "rgba(217,119,6,0.15)"}`,
-borderRadius: 8,
-fontSize:     11,
-color: dark ? "#94a3b8" : "#92400e",
-  lineHeight:   1.6,
-}}>
-  ⚠ Hiding a subject removes it from SGPA calculation.
+          marginTop: 16,
+          padding: "8px 12px",
+          background: dark ? "rgba(148,163,184,0.08)" : "rgba(217,119,6,0.06)",
+          border: `1px solid ${dark ? "rgba(148,163,184,0.2)" : "rgba(217,119,6,0.15)"}`,
+          borderRadius: 8,
+          fontSize: 11,
+          color: dark ? "#94a3b8" : "#92400e",
+          lineHeight: 1.6,
+        }}>
+          ⚠ Hiding a subject removes it from SGPA calculation.
           Restoring it will include it again from the next save.
           Custom subjects persist across sessions.
         </div>
