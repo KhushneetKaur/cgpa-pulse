@@ -442,44 +442,91 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
               </p>
 
               {[
-                {
-                  icon:  "👤",
-                  title: "Your profile is in the top-right avatar",
-                  desc:  "Tap your initials button to change username, switch branch, view CGPA, or sign out.",
-                },
-                {
-                  icon:  "📝",
-                  title: "Enter marks in the Calculator tab",
-                  desc:  "Select a semester, enter internal + external marks for each subject, then hit Save.",
-                },
-                {
-                  icon:  "✏️",
-                  title: "Customise subjects if your syllabus changed",
-                  desc:  "Use the Customise button inside the calculator to hide removed subjects or add new ones.",
-                },
-                {
-                  icon:  "🏆",
-                  title: "Join the leaderboard anytime",
-                  desc:  "Go to the Leaderboard tab and opt in to show your CGPA to other students.",
-                },
-              ].map(tip => (
-                <div key={tip.title} style={{
-                  display:      "flex",
-                  gap:          10,
-                  marginBottom: 10,
-                  alignItems:   "flex-start",
-                }}>
-                  <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1.3 }}>{tip.icon}</span>
-                  <div>
-                    <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: c.text }}>
-                      {tip.title}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 11, color: c.sub, lineHeight: 1.5 }}>
-                      {tip.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
+  {
+    icon:    "📲",
+    title:   "Install CGPA Pulse on your phone",
+    desc:    "Tap the Share button in Safari (iOS) or the menu in Chrome (Android) and select \"Add to Home Screen\" — works like a native app, no App Store needed.",
+    highlight: true,
+  },
+  {
+    icon:  "👤",
+    title: "Your profile is in the top-right avatar",
+    desc:  "Tap your initials button to change username, switch branch, view CGPA, or sign out.",
+  },
+  {
+    icon:  "📝",
+    title: "Enter marks in the Calculator tab",
+    desc:  "Select a semester, enter internal + external marks for each subject, then hit Save.",
+  },
+  {
+    icon:  "⚡",
+    title: "Already have your SGPA? Use Quick SGPA",
+    desc:  "Tap ⚡ inside the Calculator to directly enter a known SGPA for any semester — no need to enter every mark.",
+  },
+  {
+    icon:  "✏️",
+    title: "Customise subjects if your syllabus changed",
+    desc:  "Use the Customise button inside the calculator to hide removed subjects or add new ones.",
+  },
+  {
+    icon:  "🏆",
+    title: "Join the leaderboard anytime",
+    desc:  "Go to the Leaderboard tab and opt in to show your CGPA to other students.",
+  },
+].map(tip => (
+  <div key={tip.title} style={{
+    display:      "flex",
+    gap:          10,
+    marginBottom: 10,
+    alignItems:   "flex-start",
+    padding:      tip.highlight ? "10px 12px" : "0",
+    borderRadius: tip.highlight ? 10 : 0,
+    background:   tip.highlight
+      ? dark
+        ? "rgba(124,131,245,0.12)"
+        : "rgba(109,40,217,0.07)"
+      : "transparent",
+    border: tip.highlight
+      ? `1px solid ${dark ? "rgba(124,131,245,0.25)" : "rgba(109,40,217,0.18)"}`
+      : "none",
+  }}>
+    <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1.3 }}>
+      {tip.icon}
+    </span>
+    <div>
+      <p style={{
+        margin:     "0 0 2px",
+        fontSize:   12,
+        fontWeight: 700,
+        color:      tip.highlight ? c.accent : c.text,
+      }}>
+        {tip.title}
+        {tip.highlight && (
+          <span style={{
+            marginLeft:   6,
+            fontSize:     9,
+            fontWeight:   700,
+            color:        "#fff",
+            background:   c.accent,
+            borderRadius: 4,
+            padding:      "1px 5px",
+            verticalAlign: "middle",
+          }}>
+            NEW
+          </span>
+        )}
+      </p>
+      <p style={{
+        margin:     0,
+        fontSize:   11,
+        color:      tip.highlight ? c.sub : c.sub,
+        lineHeight: 1.5,
+      }}>
+        {tip.desc}
+      </p>
+    </div>
+  </div>
+))}
             </div>
 
             <button

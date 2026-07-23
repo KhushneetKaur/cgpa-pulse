@@ -204,9 +204,7 @@ button, input, select, textarea, a {
 /* But don't slow down animations or transforms */
 *[style*="animation"],
 *[style*="transform"],
-button,
-input,
-select {
+button, input, select, a {
   transition:
     background-color 0.12s ease,
     border-color     0.12s ease,

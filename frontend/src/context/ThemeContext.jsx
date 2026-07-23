@@ -18,11 +18,13 @@ export function ThemeProvider({ children }) {
   });
 
   const toggleDark = useCallback(() => {
-    setDark((prev) => {
-      const next = !prev;
-      localStorage.setItem("dark", String(next));
-      return next;
-    });
+  setDark((prev) => {
+    const next = !prev;
+    localStorage.setItem("dark", String(next));
+    // Fire before React re-renders so CSS transitions start immediately
+    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    return next;
+  });
   }, []);
 
   // Sync class on document root
