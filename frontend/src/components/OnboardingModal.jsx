@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BRANCHES } from "../data/branches";
 import { apiUpdateUsername, apiUpdateBranch, apiUpdateCurrentSem } from "../services/user.api.js";
 
@@ -19,6 +19,9 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   const [currentSem, setCurrentSem] = useState(user?.currentSem || null);
   const [err,        setErr]        = useState("");
   const [loading,    setLoading]    = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState(null);
+  const [suggestions,   setSuggestions]   = useState([]);
+  const checkTimer = useRef(null);
 
   // Single state initialization for username
   const [username, setUsername] = useState(() => {
@@ -165,7 +168,30 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             <input
               type="text"
               value={username}
-              onChange={e => { setUsername(e.target.value); setErr(""); }}
+              onChange={e => {
+  const val = e.target.value;
+  setUsername(val);
+  setErr("");
+  setSuggestions([]);
+  setUsernameStatus(null);
+
+  if (checkTimer.current) clearTimeout(checkTimer.current);
+
+  const check = isValidUsername(val);
+  if (!check.ok) return;
+
+  setUsernameStatus("checking");
+  checkTimer.current = setTimeout(async () => {
+    try {
+      const { apiCheckUsername } = await import("../services/user.api.js");
+      const { available, suggestions: sugg } = await apiCheckUsername(val.trim());
+      setUsernameStatus(available ? "available" : "taken");
+      setSuggestions(sugg || []);
+    } catch {
+      setUsernameStatus(null);
+    }
+  }, 600);
+}}
               placeholder="e.g. khushneet_k"
               style={{
                 ...inp(),
@@ -175,6 +201,74 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
               }}
               autoFocus
             />
+           
+           {usernameStatus && (
+  <div style={{
+    display:    "flex",
+    alignItems: "center",
+    gap:        6,
+    marginTop:  4,
+    marginBottom: 6,
+    fontSize:   12,
+    fontWeight: 600,
+    color:      usernameStatus === "available"
+      ? c.ok
+      : usernameStatus === "taken"
+      ? c.bad
+      : c.muted,
+  }}>
+    {usernameStatus === "checking" && (
+      <>
+        <div style={{
+          width:        10, height: 10, borderRadius: "50%",
+          border:       `2px solid ${c.muted}`,
+          borderTop:    `2px solid ${c.accent}`,
+          animation:    "spin 0.7s linear infinite",
+          flexShrink:   0,
+        }} />
+        Checking availability...
+      </>
+    )}
+    {usernameStatus === "available" && "✓ Username is available!"}
+    {usernameStatus === "taken"     && "✗ Username already taken"}
+  </div>
+)}
+
+{usernameStatus === "taken" && suggestions.length > 0 && (
+  <div style={{ marginBottom: 10 }}>
+    <p style={{ margin: "0 0 6px", fontSize: 11, color: c.muted }}>
+      Try one of these:
+    </p>
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      {suggestions.map(s => (
+        <button
+          key={s}
+          type="button"
+          onClick={() => {
+            setUsername(s);
+            setErr("");
+            setUsernameStatus("available");
+            setSuggestions([]);
+          }}
+          style={{
+            padding:      "4px 10px",
+            borderRadius: 8,
+            border:       `1px solid ${c.accent}`,
+            background:   `${c.accent}12`,
+            color:        c.accent,
+            fontSize:     12,
+            fontWeight:   600,
+            cursor:       "pointer",
+            fontFamily:   "inherit",
+          }}
+        >
+          {s}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
             <p style={{ margin: "0 0 16px", fontSize: 11, color: c.muted }}>
               4–15 characters · letters, numbers, _ · must include a letter · can change after 30 days
             </p>
@@ -186,19 +280,22 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
             )}
 
             <button
-              type="submit"
-              disabled={loading}
-              style={{
-                ...btn("primary"),
-                width:          "100%",
-                padding:        "13px",
-                fontSize:       14,
-                justifyContent: "center",
-                opacity:        loading ? 0.7 : 1,
-              }}
-            >
-              {loading ? "Checking..." : "Continue →"}
-            </button>
+  type="submit"
+  disabled={loading || usernameStatus === "taken" || usernameStatus === "checking"}
+  style={{
+    ...btn("primary"),
+    width:          "100%",
+    padding:        "13px",
+    fontSize:       14,
+    justifyContent: "center",
+    opacity:  loading || usernameStatus === "taken" || usernameStatus === "checking"
+      ? 0.6 : 1,
+    cursor:   usernameStatus === "taken" || usernameStatus === "checking"
+      ? "not-allowed" : "pointer",
+  }}
+>
+  {loading ? "Checking..." : "Continue →"}
+</button>
           </form>
         )}
 

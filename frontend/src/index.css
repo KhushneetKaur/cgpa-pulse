@@ -213,3 +213,19 @@ button, input, select, a {
     transform        0.15s ease,
     opacity          0.15s ease;
 }
+/* ── Smooth theme switch ─────────────────────────────────────────────────── */
+html {
+  transition: background-color 0.15s ease;
+}
+
+body {
+  background-color: var(--bg, #080c18);
+  transition:       background-color 0.15s ease;
+}
+
+/* Only transition color properties, not layout/transform/animation */
+*:not([style*="animation"]):not(canvas) {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}

@@ -27,6 +27,37 @@ export function ThemeProvider({ children }) {
   });
   }, []);
 
+   
+useEffect(() => {
+  const root = document.documentElement;
+
+  if (dark) {
+    root.style.setProperty("--bg",           "#080c18");
+    root.style.setProperty("--card",         "#0f1424");
+    root.style.setProperty("--border",       "#1e2540");
+    root.style.setProperty("--text",         "#eceef8");
+    root.style.setProperty("--sub",          "#8b90b8");
+    root.style.setProperty("--muted",        "#4a5070");
+    root.style.setProperty("--hover",        "#131828");
+    root.style.setProperty("--accent",       "#7c83f5");
+    root.style.setProperty("--ok",           "#2dd4aa");
+    root.style.setProperty("--bad",          "#e05c5c");
+  } else {
+    root.style.setProperty("--bg",           "#f4f3ff");
+    root.style.setProperty("--card",         "#ffffff");
+    root.style.setProperty("--border",       "#e4e2f0");
+    root.style.setProperty("--text",         "#1e1b4b");
+    root.style.setProperty("--sub",          "#5b5687");
+    root.style.setProperty("--muted",        "#a09bbf");
+    root.style.setProperty("--hover",        "#ede9fe");
+    root.style.setProperty("--accent",       "#6d28d9");
+    root.style.setProperty("--ok",           "#059669");
+    root.style.setProperty("--bad",          "#dc2626");
+  }
+
+  document.documentElement.classList.toggle("dark", dark);
+}, [dark]);
+
   // Sync class on document root
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);

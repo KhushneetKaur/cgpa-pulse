@@ -5,6 +5,7 @@ import {
   updateLbOptIn,
   updateUsername,
   updateCurrentSem,
+  checkUsername
 } from "../controllers/user.controller.js";
 import { protect }      from "../middleware/auth.middleware.js";
 import { validate }     from "../middleware/validate.middleware.js";
@@ -36,6 +37,8 @@ router.put(
 );
 
 router.put("/current-sem", saveLimiter, updateCurrentSem);
+
+router.get("/check-username", readLimiter, checkUsername);
 
 // PUT /api/user/leaderboard
 router.put(

@@ -12,6 +12,11 @@ export async function apiUpdateUsername(username) {
   return res.user;
 }
 
+export async function apiCheckUsername(username) {
+  const res = await api.get(`/user/check-username?username=${encodeURIComponent(username)}`);
+  return res.data;
+}
+
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
 export async function apiUpdateBranch(branch) {
   const res = await api.put("/user/branch", { branch });

@@ -80,6 +80,36 @@ export async function updateUsername(req, res, next) {
   }
 }
 
+export async function checkUsername(req, res, next) {
+  try {
+    const { username } = req.query;
+    if (!username) return sendResponse(res, 200, { available: false });
+
+    const existing = await User.findOne({ username: username.trim() });
+    const available = !existing;
+
+    // Generate suggestions if taken
+    const suggestions = [];
+    if (!available) {
+      const base = username.trim();
+      const candidates = [
+        `${base}_`,
+        `${base}2`,
+        `${base}25`,
+        `${base}_mrsptu`,
+        `${base}cse`,
+      ];
+      for (const c of candidates) {
+        const taken = await User.findOne({ username: c });
+        if (!taken) suggestions.push(c);
+        if (suggestions.length === 3) break;
+      }
+    }
+
+    sendResponse(res, 200, { available, suggestions }, "");
+  } catch (err) { next(err); }
+}
+
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
 export async function updateBranch(req, res, next) {
   try {
