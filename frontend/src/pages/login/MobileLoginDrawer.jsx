@@ -132,7 +132,7 @@ function TypingText({ dark }) {
 const LINES = [
   { text: "> CGPA Pulse v1.0.0  —  MRSPTU Bathinda", delay: 0,    color: "#eceef8" },
   { text: "> Initializing grade engine...        [OK]", delay: 500,  color: "#2dd4aa" },
-  { text: "> Loading 6 engineering branches...   [OK]", delay: 1000, color: "#2dd4aa" },
+  { text: "> Loading 7 engineering branches...   [OK]", delay: 1000, color: "#2dd4aa" },
   { text: "> Syncing semester data structure...  [OK]", delay: 1500, color: "#2dd4aa" },
   { text: "> Calculating CGPA algorithms...      [OK]", delay: 2000, color: "#2dd4aa" },
   { text: "  ─────────────────────────────────────────", delay: 2400, color: "rgba(236,238,248,0.2)" },
