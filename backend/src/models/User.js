@@ -76,6 +76,19 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
+appInstalled: {
+  type:    Boolean,
+  default: false,
+},
+appInstalledAt: {
+  type:    Date,
+  default: null,
+},
+appInstalledOn: {
+  type:    String,  // "android" | "ios" | "desktop"
+  default: null,
+},
+
     isActive: {
       type: Boolean,
       default: true,
@@ -122,6 +135,9 @@ userSchema.methods.toPublicJSON = function () {
     role: this.role,
     branch: this.branch,
     currentSem: this.currentSem,
+    appInstalled:   this.appInstalled,
+   appInstalledAt: this.appInstalledAt,
+   appInstalledOn: this.appInstalledOn,
     lbOptIn: this.lbOptIn,
     lbOptInDate: this.lbOptInDate,
     hasSetPassword: this.hasSetPassword,

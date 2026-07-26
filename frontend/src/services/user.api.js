@@ -33,3 +33,8 @@ export async function apiUpdateLbOptIn(optIn) {
   const res = await api.put("/user/leaderboard", { optIn });
   return res;
 }
+
+export async function apiRecordAppInstall(platform) {
+  const res = await api.post("/user/app-install", { platform });
+  return res.data;
+}

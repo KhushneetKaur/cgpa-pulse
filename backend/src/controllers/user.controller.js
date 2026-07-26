@@ -224,3 +224,21 @@ export async function updateLbOptIn(req, res, next) {
     next(err);
   }
 }
+
+export async function recordAppInstall(req, res, next) {
+  try {
+    const { platform } = req.body; // "android" | "ios" | "desktop"
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          appInstalled:   true,
+          appInstalledAt: new Date(),
+          appInstalledOn: platform || "unknown",
+        },
+      },
+      { new: true }
+    );
+    sendResponse(res, 200, { user: user.toPublicJSON() }, "Install recorded");
+  } catch (err) { next(err); }
+}

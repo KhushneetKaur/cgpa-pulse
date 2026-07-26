@@ -5,7 +5,8 @@ import {
   updateLbOptIn,
   updateUsername,
   updateCurrentSem,
-  checkUsername
+  checkUsername,
+  recordAppInstall
 } from "../controllers/user.controller.js";
 import { protect }      from "../middleware/auth.middleware.js";
 import { validate }     from "../middleware/validate.middleware.js";
@@ -54,5 +55,5 @@ router.put(
   validate(updateUsernameSchema),
   updateUsername
 );
-
+router.post("/app-install", saveLimiter, recordAppInstall);
 export default router;
