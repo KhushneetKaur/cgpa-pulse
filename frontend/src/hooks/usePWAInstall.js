@@ -7,7 +7,7 @@ export function usePWAInstall() {
   const [isIOS, setIsIOS] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  // Helper to record install event safely (once per device/browser)
+  // Helper to record install event safely 
   const recordInstall = (platformOverride) => {
     const alreadyRecorded = localStorage.getItem("pwa_install_recorded");
     if (alreadyRecorded) return;
@@ -44,7 +44,9 @@ export function usePWAInstall() {
       // If opened in standalone mode, record launch if not previously logged
       if (standalone) {
         recordInstall();
-      }
+      } else {
+    localStorage.removeItem("pwa_install_recorded");
+  }
     };
 
     checkStandalone();
