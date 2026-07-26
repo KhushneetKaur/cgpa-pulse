@@ -977,11 +977,6 @@ export default function NavBar() {
   </div>
   <InstallButton compact />
 </div>
-
-              {/* Install app */}
-<div style={{ padding: "6px 10px" }}>
-  <InstallButton compact />
-</div>
 <div style={{ height: 1, background: c.border, margin: "2px 0" }} />
 
               {/* Developer Console */}
