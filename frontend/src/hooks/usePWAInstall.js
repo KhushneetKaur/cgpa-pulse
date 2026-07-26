@@ -2,21 +2,28 @@ import { useState, useEffect } from "react";
 
 export function usePWAInstall() {
   const [installPrompt, setInstallPrompt] = useState(null);
-  const [isInstalled,   setIsInstalled]   = useState(false);
-  const [isIOS,         setIsIOS]         = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    // 1. Standalone check (Android + iOS)
+    if (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone
+    ) {
       setIsInstalled(true);
       return;
     }
 
-    // Detect iOS
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(ios);
+    // 2. iOS & iPadOS detection
+    const isIosDevice =
+      (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) &&
+      !window.MSStream;
+    
+    setIsIOS(isIosDevice);
 
-    // Capture install prompt (Chrome/Android/Desktop)
+    // 3. Capture event (Android / Chromium)
     function onBeforeInstall(e) {
       e.preventDefault();
       setInstallPrompt(e);
@@ -24,7 +31,7 @@ export function usePWAInstall() {
 
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
 
-    // Listen for successful install
+    // 4. App installed listener
     window.addEventListener("appinstalled", () => {
       setIsInstalled(true);
       setInstallPrompt(null);
@@ -35,12 +42,20 @@ export function usePWAInstall() {
 
   async function triggerInstall() {
     if (!installPrompt) return false;
-    const result = await installPrompt.prompt();
-    if (result.outcome === "accepted") {
+
+    // Show native prompt
+    await installPrompt.prompt();
+    
+    // Wait for user interaction
+    const choiceResult = await installPrompt.userChoice;
+
+    if (choiceResult.outcome === "accepted") {
       setInstallPrompt(null);
       setIsInstalled(true);
+      return true;
     }
-    return result.outcome === "accepted";
+
+    return false;
   }
 
   const canInstall = !isInstalled && (!!installPrompt || isIOS);

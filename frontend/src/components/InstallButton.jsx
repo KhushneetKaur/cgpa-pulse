@@ -27,6 +27,7 @@ export default function InstallButton({ compact = false }) {
   return (
     <>
       <button
+      type = "button"
         onClick={isIOS ? () => setShowIOSGuide(true) : triggerInstall}
         style={{
           display:        "flex",
@@ -148,6 +149,7 @@ export default function InstallButton({ compact = false }) {
             ))}
 
             <button
+            type = "button"
               onClick={() => setShowIOSGuide(false)}
               style={{
                 width:          "100%",

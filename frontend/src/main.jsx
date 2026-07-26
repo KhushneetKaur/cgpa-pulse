@@ -1,23 +1,33 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import './index.css';
-import './styles/responsive.css';
-import App from './App.jsx';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import "./styles/responsive.css";
+import App from "./App.jsx";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
-createRoot(document.getElementById("root")).render(
+const appContent = (
   <StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
-      <App />
-    </GoogleOAuthProvider>
+    <App />
   </StrictMode>
 );
 
-// Register Service Worker
-if ("serviceWorker" in navigator) {
+createRoot(document.getElementById("root")).render(
+  googleClientId ? (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      {appContent}
+    </GoogleOAuthProvider>
+  ) : (
+    appContent
+  )
+);
+
+// Register Service Worker (Production Only)
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("/sw.js").catch((err) => {
+      console.error("SW Registration failed:", err);
+    });
   });
 }
