@@ -1,24 +1,27 @@
 {
+  "id": "/",
   "name": "CGPA Pulse",
   "short_name": "CGPA Pulse",
   "description": "Track and predict your CGPA — MRSPTU Bathinda",
-  "start_url": "/",
+  "start_url": "/?mode=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
   "background_color": "#080c18",
   "theme_color": "#7c3aed",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
