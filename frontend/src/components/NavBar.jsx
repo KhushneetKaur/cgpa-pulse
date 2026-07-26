@@ -5,6 +5,7 @@ import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
 import { TABS } from "../utils/constants";
 import UsernameSetupModal from "./UsernameSetupModal";
+import InstallButton from "./InstallButton";
 
 export default function NavBar() {
   const {
@@ -956,6 +957,32 @@ export default function NavBar() {
                   {lbOptIn ? "Opted in" : "Private"}
                 </span>
               </div>
+
+              {/* Install app */}
+<div style={{
+  padding:      "13px 14px",
+  borderRadius: 10,
+  border:       `1px solid ${c.border}`,
+  background:   c.hover,
+  marginBottom: 4,
+  display:      "flex",
+  alignItems:   "center",
+  justifyContent: "space-between",
+}}>
+  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+    <span style={{ fontSize: 16 }}>📲</span>
+    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: c.text }}>
+      Install App
+    </p>
+  </div>
+  <InstallButton compact />
+</div>
+
+              {/* Install app */}
+<div style={{ padding: "6px 10px" }}>
+  <InstallButton compact />
+</div>
+<div style={{ height: 1, background: c.border, margin: "2px 0" }} />
 
               {/* Developer Console */}
               <button

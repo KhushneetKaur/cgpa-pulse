@@ -57,11 +57,22 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   }
 
   // Step 2: Select Branch locally
-  function handleBranchNext() {
-    if (!branch) { setErr("Please select your branch"); return; }
-    setErr("");
+async function handleBranchNext() {
+  if (!branch) { setErr("Please select your branch"); return; }
+  setErr("");
+  setLoading(true);
+  try {
+    if (typeof apiUpdateBranch === "function") {
+      await apiUpdateBranch(branch); 
+    }
     setStep(3);
+  } catch (e) {
+    console.error("Error saving branch:", e);
+    setErr(e.message || "Failed to save branch. Try again.");
+  } finally {
+    setLoading(false);
   }
+}
 
   // Step 3: Select & save Semester
   async function handleSemesterNext() {
@@ -83,20 +94,10 @@ export default function OnboardingModal({ dark, c, btn, inp, user, onDone }) {
   }
 
   // Step 4: Save branch to API and finish
-  async function handleFinish(e) {
-    if (e) e.preventDefault();
-    setLoading(true);
-    try {
-      if (typeof apiUpdateBranch === "function") {
-        await apiUpdateBranch(branch);
-      }
-    } catch (e) {
-      console.error("Error completing onboarding:", e);
-    } finally {
-      setLoading(false);
-      onDone(username.trim(), branch, currentSem);
-    }
-  }
+function handleFinish(e) {
+  if (e) e.preventDefault();
+  onDone(username.trim(), branch, currentSem);
+}
 
   return (
     <div style={{
