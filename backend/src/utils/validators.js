@@ -16,6 +16,37 @@ export const googleAuthSchema = Joi.object({
   }),
 });
 
+export const checkEmailSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+export const sendOTPSchema = Joi.object({
+  email: Joi.string().email().required(),
+  intent: Joi.string().valid("signup", "login").required(),
+  username: Joi.string().when("intent", { is: "signup", then: Joi.required() }),
+  password: Joi.string().min(8).required(),
+});
+
+export const loginSchema = Joi.object({
+  identifier: Joi.string().required(),
+  password: Joi.string().required(),
+});
+
+export const verifyOTPSchema = Joi.object({
+  otpId: Joi.string().uuid().required(),
+  otp:   Joi.string().length(6).pattern(/^\d{6}$/).required(),
+});
+
+export const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+export const resetPasswordSchema = Joi.object({
+  token:       Joi.string().uuid().required(),
+  newPassword: Joi.string().min(8).required(),
+});
+
+
 export const updateUsernameSchema = Joi.object({
   username: Joi.string()
     .pattern(usernamePattern)

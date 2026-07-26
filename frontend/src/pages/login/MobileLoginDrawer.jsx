@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import AboutModal from "./AboutModal";
+import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+import { apiCheckEmail, apiSendOTP, apiForgotPassword, apiLogin } from "../../services/auth.api";
 
 // ── Grade color ───────────────────────────────────────────────────────────────
 function gradeClr(gp) {
@@ -312,11 +315,26 @@ function Terminal({ onDone, onOpenAbout }) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout }) {
+  const { verifyOtpAndLogin, setUser } = useAuth();
+  
   const [phase,         setPhase]         = useState("terminal");
   const [termFading,    setTermFading]    = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [showAbout,     setShowAbout]     = useState(false);
   const [isDesktop,     setIsDesktop]     = useState(window.innerWidth > 768);
+
+  // Auth Steps: "entry" | "signup" | "login" | "otp"
+  const [step, setStep] = useState("entry");
+  
+  // Auth Form State
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [otpId, setOtpId] = useState("");
+  const [otpArr, setOtpArr] = useState(["", "", "", "", "", ""]);
+  const [loading, setLoading] = useState(false);
+  
+  const otpRefs = useRef([]);
 
   useEffect(() => {
     function onResize() { setIsDesktop(window.innerWidth > 768); }
@@ -337,9 +355,163 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
     if (onOpenAbout) onOpenAbout();
   }
 
+  async function handleEntrySubmit(e) {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const res = await apiCheckEmail(email);
+      if (!res.exists) {
+        setStep("signup");
+      } else if (res.isGoogleOnly) {
+        toast.error("This email uses Google Sign-In. Please use the Google button.");
+      } else if (res.hasSetPassword) {
+        setStep("login");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to check email");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSignupOrLoginSubmit(e) {
+    e.preventDefault();
+    if (!password) return;
+    setLoading(true);
+    try {
+      if (step === "login") {
+        const user = await apiLogin({ identifier: email, password });
+        toast.success("Welcome back!");
+        setUser(user);
+      } else {
+        const payload = { email, intent: "signup", password, username };
+        const res = await apiSendOTP(payload);
+        setOtpId(res.otpId);
+        setStep("otp");
+        toast.success("OTP sent to your email!");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.error || `Failed to ${step}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault(); // Prevent any form submission just in case
+    console.log("Forgot password clicked for email:", email);
+    if (!email) {
+      toast.error("No email found. Please go back and enter your email.");
+      return;
+    }
+    setLoading(true);
+    const toastId = toast.loading("Sending reset link...");
+    try {
+      await apiForgotPassword(email);
+      toast.success("If the account exists, a reset link was sent.", { id: toastId });
+      setStep("forgot-success");
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      toast.error(err.response?.data?.error || "Failed to send reset link", { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleOtpChange(index, val) {
+    if (val.length > 1) val = val.slice(-1);
+    const newArr = [...otpArr];
+    newArr[index] = val;
+    setOtpArr(newArr);
+
+    // Auto focus next
+    if (val && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+    
+    // Auto submit on last digit
+    if (index === 5 && val && newArr.every(x => x)) {
+      const fullOtp = newArr.join("");
+      setLoading(true);
+      try {
+        await verifyOtpAndLogin(otpId, fullOtp);
+        toast.success("Verified successfully!");
+        // Navigation is handled by AuthContext setting user, App.jsx re-renders
+      } catch (err) {
+        setOtpArr(["", "", "", "", "", ""]);
+        otpRefs.current[0]?.focus();
+      } finally {
+        setLoading(false);
+      }
+    }
+  }
+
+  function handleOtpKeyDown(index, e) {
+    if (e.key === "Backspace" && !otpArr[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handleOtpPaste(e) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const newArr = [...otpArr];
+    for (let i = 0; i < pasted.length; i++) {
+      newArr[i] = pasted[i];
+    }
+    setOtpArr(newArr);
+    if (pasted.length === 6) {
+      otpRefs.current[5]?.focus();
+      // Manually trigger submit logic since state update is async
+      setTimeout(async () => {
+        setLoading(true);
+        try {
+          await verifyOtpAndLogin(otpId, pasted);
+          toast.success("Verified successfully!");
+        } catch (err) {
+          setOtpArr(["", "", "", "", "", ""]);
+          otpRefs.current[0]?.focus();
+        } finally {
+          setLoading(false);
+        }
+      }, 0);
+    } else {
+      otpRefs.current[pasted.length]?.focus();
+    }
+  }
+
+  // Common input styles
+  const inputStyle = {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "14px 16px",
+    borderRadius: 12,
+    border: `1px solid ${dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"}`,
+    background: dark ? "rgba(255,255,255,0.05)" : "#fff",
+    color: dark ? "#fff" : "#1e1b4b",
+    marginBottom: 12,
+    outline: "none",
+    fontSize: 15,
+  };
+
+  const btnStyle = {
+    width: "100%",
+    padding: "14px",
+    borderRadius: 12,
+    background: "linear-gradient(135deg,#7c3aed,#a78bfa)",
+    color: "#fff",
+    border: "none",
+    fontWeight: 700,
+    cursor: loading ? "not-allowed" : "pointer",
+    opacity: loading ? 0.7 : 1,
+    marginBottom: 16,
+    fontSize: 15,
+  };
+
   return (
     <>
-      {/* ── Terminal phase ──────────────────────────────────── */}
       {phase === "terminal" && (
         <div style={{
           opacity:    termFading ? 0 : 1,
@@ -349,7 +521,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
         </div>
       )}
 
-      {/* ── Main phase ──────────────────────────────────────── */}
       {phase === "main" && (
         <div style={{
           position: "fixed",
@@ -361,7 +532,7 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
           justifyContent: isDesktop ? "center" : undefined,
         }}>
 
-          {/* Background */}
+          {/* Background Elements */}
           <div style={{
             position: "absolute", inset: 0,
             background: dark
@@ -369,8 +540,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
               : "linear-gradient(160deg,#f4f3ff 0%,#ede9fe 55%,#f4f3ff 100%)",
           }}>
             <FloatingCards dark={dark} />
-
-            {/* Top fade */}
             <div style={{
               position: "absolute", top: 0, left: 0, right: 0, height: "55%",
               background: dark
@@ -378,8 +547,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
                 : "linear-gradient(180deg,rgba(244,243,255,0.9) 0%,transparent 100%)",
               pointerEvents: "none", zIndex: 1,
             }} />
-
-            {/* Bottom fade */}
             <div style={{
               position: "absolute", bottom: 0, left: 0, right: 0, height: "65%",
               background: dark
@@ -406,7 +573,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             pointerEvents:  "none",
             zIndex:         2,
           }}>
-            {/* MRSPTU label */}
             <p style={{
               margin:        "0 0 8px",
               fontSize:      "clamp(10px,1.4vw,13px)",
@@ -417,8 +583,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             }}>
               MRSPTU Bathinda
             </p>
-
-            {/* CGPA */}
             <h1 style={{
               margin:        0,
               fontSize:      "clamp(52px,10vw,108px)",
@@ -429,8 +593,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             }}>
               CGPA
             </h1>
-
-            {/* PULSE — gradient */}
             <h1 style={{
               margin:               "0 0 clamp(10px,2vw,18px)",
               fontSize:             "clamp(52px,10vw,108px)",
@@ -452,8 +614,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             }}>
               PULSE
             </h1>
-
-            {/* Typing tagline */}
             <p style={{
               margin:        0,
               fontSize:      "clamp(13px,1.8vw,18px)",
@@ -465,7 +625,7 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             </p>
           </div>
 
-          {/* ── Sign-in Drawer (Mobile Drawer / Desktop Floating Card) ── */}
+          {/* ── Sign-in Drawer ── */}
           <div style={{
             position:     isDesktop ? "relative" : "absolute",
             bottom:       isDesktop ? "auto" : 0,
@@ -478,14 +638,10 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             maxWidth:     isDesktop ? 420 : "min(100%, 480px)",
             borderRadius: isDesktop ? 24 : "20px 20px 0 0",
             zIndex:       20,
-            background:   dark
-              ? "rgba(13,14,26,0.95)"
-              : "rgba(255,255,255,0.95)",
+            background:   dark ? "rgba(13,14,26,0.95)" : "rgba(255,255,255,0.95)",
             backdropFilter:       "blur(32px)",
             WebkitBackdropFilter: "blur(32px)",
-            border:               `1px solid ${dark
-              ? "rgba(167,139,250,0.18)"
-              : "rgba(124,58,237,0.12)"}`,
+            border:               `1px solid ${dark ? "rgba(167,139,250,0.18)" : "rgba(124,58,237,0.12)"}`,
             padding:      "20px clamp(20px,5vw,36px) clamp(24px,5vw,32px)",
             boxShadow:    dark
               ? isDesktop ? "0 20px 60px rgba(0,0,0,0.6)" : "0 -20px 60px rgba(0,0,0,0.55)"
@@ -493,7 +649,6 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             transition:   "transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease",
           }}>
 
-            {/* Handle — mobile only */}
             {!isDesktop && (
               <div style={{
                 width:        40, height: 4, borderRadius: 99,
@@ -502,65 +657,137 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
               }} />
             )}
 
-            {/* Headline */}
-            <p style={{
-              margin:     "0 0 4px",
-              fontSize:   "clamp(17px,2.5vw,22px)",
-              fontWeight: 800,
-              color:      dark ? "rgba(255,255,255,0.92)" : "#1e1b4b",
-              textAlign:  "center",
-            }}>
-              Sign in to get started
-            </p>
-            <p style={{
-              margin:     "0 0 clamp(14px,2vw,20px)",
-              fontSize:   "clamp(11px,1.4vw,13px)",
-              color:      dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
-              textAlign:  "center",
-            }}>
-              Your grades, saved securely to your Google account
-            </p>
+            {/* ── STEP: ENTRY ── */}
+            {step === "entry" && (
+              <form onSubmit={handleEntrySubmit}>
+                <p style={{
+                  margin: "0 0 16px", fontSize: "clamp(17px,2.5vw,22px)", fontWeight: 800,
+                  color: dark ? "rgba(255,255,255,0.92)" : "#1e1b4b", textAlign: "center"
+                }}>
+                  Sign in to get started
+                </p>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  style={inputStyle}
+                  required
+                />
+                <button type="submit" style={btnStyle} disabled={loading}>
+                  {loading ? "Checking..." : "Continue with Email"}
+                </button>
 
-            {/* Google button */}
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              style={{
-                width:          "100%",
-                padding:        "clamp(12px,1.8vw,16px) 16px",
-                borderRadius:   14,
-                border:         `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "#dadce0"}`,
-                background:     dark ? "rgba(255,255,255,0.08)" : "#fff",
-                color:          dark ? "rgba(255,255,255,0.9)" : "#3c4043",
-                fontSize:       "clamp(14px,1.6vw,16px)",
-                fontWeight:     600,
-                fontFamily:     "inherit",
-                cursor:         "pointer",
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                gap:            12,
-                transition:     "all 0.2s",
-                boxShadow:      dark ? "none" : "0 2px 8px rgba(0,0,0,0.08)",
-                marginBottom:   "clamp(10px,1.5vw,14px)",
-              }}
-              onMouseEnter={e =>
-                e.currentTarget.style.background = dark
-                  ? "rgba(255,255,255,0.13)" : "#f8f9fa"
-              }
-              onMouseLeave={e =>
-                e.currentTarget.style.background = dark
-                  ? "rgba(255,255,255,0.08)" : "#fff"
-              }
-            >
-              <svg width="20" height="20" viewBox="0 0 48 48">
-                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-              </svg>
-              Continue with Google
-            </button>
+                <div style={{ display: "flex", alignItems: "center", margin: "16px 0" }}>
+                  <div style={{ flex: 1, height: 1, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }} />
+                  <span style={{ margin: "0 10px", fontSize: 12, color: dark ? "rgba(255,255,255,0.4)" : "#a09bbf" }}>OR</span>
+                  <div style={{ flex: 1, height: 1, background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }} />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  style={{
+                    width: "100%", padding: "14px 16px", borderRadius: 12,
+                    border: `1.5px solid ${dark ? "rgba(255,255,255,0.14)" : "#dadce0"}`,
+                    background: dark ? "rgba(255,255,255,0.08)" : "#fff",
+                    color: dark ? "rgba(255,255,255,0.9)" : "#3c4043",
+                    fontSize: 15, fontWeight: 600, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+                    marginBottom: 16
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+              </form>
+            )}
+
+            {/* ── STEP: SIGNUP ── */}
+            {step === "signup" && (
+              <form onSubmit={handleSignupOrLoginSubmit}>
+                <button type="button" onClick={() => setStep("entry")} style={{ background: "none", border: "none", color: dark ? "#a78bfa" : "#7c3aed", cursor: "pointer", padding: 0, marginBottom: 12, fontSize: 13, fontWeight: 600 }}>← Back</button>
+                <p style={{ margin: "0 0 16px", fontSize: "clamp(17px,2.5vw,22px)", fontWeight: 800, color: dark ? "#fff" : "#1e1b4b" }}>
+                  Create Account
+                </p>
+                <input type="text" placeholder="Username (e.g. alex_123)" value={username} onChange={e => setUsername(e.target.value)} style={inputStyle} required minLength={3} />
+                <input type="password" placeholder="Password (min 8 chars)" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} required minLength={8} />
+                <button type="submit" style={btnStyle} disabled={loading}>{loading ? "Sending OTP..." : "Create Account"}</button>
+              </form>
+            )}
+
+            {/* ── STEP: LOGIN ── */}
+            {step === "login" && (
+              <form onSubmit={handleSignupOrLoginSubmit}>
+                <button type="button" onClick={() => setStep("entry")} style={{ background: "none", border: "none", color: dark ? "#a78bfa" : "#7c3aed", cursor: "pointer", padding: 0, marginBottom: 12, fontSize: 13, fontWeight: 600 }}>← Back</button>
+                <p style={{ margin: "0 0 16px", fontSize: "clamp(17px,2.5vw,22px)", fontWeight: 800, color: dark ? "#fff" : "#1e1b4b" }}>
+                  Welcome back
+                </p>
+                <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} required />
+                <div style={{ textAlign: "right", marginBottom: 16 }}>
+                  <button type="button" onClick={handleForgotPassword} disabled={loading} style={{ background: "none", border: "none", color: dark ? "#a78bfa" : "#7c3aed", cursor: loading ? "not-allowed" : "pointer", fontSize: 12, padding: 0, opacity: loading ? 0.5 : 1 }}>{loading ? "Sending link..." : "Forgot Password?"}</button>
+                </div>
+                <button type="submit" style={btnStyle} disabled={loading}>{loading ? "Checking..." : "Sign In"}</button>
+              </form>
+            )}
+
+            {/* ── STEP: FORGOT SUCCESS ── */}
+            {step === "forgot-success" && (
+              <div style={{ textAlign: "center" }}>
+                <p style={{ margin: "0 0 16px", fontSize: "clamp(17px,2.5vw,22px)", fontWeight: 800, color: dark ? "#fff" : "#1e1b4b" }}>
+                  Check your email
+                </p>
+                <p style={{ margin: "0 0 24px", fontSize: 14, color: dark ? "rgba(255,255,255,0.6)" : "#5b5687", lineHeight: 1.5 }}>
+                  We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and spam folder.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setStep("login")}
+                  style={btnStyle}
+                >
+                  Back to Login
+                </button>
+              </div>
+            )}
+
+            {/* ── STEP: OTP ── */}
+
+            {step === "otp" && (
+              <div>
+                <button type="button" onClick={() => setStep("entry")} style={{ background: "none", border: "none", color: dark ? "#a78bfa" : "#7c3aed", cursor: "pointer", padding: 0, marginBottom: 12, fontSize: 13, fontWeight: 600 }}>← Cancel</button>
+                <p style={{ margin: "0 0 8px", fontSize: "clamp(17px,2.5vw,22px)", fontWeight: 800, color: dark ? "#fff" : "#1e1b4b", textAlign: "center" }}>
+                  Enter Verification Code
+                </p>
+                <p style={{ margin: "0 0 20px", fontSize: 13, color: dark ? "rgba(255,255,255,0.5)" : "#5b5687", textAlign: "center" }}>
+                  Sent to {email}
+                </p>
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 20 }} onPaste={handleOtpPaste}>
+                  {otpArr.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={el => otpRefs.current[i] = el}
+                      type="text"
+                      maxLength={1}
+                      value={digit}
+                      onChange={e => handleOtpChange(i, e.target.value)}
+                      onKeyDown={e => handleOtpKeyDown(i, e)}
+                      style={{
+                        width: 40, height: 48, textAlign: "center", fontSize: 20, fontWeight: 700,
+                        borderRadius: 10, border: `1px solid ${dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"}`,
+                        background: dark ? "rgba(255,255,255,0.05)" : "#fff", color: dark ? "#fff" : "#1e1b4b",
+                        outline: "none"
+                      }}
+                    />
+                  ))}
+                </div>
+                {loading && <p style={{ textAlign: "center", fontSize: 13, color: dark ? "#a78bfa" : "#7c3aed", margin: "0 0 16px" }}>Verifying...</p>}
+              </div>
+            )}
 
             {/* Developer Console card */}
             <button
@@ -569,9 +796,7 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
                 width:          "100%",
                 padding:        "clamp(10px,1.5vw,13px) 14px",
                 borderRadius:   12,
-                background:     dark
-                  ? "rgba(16,185,129,0.06)"
-                  : "rgba(16,185,129,0.04)",
+                background:     dark ? "rgba(16,185,129,0.06)" : "rgba(16,185,129,0.04)",
                 border:         "1px solid rgba(16,185,129,0.25)",
                 cursor:         "pointer",
                 fontFamily:     "inherit",
@@ -583,85 +808,20 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
                 animation:      "termGlow 3s ease-in-out infinite",
                 marginBottom:   "clamp(8px,1.2vw,12px)",
               }}
-              onMouseEnter={e =>
-                e.currentTarget.style.background = "rgba(16,185,129,0.1)"
-              }
-              onMouseLeave={e =>
-                e.currentTarget.style.background = dark
-                  ? "rgba(16,185,129,0.06)"
-                  : "rgba(16,185,129,0.04)"
-              }
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+              onMouseLeave={e => e.currentTarget.style.background = dark ? "rgba(16,185,129,0.06)" : "rgba(16,185,129,0.04)"}
             >
-              {/* KK avatar */}
-              <div style={{
-                width:          "clamp(34px,5vw,42px)",
-                height:         "clamp(34px,5vw,42px)",
-                borderRadius:   "50%",
-                background:     "linear-gradient(135deg,#6d28d9,#a78bfa)",
-                display:        "flex",
-                alignItems:     "center",
-                justifyContent: "center",
-                fontSize:       "clamp(11px,1.6vw,14px)",
-                fontWeight:     900,
-                color:          "#fff",
-                flexShrink:     0,
-                boxShadow:      "0 0 12px rgba(109,40,217,0.4)",
-              }}>
-                KK
-              </div>
-
+              <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#6d28d9,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: "#fff", flexShrink: 0 }}>KK</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin:   "0 0 1px",
-                  fontSize: "clamp(12px,1.5vw,14px)",
-                  fontWeight: 700,
-                  color:    dark ? "rgba(255,255,255,0.88)" : "#1e1b4b",
-                }}>
-                  Khushneet Kaur
-                </p>
-                <p style={{
-                  margin:   0,
-                  fontSize: "clamp(9px,1.2vw,11px)",
-                  color:    dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
-                }}>
-                  CSE · GZSCCET · MRSPTU Bathinda
-                </p>
+                <p style={{ margin: "0 0 1px", fontSize: 13, fontWeight: 700, color: dark ? "rgba(255,255,255,0.88)" : "#1e1b4b" }}>Khushneet Kaur</p>
+                <p style={{ margin: 0, fontSize: 10, color: dark ? "rgba(255,255,255,0.38)" : "#a09bbf" }}>CSE · GZSCCET · MRSPTU</p>
               </div>
-
-              {/* Console badge */}
-              <div style={{
-                display:      "flex",
-                alignItems:   "center",
-                gap:          4,
-                background:   "rgba(16,185,129,0.12)",
-                border:       "1px solid rgba(16,185,129,0.35)",
-                borderRadius: 6,
-                padding:      "4px 8px",
-                flexShrink:   0,
-              }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: "50%",
-                  background: "#10b981",
-                  animation: "consolePulse 1.2s step-end infinite",
-                  boxShadow: "0 0 5px #10b981",
-                }} />
-                <span style={{
-                  fontSize: 9, fontWeight: 700,
-                  color: "#10b981", fontFamily: "monospace",
-                  letterSpacing: 0.4,
-                }}>
-                  CONSOLE
-                </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.35)", borderRadius: 6, padding: "4px 8px", flexShrink: 0 }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981", animation: "consolePulse 1.2s step-end infinite", boxShadow: "0 0 5px #10b981" }} />
+                <span style={{ fontSize: 9, fontWeight: 700, color: "#10b981", fontFamily: "monospace", letterSpacing: 0.4 }}>CONSOLE</span>
               </div>
             </button>
-
-            <p style={{
-              textAlign:  "center",
-              fontSize:   "clamp(8px,1.1vw,10px)",
-              color:      dark ? "rgba(255,255,255,0.16)" : "#c4bfd8",
-              lineHeight: 1.6,
-              margin:     0,
-            }}>
+            <p style={{ textAlign: "center", fontSize: "clamp(8px,1.1vw,10px)", color: dark ? "rgba(255,255,255,0.16)" : "#c4bfd8", margin: 0 }}>
               Unofficial · Not affiliated with MRSPTU · Free forever
             </p>
           </div>

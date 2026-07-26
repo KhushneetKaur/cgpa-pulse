@@ -26,6 +26,7 @@ const PredictorPage = React.lazy(() => import("./pages/PredictorPage"));
 const BacklogsPage = React.lazy(() => import("./pages/BacklogsPage"));
 const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
 const GradeTablePage = React.lazy(() => import("./pages/GradeTablePage"));
+const ResetPasswordPage = React.lazy(() => import("./pages/ResetPasswordPage"));
 
 export default function App() {
   return (
@@ -41,6 +42,17 @@ export default function App() {
 
 function Shell() {
   const { screen, authLoading, user, c } = useAppData();
+  
+  const isResetRoute = window.location.pathname === "/reset-password" ||
+                       new URLSearchParams(window.location.search).get("token");
+  
+  if (isResetRoute) {
+    return (
+      <Suspense fallback={null}>
+        <ResetPasswordPage />
+      </Suspense>
+    );
+  }
 
   if (authLoading || (user && screen === "login")) {
     return (

@@ -98,11 +98,10 @@ export function clearTokenCookie(res) {
     secure: isProduction,
     sameSite: isProduction ? "none" : "lax",
     path: "/",
-    expires: new Date(0),
   };
 
-  res.cookie("token", "", cookieOptions);
-  res.cookie("refreshToken", "", cookieOptions);
+  res.clearCookie("token", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
 }
 
 // ── Signup ───────────────────────────────────────────────────────────

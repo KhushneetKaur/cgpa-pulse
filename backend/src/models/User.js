@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -112,6 +113,22 @@ userSchema.pre("validate", function (next) {
   }
   next();
 });
+
+// ── Pre-Save Hook: Hash password ──────────────────────────────────────────────
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("passwordHash") || !this.passwordHash) return next();
+  // Only hash if it looks like a plain password (not already a bcrypt hash)
+  if (!this.passwordHash.startsWith("$2")) {
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+  }
+  next();
+});
+
+// ── Instance method: compare password ─────────────────────────────────────────
+userSchema.methods.comparePassword = async function (candidate) {
+  if (!this.passwordHash) return false;
+  return bcrypt.compare(candidate, this.passwordHash);
+};
 
 // ── Instance method: safe public profile ──────────────────────────────────────
 userSchema.methods.toPublicJSON = function () {

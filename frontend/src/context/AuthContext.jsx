@@ -12,6 +12,7 @@ import {
   apiLogout,
   apiGetMe,
   apiGoogleSignIn,
+  apiVerifyOTP,
 } from "../services/auth.api.js";
 import toast from "react-hot-toast";
 
@@ -145,14 +146,31 @@ export function AuthProvider({ children }) {
     }
   }, [uname, pwd]);
 
+  // ── OTP Verify + Login ───────────────────────────────────────
+  const verifyOtpAndLogin = useCallback(async (otpId, otp) => {
+    setAuthErr("");
+    try {
+      const data = await apiVerifyOTP(otpId, otp);
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      setAuthErr(err.message || "OTP verification failed");
+      throw err;
+    }
+  }, []);
+
   // ── Logout ───────────────────────────────────────────────────
   const logout = useCallback(async () => {
     try {
+      setAuthLoading(true);
       await apiLogout();
-    } catch {
-      // Clear local state regardless
-    } finally {
+      localStorage.removeItem("accessToken");
       setUser(null);
+      toast.success("Logged out successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to logout");
+    } finally {
+      setAuthLoading(false);
       setUname("");
       setPwd("");
       setAuthErr("");
@@ -176,8 +194,9 @@ export function AuthProvider({ children }) {
       logout,
       clearForm,
       googleLogin,
+      verifyOtpAndLogin,
     }),
-    [user, authErr, authLoading, logout, clearForm, googleLogin]
+    [user, authErr, authLoading, logout, clearForm, googleLogin, verifyOtpAndLogin]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
