@@ -5,7 +5,7 @@ import { useAppData } from "../context/AppDataContext";
 export default function InstallButton({ compact = false }) {
   const { c, dark } = useAppData();
   const { canInstall, isInstalled, isIOS, triggerInstall, hasPrompt } = usePWAInstall();
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   if (isInstalled) {
     return (
@@ -25,21 +25,20 @@ export default function InstallButton({ compact = false }) {
   if (!canInstall) return null;
 
   const handleInstallClick = async () => {
+    // 1. iOS Safari Flow
     if (isIOS) {
-      setShowIOSGuide(true);
+      setShowGuide(true);
       return;
     }
 
-    if (!hasPrompt) {
-      // Fallback if Chrome hasn't provided the native prompt event yet
-      alert("To install CGPA Pulse:\n\nTap the browser menu (3 dots top-right) and select 'Add to Home Screen' or 'Install App'.");
-      return;
+    // 2. Native Chrome Auto-Prompt Flow
+    if (hasPrompt) {
+      const installed = await triggerInstall();
+      if (installed) return;
     }
 
-    const installed = await triggerInstall();
-    if (!installed) {
-      console.log("Install prompt dismissed or pending.");
-    }
+    // 3. Fallback Modal if Chrome suppresses native event
+    setShowGuide(true);
   };
 
   return (
@@ -76,10 +75,10 @@ export default function InstallButton({ compact = false }) {
         {compact ? "Install App" : "Install as App"}
       </button>
 
-      {/* iOS install guide modal */}
-      {showIOSGuide && (
+      {/* Unified Install Guide Modal (iOS & Android Fallback) */}
+      {showGuide && (
         <div
-          onClick={() => setShowIOSGuide(false)}
+          onClick={() => setShowGuide(false)}
           style={{
             position: "fixed",
             inset: 0,
@@ -119,7 +118,7 @@ export default function InstallButton({ compact = false }) {
               color: c.text,
               textAlign: "center",
             }}>
-              Add to Home Screen
+              {isIOS ? "Add to Home Screen" : "Install CGPA Pulse"}
             </h3>
             <p style={{
               margin: "0 0 20px",
@@ -127,14 +126,20 @@ export default function InstallButton({ compact = false }) {
               color: c.sub,
               textAlign: "center",
             }}>
-              Install CGPA Pulse like a native app — 3 taps!
+              {isIOS 
+                ? "Install CGPA Pulse like a native app — 3 taps!"
+                : "Install via your browser's menu in 3 simple steps:"}
             </p>
 
-            {[
+            {(isIOS ? [
               { step: "1", icon: "⬆️", text: "Tap the Share button at the bottom of Safari" },
               { step: "2", icon: "➕", text: 'Scroll down and tap "Add to Home Screen"' },
               { step: "3", icon: "✅", text: 'Tap "Add" in the top right corner' },
-            ].map(s => (
+            ] : [
+              { step: "1", icon: "⋮", text: "Tap the 3 vertical dots in top-right of Chrome" },
+              { step: "2", icon: "📲", text: 'Tap "Add to Home screen" or "Install app"' },
+              { step: "3", icon: "✅", text: "Confirm by tapping 'Add' or 'Install'" },
+            ]).map(s => (
               <div key={s.step} style={{
                 display: "flex",
                 alignItems: "center",
@@ -168,7 +173,7 @@ export default function InstallButton({ compact = false }) {
 
             <button
               type="button"
-              onClick={() => setShowIOSGuide(false)}
+              onClick={() => setShowGuide(false)}
               style={{
                 width: "100%",
                 padding: "13px",
