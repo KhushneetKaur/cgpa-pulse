@@ -7,7 +7,6 @@ import { Toaster } from "react-hot-toast";
 
 // Core Layout Components
 import NavBar from "./components/NavBar";
-import DisclaimerBanner from "./components/DisclaimerBanner";
 import DisclaimerModal from "./components/DisclaimerModal";
 import QuickSGPAModal from "./components/QuickSGPAModal";
 import BranchSelect from "./components/BranchSelect";
