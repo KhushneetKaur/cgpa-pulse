@@ -620,12 +620,12 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
                   Khushneet Kaur
                 </p>
                 <p style={{
-                  margin:   0,
-                  fontSize: "clamp(9px,1.2vw,11px)",
-                  color:    dark ? "rgba(255,255,255,0.38)" : "#a09bbf",
-                }}>
-                  CSE · GZSCCET · MRSPTU Bathinda
-                </p>
+  margin:   0,
+  fontSize: "clamp(9px,1.2vw,11px)",
+  color:    dark ? "rgba(255,255,255,0.5)" : "#7b6fa0",
+}}>
+  Developer
+</p>
               </div>
 
               {/* Console badge */}
@@ -656,14 +656,14 @@ export default function MobileLoginDrawer({ handleGoogleLogin, dark, onOpenAbout
             </button>
 
             <p style={{
-              textAlign:  "center",
-              fontSize:   "clamp(8px,1.1vw,10px)",
-              color:      dark ? "rgba(255,255,255,0.16)" : "#c4bfd8",
-              lineHeight: 1.6,
-              margin:     0,
-            }}>
-              Unofficial · Not affiliated with MRSPTU · Free forever
-            </p>
+  textAlign:  "center",
+  fontSize:   "clamp(10px,1.3vw,12px)",
+  color:      dark ? "rgba(255,255,255,0.45)" : "#7b6fa0",
+  lineHeight: 1.6,
+  margin:     0,
+}}>
+  Unofficial · Not affiliated with MRSPTU · Free forever
+</p>
           </div>
         </div>
       )}

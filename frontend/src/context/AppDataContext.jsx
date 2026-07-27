@@ -46,8 +46,8 @@ export function AppDataProvider({ children }) {
       border:      "#1e2540",
       borderHover: "#3d4470",
       text:        "#eceef8",
-      sub:         "#8b90b8",
-      muted:       "#4a5070",
+      sub:          "#9ba3c8",   
+      muted:        "#6b7299",
       maroon:      "#6d6af0",
       gold:        "#7c83f5",
       accent:      "#7c83f5",
@@ -69,8 +69,8 @@ export function AppDataProvider({ children }) {
       border:      "#e4e2f0",
       borderHover: "#a78bfa",
       text:        "#1e1b4b",
-      sub:         "#5b5687",
-      muted:       "#a09bbf",
+      sub:          "#4a4575",   
+     muted:        "#7b6fa0",
       maroon:      "#8B1A1A",
       gold:        "#c9a227",
       accent:      "#6d28d9",
@@ -298,7 +298,7 @@ export function AppDataProvider({ children }) {
     }
 
     loadUserData();
-  }, [user, authLoading]); // Screen dependency removed to prevent recalculation cycles
+  }, [user, authLoading]); 
 
   async function setBranch(key) {
     if (!BRANCHES[key]) return;
