@@ -16,6 +16,7 @@ import MRSPTULogo from "./components/MRSPTULogo";
 import UsernameSetupModal from "./components/UsernameSetupModal";
 import BottomTabBar from "./components/BottomTabBar";
 import OnboardingModal from "./components/OnboardingModal";
+import InstallPromptToast from "./components/InstallPromptToast";
 
 // Code Splitting Definitions
 const LoginPage = React.lazy(() => import("./pages/login/LoginPage"));
@@ -82,7 +83,7 @@ function AppLayout() {
   const [showUsernameModal,  setShowUsernameModal]  = useState(false);
   const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
 
-  // 🟢 FIXED TRIGGER: Triggers whenever user has no branch set (brand-new user)
+  // FIXED TRIGGER: Triggers whenever user has no branch set (brand-new user)
   useEffect(() => {
     if (!user) return;
 
@@ -90,7 +91,7 @@ function AppLayout() {
     const needsOnboarding = !user.branch;
 
     if (needsOnboarding && !hasShownOnboarding) {
-      console.log("🚀 User needs onboarding (no branch set):", user);
+      console.log(" User needs onboarding (no branch set):", user);
       setShowOnboarding(true);
       setHasShownOnboarding(true);
     }
@@ -176,7 +177,7 @@ function AppLayout() {
           </>
         )}
       </main>
-
+      <InstallPromptToast />
       <BottomTabBar />
     </div>
   );
