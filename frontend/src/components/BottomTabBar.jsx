@@ -57,23 +57,28 @@ export default function BottomTabBar() {
         aria-modal="true"
         aria-label="More navigation options"
         style={{
-          position: "fixed",
-          bottom: 64,
-          left: 0,
-          right: 0,
-          zIndex: 149,
-          background: dark ? "#0f1424" : "#fff",
-          borderRadius: "20px 20px 0 0",
-          border: `1px solid ${dark ? "rgba(129,140,248,0.2)" : "rgba(109,40,217,0.12)"}`,
-          borderBottom: "none",
-          boxShadow: dark
-            ? "0 -8px 40px rgba(0,0,0,0.5)"
-            : "0 -8px 40px rgba(109,40,217,0.12)",
-          transform: showMore ? "translateY(0)" : "translateY(110%)",
-          transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          willChange: "transform",
-          padding: "6px 0 8px",
-        }}
+  position:    "fixed",
+  bottom:      60,    
+  left:        0,
+  right:       0,
+  zIndex:      149,
+  background:  dark ? "#0f1424" : "#fff",
+  borderRadius: "20px 20px 0 0",
+  border:      `1px solid ${dark
+    ? "rgba(129,140,248,0.2)"
+    : "rgba(109,40,217,0.12)"}`,
+  borderBottom: "none",
+  boxShadow:   dark
+    ? "0 -8px 40px rgba(0,0,0,0.5)"
+    : "0 -8px 40px rgba(109,40,217,0.12)",
+  transform:   showMore ? "translateY(0)" : "translateY(110%)",
+  transition:  "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  padding:     "6px 0 0",
+  maxHeight:   "60vh",   
+  overflowY:   "auto",   
+  scrollbarWidth: "none",
+  paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",  
+}}
       >
         {/* Sheet handle */}
         <div style={{
