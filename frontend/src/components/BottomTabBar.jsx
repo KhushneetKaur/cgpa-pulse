@@ -52,6 +52,7 @@ export default function BottomTabBar() {
 
       {/* ── More slide-up sheet ───────────────────────────────── */}
       <div
+        className="more-sheet" 
         className="bottom-tab-bar"
         role="dialog"
         aria-modal="true"
@@ -80,6 +81,7 @@ export default function BottomTabBar() {
   paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",  
 }}
       >
+       <style>{`.more-sheet::-webkit-scrollbar { display: none; }`}</style>
         {/* Sheet handle */}
         <div style={{
           width: 36,
