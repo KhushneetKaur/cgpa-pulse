@@ -367,7 +367,7 @@ This started as "I just need a quick calculator" and turned into a full-stack pr
 That escalated quickly.
 
 [![GitHub](https://img.shields.io/badge/GitHub-KhushneetKaur-181717?style=flat-square&logo=github)](https://github.com/KhushneetKaur)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Khushneet%20Kaur-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/khushneet-kaur)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Khushneet%20Kaur-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/khushneet)
 
 ---
 
