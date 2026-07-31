@@ -15,6 +15,7 @@ export default function BottomTabBar() {
     screen, branch,
     c, dark,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   const [showMore, setShowMore] = useState(false);
 

@@ -3,7 +3,7 @@ import { usePWAInstall } from "../hooks/usePWAInstall";
 import { useAppData } from "../context/AppDataContext";
 
 export default function InstallButton({ compact = false }) {
-  const { c, dark } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
   const { canInstall, isInstalled, isIOS, triggerInstall, hasPrompt } = usePWAInstall();
   const [showGuide, setShowGuide] = useState(false);
 

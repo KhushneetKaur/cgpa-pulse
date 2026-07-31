@@ -364,7 +364,7 @@ export default function CustomiseSubjectsModal({
           color: dark ? "#94a3b8" : "#92400e",
           lineHeight: 1.6,
         }}>
-          ⚠ Hiding a subject removes it from SGPA calculation.
+          Hiding a subject removes it from SGPA calculation.
           Restoring it will include it again from the next save.
           Custom subjects persist across sessions.
         </div>

@@ -27,7 +27,7 @@ function dismiss(type) {
 }
 
 export default function InstallPromptToast() {
-  const { c, dark, screen } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
   const { canInstall, isInstalled, isIOS, triggerInstall } = usePWAInstall();
 
   const [visible,     setVisible]     = useState(false);

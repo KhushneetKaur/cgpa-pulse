@@ -18,6 +18,7 @@ export default function NavBar() {
     lbOptIn,
     c, btn, inp, scoreClr,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
   const showSecondBar = screen === "app" && !!branch;

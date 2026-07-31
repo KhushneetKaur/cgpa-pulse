@@ -4,6 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { AppDataProvider, useAppData } from "./context/AppDataContext";
 import { BRANCHES } from "./data/branches";
 import { Toaster } from "react-hot-toast";
+import { useTheme } from "../context/ThemeContext";
 
 // Core Layout Components
 import NavBar from "./components/NavBar";
@@ -40,7 +41,8 @@ export default function App() {
 }
 
 function Shell() {
-  const { screen, authLoading, user, c } = useAppData();
+  const { screen, authLoading, user } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   if (authLoading || (user && screen === "login")) {
     return (

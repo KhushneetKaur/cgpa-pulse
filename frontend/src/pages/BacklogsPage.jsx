@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
+import { useTheme } from "../context/ThemeContext";
 
 export default function BacklogsPage() {
   const {
@@ -9,10 +10,8 @@ export default function BacklogsPage() {
     bBacklogs,
     bElectiveNames,
     toggleBacklog,
-    c,
-    cardSty,
   } = useAppData();
-
+const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
   // Memoize total backlog count to avoid unnecessary array iterations on re-renders
   const totalBacklogs = useMemo(() => {
     return Object.values(bBacklogs).reduce((acc, arr) => acc + (arr?.length || 0), 0);

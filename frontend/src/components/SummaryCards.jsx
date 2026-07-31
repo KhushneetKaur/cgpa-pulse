@@ -17,6 +17,7 @@ export default function SummaryCards() {
     scoreClr,
     authLoading,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   const percentage = cgpaToPercentage(cgpa);
 

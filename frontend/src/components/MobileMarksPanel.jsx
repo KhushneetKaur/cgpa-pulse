@@ -53,9 +53,10 @@ export default function MobileMarksPanel({ branch, selSem }) {
     bElectiveNames,
     liveRes, saving, saveSem,
     openQuick, deleteSemRecord, bHist,
-    c, dark, scoreClr, btn, inp, setElectiveName,
+    setElectiveName,
     addCustomSubject, removeCustomSubject, toggleHiddenSubject,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [showCustomise, setShowCustomise] = useState(false);

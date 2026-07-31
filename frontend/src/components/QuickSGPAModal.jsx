@@ -10,8 +10,8 @@ export default function QuickSGPAModal() {
     qSem, qVal, setQVal, qErr,
     closeQuick, saveQuick, deleteQuick,
     branch, bHist,
-    c, inp, btn,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   if (!qSem || !branch) return null;
 

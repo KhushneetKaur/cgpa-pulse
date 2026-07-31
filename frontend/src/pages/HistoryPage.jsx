@@ -16,10 +16,9 @@ export default function HistoryPage() {
   doneSems,
   lbOptIn, toggleLbOptIn,
   openQuick,
-  c, dark, cardSty, btn, scoreClr,
   authLoading,
 } = useAppData();
-
+const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 if (authLoading) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

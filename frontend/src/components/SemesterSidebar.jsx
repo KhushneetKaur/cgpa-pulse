@@ -57,6 +57,7 @@ export default function SemesterSidebar() {
     cgpa, doneSems,
     c, dark, scoreClr,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   return (
     <div style={{

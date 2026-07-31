@@ -11,8 +11,8 @@ export default function CalculatorPage() {
   const {
     branch,
     selSem,
-    c, cardSty,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   // Memoize empty state styling object so it retains reference consistency
   const emptyCardStyle = useMemo(() => ({

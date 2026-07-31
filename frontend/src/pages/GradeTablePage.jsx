@@ -1,5 +1,6 @@
 import { useAppData } from "../context/AppDataContext";
 import { GRADE_TABLE } from "../data/gradeTable";
+import { useTheme } from "../context/ThemeContext";
 
 const FORMULA_BOXES = [
   {
@@ -41,7 +42,7 @@ const PERF_MAP = {
 };
 
 export default function GradeTablePage() {
-  const { c, cardSty, scoreClr } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

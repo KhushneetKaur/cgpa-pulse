@@ -9,7 +9,8 @@ const BRANCH_ENTRIES = Object.entries(BRANCHES);
 const SKELETON_ITEMS = [1, 2, 3, 4, 5, 6];
 
 export default function BranchSelect() {
-  const { setBranch, hist, c, dark, cardSty, authLoading } = useAppData();
+  const { setBranch, hist, authLoading } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   if (authLoading) {
     return (

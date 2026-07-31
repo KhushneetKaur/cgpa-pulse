@@ -48,8 +48,8 @@ export default function SubjectRow({ sub, selSem, branch }) {
     bElectiveNames,
     setElectiveName,
     toggleBacklog,
-    c, dark, inp, scoreClr,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   const mx         = getMaxMarks(sub.type);
   const entry      = marks[sub.code] || {};
