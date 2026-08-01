@@ -6,17 +6,16 @@ import MRSPTULogo from "./MRSPTULogo";
 import { TABS } from "../utils/constants";
 import UsernameSetupModal from "./UsernameSetupModal";
 import InstallButton from "./InstallButton";
+import { useTheme } from "../context/ThemeContext";
 
 export default function NavBar() {
   const {
-    dark, toggleDark,
     user, setUser, logout,
     saveMsg, totalBacklogs, cgpa,
     branch, setBranch,
     tab, setTab,
     screen, setScreen,
     lbOptIn,
-    c, btn, inp, scoreClr,
   } = useAppData();
   const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
