@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { TABS } from "../utils/constants";
+import { useTheme } from "../context/ThemeContext";
 
 // Static definitions pre-computed outside render loop
 const CORE_TAB_KEYS = new Set(["calculator", "history", "target", "predictor"]);
@@ -13,7 +14,6 @@ export default function BottomTabBar() {
     tab, setTab,
     totalBacklogs,
     screen, branch,
-    c, dark,
   } = useAppData();
   const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 

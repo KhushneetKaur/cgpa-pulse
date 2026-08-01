@@ -1,6 +1,7 @@
 import { useAppData } from "../context/AppDataContext";
 import { cgpaToPercentage } from "../utils/calculations";
 import SkeletonCard from "./SkeletonCard";
+import { useTheme } from "../context/ThemeContext";
 
 // The 4 stat cards shown at the top of the app dashboard.
 // Updates live as the student enters marks.
@@ -12,9 +13,6 @@ export default function SummaryCards() {
     selSem,
     liveRes,
     totalBacklogs,
-    c,
-    dark,
-    scoreClr,
     authLoading,
   } = useAppData();
   const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
