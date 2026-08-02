@@ -1,10 +1,9 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { AuthProvider } from "./context/AuthContext";
-import { ThemeProvider } from "./context/ThemeContext";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { AppDataProvider, useAppData } from "./context/AppDataContext";
 import { BRANCHES } from "./data/branches";
 import { Toaster } from "react-hot-toast";
-import { useTheme } from "./context/ThemeContext";
 
 // Core Layout Components
 import NavBar from "./components/NavBar";
@@ -42,7 +41,7 @@ export default function App() {
 
 function Shell() {
   const { screen, authLoading, user } = useAppData();
-  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
+  const { c } = useTheme();
 
   if (authLoading || (user && screen === "login")) {
     return (
@@ -51,7 +50,7 @@ function Shell() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: c.bg,
+        background: c?.bg || "#0a0c16",
       }}>
         <svg width="36" height="36" viewBox="0 0 38 38" stroke="#7c3aed" style={{ animation: "spin 0.8s linear infinite" }}>
           <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
@@ -74,11 +73,14 @@ function Shell() {
 }
 
 function AppLayout() {
+  // Data State
   const {
     user, branch, tab,
-    c, dark, inp, btn,
     setUser, setBranch, selectSem,
   } = useAppData();
+
+  // Theme State (FIXED: Get theme props from useTheme instead of useAppData)
+  const { c, dark, inp, btn } = useTheme();
 
   const [showOnboarding,     setShowOnboarding]     = useState(false);
   const [showUsernameModal,  setShowUsernameModal]  = useState(false);
@@ -116,8 +118,8 @@ function AppLayout() {
   return (
     <div style={{
       minHeight:     "100vh",
-      background:    c.bg,
-      color:         c.text,
+      background:    c?.bg || "#0a0c16",
+      color:         c?.text || "#ffffff",
       display:       "flex",
       flexDirection: "column",
     }}>

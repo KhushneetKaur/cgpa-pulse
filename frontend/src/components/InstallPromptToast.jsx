@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { useAppData } from "../context/AppDataContext";
-
+import { useTheme } from "../context/ThemeContext";
 const STORAGE_KEY    = "cgpapulse_install_dismissed";
 const LATER_DAYS     = 7;
 const CLOSE_DAYS     = 3;

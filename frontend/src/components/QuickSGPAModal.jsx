@@ -1,5 +1,6 @@
 import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
+import { useTheme } from "../context/ThemeContext";
 
 // Modal for entering a known SGPA directly without
 // going through subject-by-subject mark entry.

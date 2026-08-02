@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAppData } from "../context/AppDataContext";
-
+import { useTheme } from "../context/ThemeContext";
 export default function MobileSemesterPills() {
   const {
     semKeys,
@@ -9,9 +9,8 @@ export default function MobileSemesterPills() {
     bHist,
     bBacklogs,
     openQuick,
-    c,
-    scoreClr,
   } = useAppData();
+  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
   // Reference container map for dynamic scrolling
   const pillRefs = useRef({});
