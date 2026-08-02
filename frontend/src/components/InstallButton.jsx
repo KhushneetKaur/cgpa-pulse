@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { usePWAInstall } from "../hooks/usePWAInstall";
 import { useAppData } from "../context/AppDataContext";
+import { useTheme } from "../context/ThemeContext";
 
 export default function InstallButton({ compact = false }) {
   const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();

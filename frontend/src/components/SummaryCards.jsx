@@ -11,7 +11,7 @@ export default function SummaryCards() {
     cgpa,
     doneSems,
     selSem,
-    liveRes,
+    liveRes, 
     totalBacklogs,
     authLoading,
   } = useAppData();
