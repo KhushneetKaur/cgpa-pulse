@@ -4,6 +4,7 @@ import { BRANCHES } from "../data/branches";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 import CustomiseSubjectsModal from "./CustomiseSubjectsModal";
+import { useTheme } from "../context/ThemeContext";
 
 function ElectiveDockInput({ code, value, onSave, dark, c }) {
   const [local, setLocal] = useState(value);

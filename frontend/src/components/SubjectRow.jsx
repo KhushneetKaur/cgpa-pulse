@@ -2,6 +2,7 @@ import { useAppData } from "../context/AppDataContext";
 import { ELECTIVE_OPTIONS } from "../data/electiveOptions";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
 import React,{ useRef, useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 function ElectiveInput({ code, value, onSave, inp, c, accent }) {
   const [local, setLocal] = useState(value);

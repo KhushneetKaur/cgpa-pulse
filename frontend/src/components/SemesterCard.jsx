@@ -1,15 +1,15 @@
 import { useAppData } from "../context/AppDataContext";
 import { getGrade } from "../data/gradeTable";
+import { useTheme } from "../context/ThemeContext";
 
 // A single saved semester card shown in HistoryPage.
 // Shows SGPA, badges, subject breakdown for detailed entries.
 
 export default function SemesterCard({ sem, h, subs, semBLs, onEdit }) {
   const {
-    bElectiveNames,
-    c, btn, scoreClr,
+    bElectiveNames
   } = useAppData();
-
+const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
   const isQuick   = h.mode === "quick";
   const isPartial = h.isPartial;
 
