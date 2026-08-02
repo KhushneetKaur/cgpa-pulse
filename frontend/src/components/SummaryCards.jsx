@@ -154,9 +154,9 @@ function Card({ card, c }) {
             color: card.red
               ? c.bad
               : card.partial
-              ? c.accentTxt // Replaced bad/purple with your crisp, readable theme accent text
+              ? c.accentTxt
               : card.hi
-              ? card.hiColor // Subtext follows score color for perfect matching
+              ? card.hiColor 
               : c.muted,
             fontWeight: card.hi ? 500 : 400,
           }}

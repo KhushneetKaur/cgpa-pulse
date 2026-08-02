@@ -1,4 +1,5 @@
 import { useAppData } from "../context/AppDataContext";
+import { useTheme } from "../context/ThemeContext";
 
 const TIPS = [
   "Consistency beats cramming — save each sem as you go 📅",
@@ -55,7 +56,6 @@ export default function SemesterSidebar() {
     bBacklogs,
     openQuick,
     cgpa, doneSems,
-    c, dark, scoreClr,
   } = useAppData();
   const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
