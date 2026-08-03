@@ -64,7 +64,7 @@ export default function SummaryCards() {
     return (
       <div className="summary-cards-grid" style={GRID_STYLE}>
         {SKELETON_KEYS.map(i => (
-          <SkeletonCard key={i} dark={dark} rows={2} height={88} />
+          <SkeletonCard key={i}  rows={2} height={88} />
         ))}
       </div>
     );

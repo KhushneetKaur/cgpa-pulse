@@ -54,7 +54,7 @@ export default function BranchSelect() {
           overflow: "hidden",
         }}>
           {SKELETON_ITEMS.map(i => (
-            <SkeletonCard key={i} dark={dark} rows={2} height={100} />
+            <SkeletonCard key={i} rows={2} height={100} />
           ))}
         </div>
       </div>

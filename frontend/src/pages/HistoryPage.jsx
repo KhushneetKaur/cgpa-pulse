@@ -42,9 +42,9 @@ export default function HistoryPage() {
   if (authLoading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <SkeletonCard dark={false} rows={3} height={160} />
+        <SkeletonCard rows={3} height={160} />
         {SKELETON_KEYS.map(i => (
-          <SkeletonCard key={i} dark={false} rows={4} height={120} />
+          <SkeletonCard key={i}  rows={4} height={120} />
         ))}
       </div>
     );
