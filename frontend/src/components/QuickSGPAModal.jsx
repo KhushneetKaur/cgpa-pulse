@@ -2,10 +2,6 @@ import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import { useTheme } from "../context/ThemeContext";
 
-// Modal for entering a known SGPA directly without
-// going through subject-by-subject mark entry.
-// Triggered by the ⚡ button next to each semester.
-
 export default function QuickSGPAModal() {
   const {
     qSem, qVal, setQVal, qErr,
