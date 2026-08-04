@@ -1,106 +1,78 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTheme } from "../context/ThemeContext";
-export default function MobileSemesterPills() {
-  const {
-    semKeys,
-    selSem,
-    selectSem,
-    bHist,
-    bBacklogs,
-    openQuick,
-  } = useAppData();
-  const { c, dark, btn, inp, cardSty, scoreClr, toggleDark } = useTheme();
 
-  // Reference container map for dynamic scrolling
+const MobileSemesterPills = memo(function MobileSemesterPills() {
+  const {
+    semKeys, selSem, selectSem,
+    bHist, bBacklogs, openQuick,
+  } = useAppData();
+
+  const { c, scoreClr } = useTheme();
+
   const pillRefs = useRef({});
 
   useEffect(() => {
     if (selSem && pillRefs.current[selSem]) {
       pillRefs.current[selSem].scrollIntoView({
         behavior: "smooth",
-        block: "nearest",
-        inline: "center",
+        block:    "nearest",
+        inline:   "center",
       });
     }
   }, [selSem]);
 
+  const setPillRef = useCallback((s) => (el) => {
+    if (el) pillRefs.current[s] = el;
+    else    delete pillRefs.current[s];
+  }, []);
+
+  const handleOpenQuick = useCallback(
+    () => openQuick(selSem),
+    [openQuick, selSem]
+  );
+
   return (
     <div style={{ marginBottom: 12 }}>
-      {/* ── Semester pills row ─────────────────────────────────── */}
+      {/* Semester pills */}
       <div
         className="no-scrollbar"
-        style={{
-          display: "flex",
-          gap: 8,
-          overflowX: "auto",
-          paddingBottom: 6,
-          WebkitOverflowScrolling: "touch", // Smooth iOS scrolling
-        }}
+        style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6, WebkitOverflowScrolling: "touch" }}
       >
-        {semKeys.map((s) => {
-          const saved = bHist[s]?.sgpa;
+        {semKeys.map(s => {
+          const saved      = bHist[s]?.sgpa;
           const isSelected = selSem === s;
-          const blCount = (bBacklogs[s] || []).length;
+          const blCount    = (bBacklogs[s] || []).length;
 
           return (
             <button
               key={s}
-              ref={(el) => {
-                if (el) pillRefs.current[s] = el;
-                else delete pillRefs.current[s];
-              }}
+              ref={setPillRef(s)}
               onClick={() => selectSem(s)}
               style={{
-                flexShrink: 0,
-                padding: "7px 14px",
+                flexShrink:  0,
+                padding:     "7px 14px",
                 borderRadius: 99,
-                border: isSelected
-                  ? `2px solid ${c.accent}`
-                  : `1px solid ${c.border}`,
-                background: isSelected ? `${c.accent}18` : c.card,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                transition: "all 0.15s ease",
+                border:      isSelected ? `2px solid ${c.accent}` : `1px solid ${c.border}`,
+                background:  isSelected ? `${c.accent}18` : c.card,
+                cursor:      "pointer",
+                fontFamily:  "inherit",
+                display:     "flex",
+                alignItems:  "center",
+                gap:         6,
+                transition:  "all 0.15s ease",
               }}
             >
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: isSelected ? 700 : 500,
-                  color: isSelected ? c.accent : c.text,
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <span style={{ fontSize: 13, fontWeight: isSelected ? 700 : 500, color: isSelected ? c.accent : c.text, whiteSpace: "nowrap" }}>
                 Sem {s}
               </span>
-
               {saved && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: scoreClr(saved),
-                  }}
-                >
+                <span style={{ fontSize: 11, fontWeight: 700, color: scoreClr(saved) }}>
                   {saved}
                 </span>
               )}
-
               {blCount > 0 && (
-                <span
-                  style={{
-                    fontSize: 9,
-                    color: c.bad,
-                    fontWeight: 700,
-                    background: `${c.bad}18`,
-                    borderRadius: 4,
-                    padding: "1px 4px",
-                  }}
-                >
+                <span style={{ fontSize: 9, color: c.bad, fontWeight: 700, background: `${c.bad}18`, borderRadius: 4, padding: "1px 4px" }}>
                   ⚠{blCount}
                 </span>
               )}
@@ -109,48 +81,22 @@ export default function MobileSemesterPills() {
         })}
       </div>
 
-      {/* ── Sub-actions footer ─────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginTop: 6,
-          alignItems: "center",
-          flexWrap: "nowrap",
-        }}
-      >
+      {/* Sub-actions footer */}
+      <div style={{ display: "flex", gap: 8, marginTop: 6, alignItems: "center", flexWrap: "nowrap" }}>
         {selSem && (
           <button
-            onClick={() => openQuick(selSem)}
-            style={{
-              fontSize: 11,
-              padding: "5px 10px",
-              borderRadius: 8,
-              border: `1px solid ${c.border}`,
-              background: "transparent",
-              color: c.sub,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
+            onClick={handleOpenQuick}
+            style={{ fontSize: 11, padding: "5px 10px", borderRadius: 8, border: `1px solid ${c.border}`, background: "transparent", color: c.sub, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", flexShrink: 0 }}
           >
             ⚡ Quick SGPA
           </button>
         )}
-        <span
-          style={{
-            fontSize: 10,
-            color: c.muted,
-            lineHeight: 1.3,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <span style={{ fontSize: 10, color: c.muted, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           ⚠ = backlog · ⚡ = click to save SGPA directly
         </span>
       </div>
     </div>
   );
-}
+});
+
+export default MobileSemesterPills;
