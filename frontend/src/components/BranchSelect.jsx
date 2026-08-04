@@ -3,6 +3,7 @@ import { useAppData } from "../context/AppDataContext";
 import { BRANCHES } from "../data/branches";
 import MRSPTULogo from "./MRSPTULogo";
 import SkeletonCard from "./SkeletonCard";
+import { useTheme } from "../context/ThemeContext";
 
 // Pre-compute static branch entries outside the render loop
 const BRANCH_ENTRIES = Object.entries(BRANCHES);
