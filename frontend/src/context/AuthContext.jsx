@@ -5,15 +5,14 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import {
-  apiSignup,
-  apiLogin,
   apiLogout,
   apiGetMe,
   apiGoogleSignIn,
+  apiRefresh,
 } from "../services/auth.api.js";
-import toast from "react-hot-toast";
 
 const AuthContext = createContext(null);
 
@@ -23,162 +22,127 @@ export function useAuth() {
   return ctx;
 }
 
+const WAS_LOGGED_IN_KEY = "cgpapulse_was_logged_in";
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const hasGoogleRedirect = window.location.hash.includes("access_token");
+  const [user,        setUser]        = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [googleProcessing, setGoogleProcessing] = useState(hasGoogleRedirect);
-  const [authErr, setAuthErr] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
-  const [uname, setUname] = useState("");
-  const [pwd, setPwd] = useState("");
+  const [authErr,     setAuthErr]     = useState(null);
+  const pingDone = useRef(false);
 
-  // ── Wake Render + restore session ──────────────────────────
-  useEffect(() => {
-    const backendUrl = (import.meta.env.VITE_API_URL || "").replace("/api", "");
-    if (backendUrl && backendUrl.includes("onrender")) {
-      fetch(`${backendUrl}/health`).catch(() => {});
+  // ── Wake Render — best effort, runs once ───────────────────────────
+  const pingBackend = useCallback(async () => {
+    if (pingDone.current) return;
+    pingDone.current = true;
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/health`, {
+        signal: AbortSignal.timeout(12000),
+      });
+    } catch {
+      // ignore — cold-start ping, non-blocking
     }
+  }, []);
 
+  // ── Session restore on mount ───────────────────────────────────────
+  useEffect(() => {
     async function restoreSession() {
-      let timeout = null;
-      try {
-        // ── Check for Google OAuth redirect in URL hash ──
-        const hash = new URLSearchParams(window.location.hash.slice(1));
-        const googleToken = hash.get("access_token");
+      // 1. Check for Google OAuth redirect in URL hash
+      const hash  = window.location.hash;
+      const token = new URLSearchParams(hash.replace("#", "?")).get("access_token");
 
-        if (googleToken) {
-          window.history.replaceState({}, "", window.location.pathname);
-          try {
-            const isNew = await googleLogin(googleToken);
-            toast.success(
-              isNew
-                ? "Account created! Welcome to CGPA Pulse 🎉"
-                : "Welcome back! 🎉"
-            );
-          } catch {
-            toast.error("Google sign-in failed");
-          } finally {
-            setGoogleProcessing(false);
-            setAuthLoading(false);
-          }
+      if (token) {
+        window.history.replaceState(null, "", window.location.pathname);
+        try {
+          await pingBackend();
+          const { user: u } = await apiGoogleSignIn(token);
+          setUser(u);
+          localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
+        } catch (e) {
+          setAuthErr(e.message || "Google login failed");
+        } finally {
+          setAuthLoading(false);
+        }
+        return;
+      }
+
+      // 2. No redirect — skip restore for first-time visitors
+      const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
+      if (!wasLoggedIn) {
+        setAuthLoading(false);
+        return;
+      }
+
+      // 3. Returning user — wake backend and restore
+      try {
+        await pingBackend();
+
+        // Fast path: access token still valid
+        try {
+          const u = await apiGetMe();
+          setUser(u);
           return;
+        } catch {
+          // Access token expired — fall through to refresh
         }
 
-        // ── Normal session restore ──
-        const controller = new AbortController();
-        timeout = setTimeout(() => controller.abort(), 8000);
-        const userData = await apiGetMe(controller.signal);
-        setUser(userData);
+        // Slow path: use refresh token (rotates on every call)
+        const { user: u } = await apiRefresh();
+        setUser(u);
       } catch {
+        // Both failed — session truly expired after 30 days
+        localStorage.removeItem(WAS_LOGGED_IN_KEY);
         setUser(null);
       } finally {
-        if (timeout) clearTimeout(timeout);
         setAuthLoading(false);
       }
     }
 
     restoreSession();
-  }, []);
+  }, [pingBackend]);
 
-  // ── Listen for 401 from API interceptor ─────────────────────
+  // ── Listen for 401 from axios interceptor ─────────────────────────
   useEffect(() => {
     function handleUnauthorized() {
-      setUser((prev) => {
-        if (prev !== null) {
-          setAuthErr("Session expired — please log in again");
-        }
+      setUser(prev => {
+        if (prev !== null) setAuthErr("Session expired — please log in again");
         return null;
       });
+      localStorage.removeItem(WAS_LOGGED_IN_KEY);
     }
-
     window.addEventListener("auth:unauthorized", handleUnauthorized);
-    return () =>
-      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
-  // ── Google login ─────────────────────────────────────────────
-  const googleLogin = useCallback(async (credential) => {
-    setAuthErr("");
-    try {
-      const data = await apiGoogleSignIn(credential);
-      setUser(data.user);
-      return data.isNewUser;
-    } catch (err) {
-      setAuthErr(err.message || "Google sign-in failed");
-      throw err;
-    }
+  // ── Google login (called from AuthContext.useEffect above too) ────
+  const googleLogin = useCallback(async (accessToken) => {
+    const { user: u, isNewUser } = await apiGoogleSignIn(accessToken);
+    setUser(u);
+    localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
+    return { user: u, isNewUser };
   }, []);
 
-  // ── Signup ───────────────────────────────────────────────────
-  const signup = useCallback(
-    async (email) => {
-      setAuthErr("");
-      try {
-        const userData = await apiSignup({
-          username: uname.trim(),
-          email: email.trim(),
-          password: pwd,
-        });
-        return userData;
-      } catch (err) {
-        setAuthErr(err.message || "Signup failed");
-        throw err;
-      }
-    },
-    [uname, pwd]
-  );
-
-  // ── Login ────────────────────────────────────────────────────
-  const login = useCallback(async () => {
-    setAuthErr("");
-    try {
-      const userData = await apiLogin({
-        identifier: uname.trim(),
-        password: pwd,
-      });
-      setUser(userData);
-      return true;
-    } catch (err) {
-      setAuthErr(err.message || "Login failed");
-      throw err;
-    }
-  }, [uname, pwd]);
-
-  // ── Logout ───────────────────────────────────────────────────
+  // ── Logout ────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    try {
-      await apiLogout();
-    } catch {
-      // Clear local state regardless
-    } finally {
-      setUser(null);
-      setUname("");
-      setPwd("");
-      setAuthErr("");
-    }
+    try { await apiLogout(); } catch {}
+    setUser(null);
+    localStorage.removeItem(WAS_LOGGED_IN_KEY);
   }, []);
 
-  // ── Clear form ───────────────────────────────────────────────
-  const clearForm = useCallback(() => {
-    setUname("");
-    setPwd("");
-    setAuthErr("");
-  }, []);
+  // ── Clear transient auth error ────────────────────────────────────
+  const clearForm = useCallback(() => setAuthErr(null), []);
 
-  const value = useMemo(
-    () => ({
-      user,
-      setUser,
-      authErr,
-      setAuthErr,
-      authLoading,
-      logout,
-      clearForm,
-      googleLogin,
-    }),
-    [user, authErr, authLoading, logout, clearForm, googleLogin]
+  const value = useMemo(() => ({
+    user, setUser,
+    authLoading,
+    authErr, setAuthErr,
+    googleLogin,
+    logout,
+    clearForm,
+  }), [user, authLoading, authErr, googleLogin, logout, clearForm]);
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

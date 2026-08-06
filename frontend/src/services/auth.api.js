@@ -31,6 +31,10 @@ export async function apiGetMe(signal) {
   return data.user;
 }
 
+export async function apiRefresh() {
+  const res = await api.post("/auth/refresh");
+  return res.data;
+}
 
 export async function apiRefreshToken() {
   const res = await api.post("/auth/refresh");

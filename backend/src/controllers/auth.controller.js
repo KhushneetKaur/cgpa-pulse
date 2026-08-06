@@ -25,7 +25,7 @@ export async function googleSignIn(req, res, next) {
     sendResponse(
       res,
       isNewUser ? 201 : 200,
-      { user, isNewUser, accessToken }, // 👈 Added accessToken for mobile/iOS fallback
+      { user, isNewUser }, 
       "Google sign-in successful"
     );
   } catch (err) {
@@ -46,7 +46,7 @@ export async function signup(req, res, next) {
     
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    sendResponse(res, 201, { user, accessToken }, "Account created successfully"); // 👈 Added accessToken
+    sendResponse(res, 201, { user }, "Account created successfully"); 
   } catch (err) {
     next(err);
   }
@@ -61,7 +61,7 @@ export async function login(req, res, next) {
     
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
-    sendResponse(res, 200, { user, accessToken }, "Login successful"); // 👈 Added accessToken
+    sendResponse(res, 200, { user}, "Login successful"); 
   } catch (err) {
     next(err);
   }
@@ -96,16 +96,18 @@ export async function getMe(req, res, next) {
 
 export async function refresh(req, res, next) {
   try {
-    const refreshToken = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken;
+    if (!token) throw ApiError.unauthorized("No refresh token");
+
     const {
       user,
       accessToken,
       refreshToken: newRefreshToken,
-    } = await refreshAccessToken(refreshToken);
-    
+    } = await refreshAccessToken(token);
+
     setTokenCookie(res, accessToken);
-    setRefreshTokenCookie(res, newRefreshToken);
-    sendResponse(res, 200, { user, accessToken }, "Token refreshed successfully"); // 👈 Added accessToken
+    setRefreshTokenCookie(res, newRefreshToken); 
+    sendResponse(res, 200, { user }, "Token refreshed successfully");
   } catch (err) {
     next(err);
   }

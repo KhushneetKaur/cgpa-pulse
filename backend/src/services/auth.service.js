@@ -81,11 +81,23 @@ const getCookieOptions = (maxAgeMs) => {
 };
 
 export function setTokenCookie(res, token) {
-  res.cookie("token", token, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+  const isProduction = process.env.NODE_ENV === "production";
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure:   isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge:   30 * 24 * 60 * 60 * 1000,  
+  });
 }
 
 export function setRefreshTokenCookie(res, token) {
-  res.cookie("refreshToken", token, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+  const isProduction = process.env.NODE_ENV === "production";
+  res.cookie("refreshToken", token, {
+    httpOnly: true,
+    secure:   isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge:   30 * 24 * 60 * 60 * 1000,  
+  });
 }
 
 // ── Clear cookie on logout ────────────────────────────────────────────────────
