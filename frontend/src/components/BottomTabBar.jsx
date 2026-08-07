@@ -1,9 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTheme } from "../context/ThemeContext";
 import { TABS } from "../utils/constants";
 
-// Module-level constants 
 const CORE_TAB_KEYS  = new Set(["calculator", "history", "target", "predictor"]);
 const CORE_TABS      = TABS.filter(t =>  CORE_TAB_KEYS.has(t.key));
 const MORE_TABS      = TABS.filter(t => !CORE_TAB_KEYS.has(t.key));
@@ -11,19 +10,24 @@ const HAMBURGER_BARS = [0, 1, 2];
 
 export default function BottomTabBar() {
   const { tab, setTab, totalBacklogs, screen, branch } = useAppData();
-
   const { c, dark } = useTheme();
 
   const [showMore, setShowMore] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
-  const isMoreActive = useMemo(() => MORE_TABS.some(t => t.key === tab), [tab]);
+  useEffect(() => {
+    function onResize() { setIsMobile(window.innerWidth <= 768); }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
-  // Stable handlers
-  const handleTabClick    = useCallback((key) => { setTab(key); setShowMore(false); }, [setTab]);
-  const handleCloseMore   = useCallback(() => setShowMore(false), []);
-  const handleToggleMore  = useCallback(() => setShowMore(v => !v), []);
+  const isMoreActive  = useMemo(() => MORE_TABS.some(t => t.key === tab), [tab]);
+  const handleTabClick   = useCallback((key) => { setTab(key); setShowMore(false); }, [setTab]);
+  const handleCloseMore  = useCallback(() => setShowMore(false), []);
+  const handleToggleMore = useCallback(() => setShowMore(v => !v), []);
 
-  if (screen !== "app" || !branch) return null;
+  // Early return AFTER all hooks
+  if (screen !== "app" || !branch || !isMobile) return null;
 
   return (
     <>
@@ -33,12 +37,9 @@ export default function BottomTabBar() {
           onClick={handleCloseMore}
           role="presentation"
           style={{
-            position:             "fixed",
-            inset:                0,
-            zIndex:               148,
-            background:           "rgba(0,0,0,0.4)",
-            backdropFilter:       "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
+            position: "fixed", inset: 0, zIndex: 148,
+            background: "rgba(0,0,0,0.4)",
+            backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           }}
         />
       )}
@@ -50,28 +51,27 @@ export default function BottomTabBar() {
         aria-modal="true"
         aria-label="More navigation options"
         style={{
-          position:      "fixed",
-          bottom:        60,
-          left:          0,
-          right:         0,
-          zIndex:        149,
-          background:    dark ? "#0f1424" : "#fff",
-          borderRadius:  "20px 20px 0 0",
-          border:        `1px solid ${dark ? "rgba(129,140,248,0.2)" : "rgba(109,40,217,0.12)"}`,
-          borderBottom:  "none",
-          boxShadow:     dark ? "0 -8px 40px rgba(0,0,0,0.5)" : "0 -8px 40px rgba(109,40,217,0.12)",
-          transform:     showMore ? "translateY(0)" : "translateY(110%)",
-          transition:    "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
-          padding:       "6px 0 0",
-          maxHeight:     "60vh",
-          overflowY:     "auto",
+          position:       "fixed",
+          bottom:         60,
+          left:           0,
+          right:          0,
+          zIndex:         149,
+          background:     dark ? "#0f1424" : "#fff",
+          borderRadius:   "20px 20px 0 0",
+          border:         `1px solid ${dark ? "rgba(129,140,248,0.2)" : "rgba(109,40,217,0.12)"}`,
+          borderBottom:   "none",
+          boxShadow:      dark ? "0 -8px 40px rgba(0,0,0,0.5)" : "0 -8px 40px rgba(109,40,217,0.12)",
+          transform:      showMore ? "translateY(0)" : "translateY(110%)",
+          transition:     "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+          padding:        "6px 0 0",
+          maxHeight:      "60vh",
+          overflowY:      "auto",
           scrollbarWidth: "none",
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",
+          paddingBottom:  "calc(env(safe-area-inset-bottom) + 8px)",
         }}
       >
         <style>{`.more-sheet::-webkit-scrollbar { display: none; }`}</style>
 
-        {/* Handle */}
         <div style={{ width: 36, height: 4, borderRadius: 99, background: dark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)", margin: "6px auto 14px" }} />
 
         <p style={{ margin: "0 0 6px 20px", fontSize: 11, fontWeight: 700, color: c.muted, textTransform: "uppercase", letterSpacing: 1 }}>
@@ -86,18 +86,18 @@ export default function BottomTabBar() {
               key={t.key}
               onClick={() => handleTabClick(t.key)}
               style={{
-                width:        "100%",
-                display:      "flex",
-                alignItems:   "center",
-                gap:          14,
-                padding:      "13px 20px",
-                border:       "none",
-                background:   isActive ? `${c.accent}12` : "transparent",
-                cursor:       "pointer",
-                fontFamily:   "inherit",
-                textAlign:    "left",
-                transition:   "background 0.15s",
-                borderLeft:   isActive ? `3px solid ${c.accent}` : "3px solid transparent",
+                width:      "100%",
+                display:    "flex",
+                alignItems: "center",
+                gap:        14,
+                padding:    "13px 20px",
+                border:     "none",
+                background: isActive ? `${c.accent}12` : "transparent",
+                cursor:     "pointer",
+                fontFamily: "inherit",
+                textAlign:  "left",
+                transition: "background 0.15s",
+                borderLeft: isActive ? `3px solid ${c.accent}` : "3px solid transparent",
               }}
             >
               <span style={{ fontSize: 20 }}>{t.icon}</span>
@@ -157,11 +157,7 @@ export default function BottomTabBar() {
                 transition:     "all 0.15s",
               }}
             >
-              <span style={{
-                fontSize:   isActive ? 20 : 18,
-                transition: "all 0.15s",
-                filter:     t.key === "backlogs" && totalBacklogs > 0 && dark ? "brightness(10)" : undefined,
-              }}>
+              <span style={{ fontSize: isActive ? 20 : 18, transition: "all 0.15s", filter: t.key === "backlogs" && totalBacklogs > 0 && dark ? "brightness(10)" : undefined }}>
                 {t.icon}
               </span>
               <span style={{ fontSize: 9, fontWeight: isActive ? 700 : 400, color: isActive ? c.accent : c.muted, letterSpacing: 0.3, textTransform: "uppercase" }}>
