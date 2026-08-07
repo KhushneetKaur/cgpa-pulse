@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   getAllSemesters,
-  getOneSemesterHandler,
   saveSemesterHandler,
   saveQuickSgpaHandler,
   deleteSemesterHandler,
