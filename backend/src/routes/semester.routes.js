@@ -36,12 +36,6 @@ router.get(
   getAllSemesters
 );
 
-// GET /api/semesters/:branch/:semNumber — Get details for a single semester
-router.get(
-  "/:branch/:semNumber",
-  readLimiter,
-  getOneSemesterHandler
-);
 
 // ── Write & Update Routes ────────────────────────────────────────────────────
 

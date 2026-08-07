@@ -11,7 +11,7 @@ const getDaysSince = (date) =>
 const getDisplayName = (user) =>
   user.username || user.name || "Anonymous";
 
-// Sync leaderboard after any CGPA-affecting change — deduplicates 3 identical blocks
+// Sync leaderboard after any CGPA-affecting change 
 async function syncLeaderboard(user, userId) {
   if (!user.lbOptIn || !user.branch) return;
   const allSems = await getUserSemesters(userId, user.branch) || [];
@@ -81,7 +81,6 @@ export async function checkUsername(req, res, next) {
     if (!available) {
       const candidates = [`${base}_`, `${base}2`, `${base}25`, `${base}_mrsptu`, `${base}cse`];
 
-      // Single query instead of 5 sequential findOne calls
       const taken     = new Set(
         (await User.find({ username: { $in: candidates } }, "username").lean())
           .map(u => u.username)
