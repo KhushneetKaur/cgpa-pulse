@@ -50,12 +50,12 @@ export function generateRefreshToken(userId) {
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
 export async function googleAuth(accessToken) {
-  const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+  const googleRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) throw ApiError.unauthorized("Invalid Google token");
+  if (!googleRes.ok) throw ApiError.unauthorized("Invalid Google token");
 
-  const { id: googleId, email, name } = await res.json();
+  const { id: googleId, email, name } = await googleRes.json();
 
   let user = await User.findOne({
     $or: [{ googleId }, { email: email.toLowerCase() }],
@@ -64,12 +64,10 @@ export async function googleAuth(accessToken) {
   const isNewUser = !user;
 
   if (user) {
-    if (!user.googleId) {
-      user.googleId = googleId;
-      await user.save({ validateBeforeSave: false });
-    }
+    if (!user.googleId) user.googleId = googleId;
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
   } else {
-    // Derive a clean base username from Google display name or email
     const base = (name || email.split("@")[0])
       .toLowerCase()
       .replace(/\s+/g, "_")
@@ -78,9 +76,9 @@ export async function googleAuth(accessToken) {
 
     let username = base;
     let counter  = 1;
-    let created  = false;
+    const MAX_RETRIES = 10; // prevent infinite loop on pathological collisions
 
-    while (!created) {
+    while (counter <= MAX_RETRIES) {
       try {
         user = await User.create({
           username,
@@ -90,9 +88,10 @@ export async function googleAuth(accessToken) {
           isEmailVerified: true,
           hasSetPassword:  false,
           role:            "student",
+          lastLogin:       new Date(),
           // usernameSetAt intentionally NOT set — triggers onboarding
         });
-        created = true;
+        break;
       } catch (err) {
         if (err.code === 11000 && err.keyPattern?.username) {
           username = `${base}${counter++}`;
@@ -101,10 +100,9 @@ export async function googleAuth(accessToken) {
         }
       }
     }
-  }
 
-  user.lastLogin = new Date();
-  await user.save({ validateBeforeSave: false });
+    if (!user) throw ApiError.internal("Failed to generate a unique username — try again");
+  }
 
   return {
     user:         user.toPublicJSON(),
@@ -121,7 +119,7 @@ export async function getCurrentUser(userId) {
   return user.toPublicJSON();
 }
 
-// ── Refresh tokens — rotates refresh token on every call ─────────────────────
+// ── Refresh tokens — rotates on every call for sliding 30-day window ──────────
 export async function refreshAccessToken(refreshToken) {
   if (!refreshToken) throw ApiError.unauthorized("No refresh token");
 
@@ -140,6 +138,6 @@ export async function refreshAccessToken(refreshToken) {
   return {
     user:         user.toPublicJSON(),
     accessToken:  generateAccessToken(user._id),
-    refreshToken: generateRefreshToken(user._id), 
+    refreshToken: generateRefreshToken(user._id),
   };
 }

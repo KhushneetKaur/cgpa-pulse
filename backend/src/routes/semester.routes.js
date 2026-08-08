@@ -17,8 +17,9 @@ import {
   readLimiter,
 } from "../middleware/rateLimit.middleware.js";
 import {
-  semesterSchema,
-  quickSgpaSchema,
+  semesterSchema, quickSgpaSchema,
+  toggleBacklogSchema, updateElectiveSchema,
+  addCustomSubjectSchema, toggleVisibilitySchema,
 } from "../utils/validators.js";
 
 const router = Router();
@@ -76,6 +77,11 @@ router.put(
   saveLimiter,
   updateElectiveHandler
 );
+
+router.put("/:branch/:semNumber/backlog",  saveLimiter, validate(toggleBacklogSchema),    toggleBacklogHandler);
+router.put("/:branch/:semNumber/elective", saveLimiter, validate(updateElectiveSchema),   updateElectiveHandler);
+router.post("/:branch/:semNumber/custom-subjects", saveLimiter, validate(addCustomSubjectSchema), addCustomSubject);
+router.patch("/:branch/:semNumber/subjects/:code/visibility", saveLimiter, validate(toggleVisibilitySchema), toggleSubjectVisibility);
 
 // ── Custom Subjects & Visibility Modifications ───────────────────────────────
 
