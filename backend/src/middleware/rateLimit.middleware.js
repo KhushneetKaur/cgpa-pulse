@@ -11,7 +11,7 @@ const createRateLimitHandler = (customMessage) => (req, res) => {
 };
 
 // ── Reusable rate limiter factory ─────────────────────────────────────────────
-
+ 
 export function rateLimiter(options = {}) {
   const message = options.message || "Too many requests — please try again later";
 
