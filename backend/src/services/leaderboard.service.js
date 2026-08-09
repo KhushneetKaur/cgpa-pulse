@@ -11,14 +11,12 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
 }
 
 // ── Upsert a leaderboard entry ────────────────────────────────────────────────
-// Called after any semester save — updates existing row or creates new one
 export async function upsertLeaderboardEntry({ userId, username, branch, cgpa, semCount }) {
-  // Guard against invalid CGPA — calculateCGPA returns null on empty data
   if (cgpa == null || cgpa < 0 || cgpa > 10) return null;
 
   return await Leaderboard.findOneAndUpdate(
     { userId },
-    { $set: { username, branch, cgpa, semCount, updatedAt: new Date() } },
+    { $set: { username, branch, cgpa, semCount } },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
 }

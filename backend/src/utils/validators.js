@@ -93,3 +93,11 @@ export const addCustomSubjectSchema = Joi.object({
 export const toggleVisibilitySchema = Joi.object({
   hidden: Joi.boolean().required(),
 });
+
+export const updateCurrentSemSchema = Joi.object({
+  semNumber: Joi.number().integer().min(1).max(8).required(),
+});
+
+export const appInstallSchema = Joi.object({
+  platform: Joi.string().valid("android", "ios", "desktop").default("unknown"),
+});

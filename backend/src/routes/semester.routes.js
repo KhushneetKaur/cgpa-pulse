@@ -10,100 +10,37 @@ import {
   removeCustomSubject,
   toggleSubjectVisibility,
 } from "../controllers/semester.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
-import { validate } from "../middleware/validate.middleware.js";
+import { protect }                from "../middleware/auth.middleware.js";
+import { validate }               from "../middleware/validate.middleware.js";
+import { saveLimiter, readLimiter } from "../middleware/rateLimit.middleware.js";
 import {
-  saveLimiter,
-  readLimiter,
-} from "../middleware/rateLimit.middleware.js";
-import {
-  semesterSchema, quickSgpaSchema,
-  toggleBacklogSchema, updateElectiveSchema,
-  addCustomSubjectSchema, toggleVisibilitySchema,
+  semesterSchema,
+  quickSgpaSchema,
+  toggleBacklogSchema,
+  updateElectiveSchema,
+  addCustomSubjectSchema,
+  toggleVisibilitySchema,
 } from "../utils/validators.js";
 
 const router = Router();
 
-// Apply authentication middleware across all semester operations
 router.use(protect);
 
-// ── Read Routes ──────────────────────────────────────────────────────────────
+// ── Read ──────────────────────────────────────────────────────────────────────
+router.get("/:branch", readLimiter, getAllSemesters);
 
-// GET /api/semesters/:branch — Get all semesters for a specific branch
-router.get(
-  "/:branch",
-  readLimiter,
-  getAllSemesters
-);
+// ── Write ─────────────────────────────────────────────────────────────────────
+router.post("/:branch/:semNumber",       saveLimiter, validate(semesterSchema),   saveSemesterHandler);
+router.post("/:branch/:semNumber/quick", saveLimiter, validate(quickSgpaSchema),  saveQuickSgpaHandler);
+router.delete("/:branch/:semNumber",     saveLimiter,                             deleteSemesterHandler);
 
+// ── Backlogs & Electives ──────────────────────────────────────────────────────
+router.put("/:branch/:semNumber/backlog",  saveLimiter, validate(toggleBacklogSchema),  toggleBacklogHandler);
+router.put("/:branch/:semNumber/elective", saveLimiter, validate(updateElectiveSchema), updateElectiveHandler);
 
-// ── Write & Update Routes ────────────────────────────────────────────────────
-
-// POST /api/semesters/:branch/:semNumber — Save full detailed marks entry
-router.post(
-  "/:branch/:semNumber",
-  saveLimiter,
-  validate(semesterSchema),
-  saveSemesterHandler
-);
-
-// POST /api/semesters/:branch/:semNumber/quick — Save quick SGPA without full marks
-router.post(
-  "/:branch/:semNumber/quick",
-  saveLimiter,
-  validate(quickSgpaSchema),
-  saveQuickSgpaHandler
-);
-
-// DELETE /api/semesters/:branch/:semNumber — Delete a semester entry
-router.delete(
-  "/:branch/:semNumber",
-  saveLimiter,
-  deleteSemesterHandler
-);
-
-// ── Backlog & Elective Management ────────────────────────────────────────────
-
-// PUT /api/semesters/:branch/:semNumber/backlog — Toggle subject backlog state
-router.put(
-  "/:branch/:semNumber/backlog",
-  saveLimiter,
-  toggleBacklogHandler
-);
-
-// PUT /api/semesters/:branch/:semNumber/elective — Update elective mapping
-router.put(
-  "/:branch/:semNumber/elective",
-  saveLimiter,
-  updateElectiveHandler
-);
-
-router.put("/:branch/:semNumber/backlog",  saveLimiter, validate(toggleBacklogSchema),    toggleBacklogHandler);
-router.put("/:branch/:semNumber/elective", saveLimiter, validate(updateElectiveSchema),   updateElectiveHandler);
-router.post("/:branch/:semNumber/custom-subjects", saveLimiter, validate(addCustomSubjectSchema), addCustomSubject);
-router.patch("/:branch/:semNumber/subjects/:code/visibility", saveLimiter, validate(toggleVisibilitySchema), toggleSubjectVisibility);
-
-// ── Custom Subjects & Visibility Modifications ───────────────────────────────
-
-// POST /api/semesters/:branch/:semNumber/custom-subjects — Add custom subject
-router.post(
-  "/:branch/:semNumber/custom-subjects",
-  saveLimiter,
-  addCustomSubject
-);
-
-// DELETE /api/semesters/:branch/:semNumber/custom-subjects/:code — Remove custom subject
-router.delete(
-  "/:branch/:semNumber/custom-subjects/:code",
-  saveLimiter,
-  removeCustomSubject
-);
-
-// PATCH /api/semesters/:branch/:semNumber/subjects/:code/visibility — Toggle subject visibility
-router.patch(
-  "/:branch/:semNumber/subjects/:code/visibility",
-  saveLimiter,
-  toggleSubjectVisibility
-);
+// ── Custom Subjects & Visibility ──────────────────────────────────────────────
+router.post("/:branch/:semNumber/custom-subjects",                   saveLimiter, validate(addCustomSubjectSchema),  addCustomSubject);
+router.delete("/:branch/:semNumber/custom-subjects/:code",           saveLimiter,                                    removeCustomSubject);
+router.patch("/:branch/:semNumber/subjects/:code/visibility",        saveLimiter, validate(toggleVisibilitySchema),  toggleSubjectVisibility);
 
 export default router;

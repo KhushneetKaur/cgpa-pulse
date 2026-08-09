@@ -6,10 +6,9 @@ const leaderboardSchema = new mongoose.Schema(
       type:     mongoose.Schema.Types.ObjectId,
       ref:      "User",
       required: true,
-      unique:   true, // Ensures one leaderboard record per user
+      unique:   true,
     },
 
-    // Stored directly for fast reads without joining the User collection
     username: {
       type:     String,
       required: true,
@@ -19,7 +18,7 @@ const leaderboardSchema = new mongoose.Schema(
     branch: {
       type:     String,
       required: true,
-      enum:     ["CSE", "ECE", "EE", "ME", "CIVIL", "TE"],
+      enum:     ["CSE", "AIML", "ECE", "EE", "ME", "CIVIL", "TE"],
     },
 
     cgpa: {
@@ -29,7 +28,6 @@ const leaderboardSchema = new mongoose.Schema(
       max:      10,
     },
 
-    // How many semesters contributed to this CGPA
     semCount: {
       type:    Number,
       default: 0,
@@ -37,16 +35,14 @@ const leaderboardSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Automatically manages createdAt and updatedAt
+    timestamps: true, 
   }
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────────────
-
-// Compound index for branch leaderboards with tie-breaking for stable sorting
+// Branch leaderboard with stable tie-breaking sort
 leaderboardSchema.index({ branch: 1, cgpa: -1, updatedAt: 1 });
 
-// Compound index for global leaderboards with tie-breaking
+// Global leaderboard with stable tie-breaking sort
 leaderboardSchema.index({ cgpa: -1, updatedAt: 1 });
 
 export default mongoose.model("Leaderboard", leaderboardSchema);

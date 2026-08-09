@@ -37,24 +37,3 @@ export async function getLeaderboardHandler(req, res, next) {
     next(err);
   }
 }
-
-// ── GET /api/leaderboard/stats ────────────────────────────────────────────────
-// Branch-wise and overall statistics — used for analytics dashboard
-
-export async function getStatsHandler(req, res, next) {
-  try {
-    const [branchStats, overall] = await Promise.all([
-      getBranchStats(),
-      getOverallStats(),
-    ]);
-
-    sendResponse(
-      res,
-      200,
-      { branchStats, overall },
-      "Stats fetched successfully"
-    );
-  } catch (err) {
-    next(err);
-  }
-}
