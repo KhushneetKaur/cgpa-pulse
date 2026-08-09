@@ -12,7 +12,7 @@ import semesterRoutes       from "./routes/semester.routes.js";
 import leaderboardRoutes    from "./routes/leaderboard.routes.js";
 import { errorMiddleware }  from "./middleware/error.middleware.js";
 import { rateLimiter }      from "./middleware/rateLimit.middleware.js";
-import { csrfProtection }   from "./middleware/csrf.middleware.js";
+
 
 const app = express();
 
@@ -65,7 +65,7 @@ app.use(mongoSanitize({
     // optional: log when something got sanitized
   },
 }));
-app.use(csrfProtection);
+
 
 // ── HTTP request logging ──────────────────────────────────────────────────────
 // In dev: colorised one-liner. In prod: combined format piped to Winston.
