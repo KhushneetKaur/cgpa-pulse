@@ -1,7 +1,6 @@
 import {
   getLeaderboard,
   getUserRank,
-  getOverallStats,
 } from "../services/leaderboard.service.js";
 import { sendResponse } from "../utils/ApiResponse.js";
 
