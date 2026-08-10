@@ -79,12 +79,7 @@ app.use(morgan(
 ));
 
 // ── Global rate limiter ───────────────────────────────────────────────────────
-// Tighter limits are applied per-route in their own middleware files
-app.use("/api", rateLimiter({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  max:      200,              // 200 requests per window per IP
-  message:  "Too many requests, please try again later.",
-}));
+
 
 // Add before routes — no auth needed
 app.get("/health", (req, res) => res.json({ status: "ok" }));
