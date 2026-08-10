@@ -11,7 +11,7 @@ import userRoutes           from "./routes/user.routes.js";
 import semesterRoutes       from "./routes/semester.routes.js";
 import leaderboardRoutes    from "./routes/leaderboard.routes.js";
 import { errorMiddleware }  from "./middleware/error.middleware.js";
-import { rateLimiter }      from "./middleware/rateLimit.middleware.js";
+
 
 
 const app = express();
