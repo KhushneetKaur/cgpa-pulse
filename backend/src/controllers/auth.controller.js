@@ -1,5 +1,4 @@
 import {
-  getCurrentUser,
   setTokenCookie,
   setRefreshTokenCookie,
   clearTokenCookie,
@@ -12,10 +11,7 @@ import ApiError from "../utils/ApiError.js";
 // ── POST /api/auth/google ─────────────────────────────────────────────────────
 export async function googleSignIn(req, res, next) {
   try {
-    const { credential } = req.body;
-    if (!credential) throw ApiError.badRequest("No Google credential provided");
-
-    const { user, accessToken, refreshToken, isNewUser } = await googleAuth(credential);
+    const { user, accessToken, refreshToken, isNewUser } = await googleAuth(req.body.credential);
     setTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
     sendResponse(res, isNewUser ? 201 : 200, { user, isNewUser }, "Google sign-in successful");
@@ -23,7 +19,7 @@ export async function googleSignIn(req, res, next) {
 }
 
 // ── POST /api/auth/logout ─────────────────────────────────────────────────────
-export async function logout(req, res, next) {
+export function logout(req, res, next) {
   try {
     clearTokenCookie(res);
     sendResponse(res, 200, null, "Logged out successfully");
@@ -31,15 +27,13 @@ export async function logout(req, res, next) {
 }
 
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
-export async function getMe(req, res, next) {
+export function getMe(req, res, next) {
   try {
-    const user = await getCurrentUser(req.user._id);
-    sendResponse(res, 200, { user }, "User fetched successfully");
+    sendResponse(res, 200, { user: req.user.toPublicJSON() }, "User fetched successfully");
   } catch (err) { next(err); }
 }
 
-
-// ── POST /api/auth/refresh ───────────────────────────────────────────────────
+// ── POST /api/auth/refresh ────────────────────────────────────────────────────
 export async function refresh(req, res, next) {
   try {
     const token = req.cookies?.refreshToken;
@@ -47,7 +41,7 @@ export async function refresh(req, res, next) {
 
     const { user, accessToken, refreshToken: newRefreshToken } = await refreshAccessToken(token);
     setTokenCookie(res, accessToken);
-    setRefreshTokenCookie(res, newRefreshToken); 
+    setRefreshTokenCookie(res, newRefreshToken);
     sendResponse(res, 200, { user }, "Token refreshed successfully");
   } catch (err) { next(err); }
 }

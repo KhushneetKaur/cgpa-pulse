@@ -4,9 +4,6 @@ import {
 import { sendResponse } from "../utils/ApiResponse.js";
 
 // ── GET /api/leaderboard ──────────────────────────────────────────────────────
-// Query params: ?branch=CSE&limit=50
-// branch defaults to ALL
-
 export async function getLeaderboardHandler(req, res, next) {
   try {
     const selectedBranch = req.query.branch || "ALL";
