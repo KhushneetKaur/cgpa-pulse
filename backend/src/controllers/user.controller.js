@@ -8,16 +8,12 @@ import { getUserSemesters, calculateCGPA } from "../services/semester.service.js
 const getDaysSince = (date) =>
   Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
 
-const getDisplayName = (user) =>
-  user.username || user.name || "Anonymous";
-
-// Sync leaderboard after any CGPA-affecting change 
 async function syncLeaderboard(user, userId) {
   if (!user.lbOptIn || !user.branch) return;
   const allSems = await getUserSemesters(userId, user.branch) || [];
   await upsertLeaderboardEntry({
     userId,
-    username: getDisplayName(user),
+    username: user.username || "Anonymous",
     branch:   user.branch,
     cgpa:     calculateCGPA(allSems) ?? 0,
     semCount: allSems.filter(s => s.sgpa).length,
@@ -25,7 +21,7 @@ async function syncLeaderboard(user, userId) {
 }
 
 // ── GET /api/user/profile ─────────────────────────────────────────────────────
-export async function getProfile(req, res, next) {
+export function getProfile(req, res, next) {
   try {
     sendResponse(res, 200, { user: req.user.toPublicJSON() }, "Profile fetched");
   } catch (err) { next(err); }
@@ -34,16 +30,11 @@ export async function getProfile(req, res, next) {
 // ── PUT /api/user/username ────────────────────────────────────────────────────
 export async function updateUsername(req, res, next) {
   try {
-    const raw = req.body?.username;
-    if (!raw || typeof raw !== "string" || !raw.trim())
-      throw ApiError.badRequest("Valid username is required");
-
-    const username = raw.trim();
+    const username = req.body.username.trim(); // schema already validated
     const userId   = req.user._id.toString();
     const user     = await User.findById(userId);
     if (!user) throw ApiError.notFound("User not found");
 
-    // 30-day cooldown — only enforced after first change
     if (user.usernameSetAt) {
       const daysLeft = 30 - getDaysSince(user.usernameSetAt);
       if (daysLeft > 0)
@@ -52,6 +43,7 @@ export async function updateUsername(req, res, next) {
         );
     }
 
+    // Case-insensitive uniqueness check — consistent with update behaviour
     const existing = await User.findOne({
       username: { $regex: new RegExp(`^${username}$`, "i") },
       _id:      { $ne: userId },
@@ -73,15 +65,16 @@ export async function checkUsername(req, res, next) {
     const { username } = req.query;
     if (!username) return sendResponse(res, 200, { available: false });
 
-    const base      = username.trim();
-    const existing  = await User.findOne({ username: base });
+    const base = username.trim();
+
+    // Case-insensitive check — consistent with updateUsername uniqueness check
+    const existing  = await User.findOne({ username: { $regex: new RegExp(`^${base}$`, "i") } });
     const available = !existing;
 
     let suggestions = [];
     if (!available) {
       const candidates = [`${base}_`, `${base}2`, `${base}25`, `${base}_mrsptu`, `${base}cse`];
-
-      const taken     = new Set(
+      const taken      = new Set(
         (await User.find({ username: { $in: candidates } }, "username").lean())
           .map(u => u.username)
       );
@@ -95,18 +88,13 @@ export async function checkUsername(req, res, next) {
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
 export async function updateBranch(req, res, next) {
   try {
-    const { branch } = req.body;
-    if (!branch || typeof branch !== "string")
-      throw ApiError.badRequest("Branch is required");
-
     const userId = req.user._id.toString();
     const user   = await User.findByIdAndUpdate(
       userId,
-      { $set: { branch } },
+      { $set: { branch: req.body.branch } },
       { new: true, runValidators: true }
     );
     if (!user) throw ApiError.notFound("User not found");
-
     await syncLeaderboard(user, userId);
     sendResponse(res, 200, { branch: user.branch }, "Branch updated");
   } catch (err) { next(err); }
@@ -115,13 +103,9 @@ export async function updateBranch(req, res, next) {
 // ── PUT /api/user/current-sem ─────────────────────────────────────────────────
 export async function updateCurrentSem(req, res, next) {
   try {
-    const { semNumber } = req.body;
-    if (!semNumber || semNumber < 1 || semNumber > 8)
-      throw ApiError.badRequest("Semester must be between 1 and 8");
-
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { $set: { currentSem: Number(semNumber) } },
+      { $set: { currentSem: Number(req.body.semNumber) } },
       { new: true }
     );
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Current semester updated");
@@ -132,14 +116,10 @@ export async function updateCurrentSem(req, res, next) {
 export async function updateLbOptIn(req, res, next) {
   try {
     const { optIn } = req.body;
-    if (typeof optIn !== "boolean")
-      throw ApiError.badRequest("optIn must be a boolean value");
-
-    const userId = req.user._id.toString();
-    const user   = await User.findById(userId);
+    const userId    = req.user._id.toString();
+    const user      = await User.findById(userId);
     if (!user) throw ApiError.notFound("User not found");
 
-    // Opting OUT — check 30-day lock
     if (!optIn && user.lbOptIn) {
       if (user.lbOptInDate) {
         const daysLeft = 30 - getDaysSince(user.lbOptInDate);
@@ -151,7 +131,6 @@ export async function updateLbOptIn(req, res, next) {
       await removeLeaderboardEntry(userId);
     }
 
-    // Opting IN
     if (optIn) {
       user.lbOptInDate = new Date();
       await syncLeaderboard({ ...user.toObject(), lbOptIn: true }, userId);
@@ -166,10 +145,9 @@ export async function updateLbOptIn(req, res, next) {
 // ── POST /api/user/app-install ────────────────────────────────────────────────
 export async function recordAppInstall(req, res, next) {
   try {
-    const { platform } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { $set: { appInstalled: true, appInstalledAt: new Date(), appInstalledOn: platform || "unknown" } },
+      { $set: { appInstalled: true, appInstalledAt: new Date(), appInstalledOn: req.body.platform } },
       { new: true }
     );
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Install recorded");
