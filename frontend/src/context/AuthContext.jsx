@@ -25,22 +25,20 @@ export function useAuth() {
 const WAS_LOGGED_IN_KEY = "cgpapulse_was_logged_in";
 
 export function AuthProvider({ children }) {
-  const [user,        setUser]        = useState(null);
+  const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [authErr,     setAuthErr]     = useState(null);
+  const [authErr, setAuthErr] = useState(null);
   const pingDone = useRef(false);
 
-  // ── Wake Render — best effort, runs once ───────────────────────────
-  const pingBackend = useCallback(async () => {
+  // ── Wake Render — non-blocking background trigger ───────────────────
+  const pingBackend = useCallback(() => {
     if (pingDone.current) return;
     pingDone.current = true;
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL}/health`, {
-        signal: AbortSignal.timeout(12000),
-      });
-    } catch {
-      // ignore — cold-start ping, non-blocking
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/health`, {
+      signal: AbortSignal.timeout(12000),
+    }).catch(() => {
+      // Non-blocking ping catch
+    });
   }, []);
 
   // ── Helper to safely extract token from Hash OR Query Params ──────
@@ -48,12 +46,12 @@ export function AuthProvider({ children }) {
     const hash = window.location.hash;
     const search = window.location.search;
 
-    // 1. Try URL Hash (#access_token=...)
     let token = new URLSearchParams(hash.replace("#", "?")).get("access_token");
 
-    // 2. Fallback to Query Params (?access_token=... or ?token=...)
     if (!token) {
-      token = new URLSearchParams(search).get("access_token") || new URLSearchParams(search).get("token");
+      token =
+        new URLSearchParams(search).get("access_token") ||
+        new URLSearchParams(search).get("token");
     }
 
     return token;
@@ -67,13 +65,10 @@ export function AuthProvider({ children }) {
 
         // 1. Check for Google OAuth redirect in URL
         if (token) {
-          // CRITICAL MOBILE FIX: Immediately clean URL state so refreshes/PWAs don't re-read
           window.history.replaceState(null, "", window.location.pathname);
-          
-          // Set flag immediately to prevent login screen flashing on mobile reload
           localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
 
-          pingBackend();
+          pingBackend(); // Non-blocking!
           const { user: u } = await apiGoogleSignIn(token);
           setUser(u);
           return;
@@ -82,11 +77,12 @@ export function AuthProvider({ children }) {
         // 2. No redirect — skip restore for first-time visitors
         const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
         if (!wasLoggedIn) {
+          setAuthLoading(false); // Fix: set loading false immediately
           return;
         }
 
-        // 3. Returning user — wake backend and restore
-        await pingBackend();
+        // 3. Returning user — wake backend in parallel (NO AWAIT)
+        pingBackend();
 
         // Fast path: access token still valid
         try {
@@ -94,7 +90,7 @@ export function AuthProvider({ children }) {
           setUser(u);
           return;
         } catch {
-          // Access token expired or cookie dropped on mobile — try refresh
+          // Access token expired or cookie dropped — try refresh
         }
 
         // Slow path: use refresh token
@@ -102,7 +98,6 @@ export function AuthProvider({ children }) {
           const { user: u } = await apiRefresh();
           setUser(u);
         } catch {
-          // Both failed — session expired or mobile browser blocked refresh cookies
           localStorage.removeItem(WAS_LOGGED_IN_KEY);
           setUser(null);
         }
@@ -121,14 +116,15 @@ export function AuthProvider({ children }) {
   // ── Listen for 401 from axios interceptor ─────────────────────────
   useEffect(() => {
     function handleUnauthorized() {
-      setUser(prev => {
+      setUser((prev) => {
         if (prev !== null) setAuthErr("Session expired — please log in again");
         return null;
       });
       localStorage.removeItem(WAS_LOGGED_IN_KEY);
     }
     window.addEventListener("auth:unauthorized", handleUnauthorized);
-    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    return () =>
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
   // ── Google login (called manually from button click) ────────────────
@@ -146,7 +142,9 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    try { await apiLogout(); } catch {}
+    try {
+      await apiLogout();
+    } catch {}
     setUser(null);
     localStorage.removeItem(WAS_LOGGED_IN_KEY);
   }, []);
@@ -154,18 +152,19 @@ export function AuthProvider({ children }) {
   // ── Clear transient auth error ────────────────────────────────────
   const clearForm = useCallback(() => setAuthErr(null), []);
 
-  const value = useMemo(() => ({
-    user, setUser,
-    authLoading,
-    authErr, setAuthErr,
-    googleLogin,
-    logout,
-    clearForm,
-  }), [user, authLoading, authErr, googleLogin, logout, clearForm]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      setUser,
+      authLoading,
+      authErr,
+      setAuthErr,
+      googleLogin,
+      logout,
+      clearForm,
+    }),
+    [user, authLoading, authErr, googleLogin, logout, clearForm]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
