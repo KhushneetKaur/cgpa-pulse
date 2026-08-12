@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
           // Set flag immediately to prevent login screen flashing on mobile reload
           localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
 
-          await pingBackend();
+          pingBackend();
           const { user: u } = await apiGoogleSignIn(token);
           setUser(u);
           return;

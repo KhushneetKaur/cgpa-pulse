@@ -10,8 +10,8 @@ function getCookie(name) {
 // ── Base Axios Instance ──────────────────────────────────────────────────────
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  withCredentials: true, // Sends httpOnly cookies when browser allows
-  timeout: 30000,        // Accommodates backend cold starts
+  withCredentials: true, 
+  timeout: 30000,        
   headers: {
     "Content-Type": "application/json",
   },
@@ -25,16 +25,15 @@ export function resetCsrfToken() {
   csrfTokenPromise = null;
 }
 
-/**
- * Thread-safe CSRF fetch that reads from cookie first, then falls back to /auth/csrf
- */
+
+// Fast synchronous/asynchronous CSRF fetch
 async function ensureCsrfToken(forceFresh = false) {
   if (forceFresh) {
     csrfToken = null;
     csrfTokenPromise = null;
   }
 
-  // Try reading directly from browser cookie first
+  // Read directly from browser cookie first
   const cookieVal = getCookie("csrfToken");
   if (cookieVal && !forceFresh) {
     csrfToken = cookieVal;
@@ -69,8 +68,8 @@ async function ensureCsrfToken(forceFresh = false) {
   return csrfTokenPromise;
 }
 
-// ── Request Interceptor ──────────────────────────────────────────────────────
-api.interceptors.request.use(async (config) => {
+// ── Request Interceptor (NON-BLOCKING) ───────────────────────────────────────
+api.interceptors.request.use((config) => {
   config.headers = config.headers || {};
 
   // 1. Attach Bearer Token from localStorage for mobile Safari & Android WebViews
@@ -79,23 +78,12 @@ api.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${localToken}`;
   }
 
-  // 2. CSRF Token Injection
+  // 2. Synchronous CSRF Token Injection (NO await = ZERO lag)
   const method = config.method?.toUpperCase();
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-    const url = config.url || "";
-    const isExempt = ["/auth/logout", "/auth/refresh", "/auth/google"].some((u) =>
-      url.includes(u)
-    );
-
-    if (!isExempt) {
-      try {
-        const token = await ensureCsrfToken();
-        if (token) {
-          config.headers["x-csrf-token"] = token;
-        }
-      } catch {
-        // Proceed without header — backend will validate if required
-      }
+    const activeCsrf = csrfToken || getCookie("csrfToken");
+    if (activeCsrf) {
+      config.headers["x-csrf-token"] = activeCsrf;
     }
   }
 
@@ -149,7 +137,6 @@ api.interceptors.response.use(
     if (status === 401 && !isAuthRoute && !error.config?._retry) {
       error.config._retry = true;
       try {
-        // FIX #1: Use raw axios instance with withCredentials so refresh failures don't re-trigger interceptor!
         const refreshRes = await axios.post(
           `${api.defaults.baseURL}/auth/refresh`,
           {},
@@ -167,7 +154,6 @@ api.interceptors.response.use(
           return api.request(error.config);
         }
       } catch {
-        // Refresh failed (cookie blocked or session expired)
         localStorage.removeItem("accessToken");
         localStorage.removeItem("cgpapulse_was_logged_in");
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
@@ -181,12 +167,11 @@ api.interceptors.response.use(
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
 
-    // ── Robust CSRF Error Detection ──────────────────────────────────────────
+    // ── Robust CSRF Error Detection & On-Demand Fallback Retry ──────────────
     const isCsrfError =
       (status === 403 || status === 400) &&
       rawMessage.toLowerCase().includes("csrf");
 
-    // ── Invalid CSRF Token Retry Routine ────────────────────────────────────
     if (isCsrfError && !error.config?._csrfRetry) {
       error.config._csrfRetry = true;
 
@@ -195,7 +180,6 @@ api.interceptors.response.use(
         error.config.headers = error.config.headers || {};
         error.config.headers["x-csrf-token"] = newToken;
 
-        // FIX #2: Use `api(error.config)` instead of raw `axios(error.config)`
         return api(error.config);
       } catch (err) {
         console.error("CSRF retry failed:", err);
