@@ -43,37 +43,49 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // ── Helper to safely extract token from Hash OR Query Params ──────
+  const extractAccessToken = () => {
+    const hash = window.location.hash;
+    const search = window.location.search;
+
+    // 1. Try URL Hash (#access_token=...)
+    let token = new URLSearchParams(hash.replace("#", "?")).get("access_token");
+
+    // 2. Fallback to Query Params (?access_token=... or ?token=...)
+    if (!token) {
+      token = new URLSearchParams(search).get("access_token") || new URLSearchParams(search).get("token");
+    }
+
+    return token;
+  };
+
   // ── Session restore on mount ───────────────────────────────────────
   useEffect(() => {
     async function restoreSession() {
-      // 1. Check for Google OAuth redirect in URL hash
-      const hash  = window.location.hash;
-      const token = new URLSearchParams(hash.replace("#", "?")).get("access_token");
+      try {
+        const token = extractAccessToken();
 
-      if (token) {
-        window.history.replaceState(null, "", window.location.pathname);
-        try {
+        // 1. Check for Google OAuth redirect in URL
+        if (token) {
+          // CRITICAL MOBILE FIX: Immediately clean URL state so refreshes/PWAs don't re-read
+          window.history.replaceState(null, "", window.location.pathname);
+          
+          // Set flag immediately to prevent login screen flashing on mobile reload
+          localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
+
           await pingBackend();
           const { user: u } = await apiGoogleSignIn(token);
           setUser(u);
-          localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
-        } catch (e) {
-          setAuthErr(e.message || "Google login failed");
-        } finally {
-          setAuthLoading(false);
+          return;
         }
-        return;
-      }
 
-      // 2. No redirect — skip restore for first-time visitors
-      const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
-      if (!wasLoggedIn) {
-        setAuthLoading(false);
-        return;
-      }
+        // 2. No redirect — skip restore for first-time visitors
+        const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
+        if (!wasLoggedIn) {
+          return;
+        }
 
-      // 3. Returning user — wake backend and restore
-      try {
+        // 3. Returning user — wake backend and restore
         await pingBackend();
 
         // Fast path: access token still valid
@@ -82,14 +94,20 @@ export function AuthProvider({ children }) {
           setUser(u);
           return;
         } catch {
-          // Access token expired — fall through to refresh
+          // Access token expired or cookie dropped on mobile — try refresh
         }
 
-        // Slow path: use refresh token (rotates on every call)
-        const { user: u } = await apiRefresh();
-        setUser(u);
-      } catch {
-        // Both failed — session truly expired after 30 days
+        // Slow path: use refresh token
+        try {
+          const { user: u } = await apiRefresh();
+          setUser(u);
+        } catch {
+          // Both failed — session expired or mobile browser blocked refresh cookies
+          localStorage.removeItem(WAS_LOGGED_IN_KEY);
+          setUser(null);
+        }
+      } catch (e) {
+        setAuthErr(e.message || "Google login failed. Please try again.");
         localStorage.removeItem(WAS_LOGGED_IN_KEY);
         setUser(null);
       } finally {
@@ -113,12 +131,17 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
-  // ── Google login (called from AuthContext.useEffect above too) ────
+  // ── Google login (called manually from button click) ────────────────
   const googleLogin = useCallback(async (accessToken) => {
-    const { user: u, isNewUser } = await apiGoogleSignIn(accessToken);
-    setUser(u);
-    localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
-    return { user: u, isNewUser };
+    try {
+      const { user: u, isNewUser } = await apiGoogleSignIn(accessToken);
+      setUser(u);
+      localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
+      return { user: u, isNewUser };
+    } catch (e) {
+      setAuthErr(e.message || "Login failed");
+      throw e;
+    }
   }, []);
 
   // ── Logout ────────────────────────────────────────────────────────

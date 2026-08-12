@@ -8,7 +8,7 @@ import { logger } from "./src/config/logger.js";
 validateEnv();
 
 const PORT = process.env.PORT || 5000;
-
+ 
 async function startServer() {
   try {
     // Connect to MongoDB first, then start listening
