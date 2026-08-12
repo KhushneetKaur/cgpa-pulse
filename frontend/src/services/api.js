@@ -73,7 +73,7 @@ async function ensureCsrfToken(forceFresh = false) {
 api.interceptors.request.use(async (config) => {
   config.headers = config.headers || {};
 
-  // 1. 👈 CRITICAL FOR IPHONE/iOS: Attach Bearer Token from localStorage
+  // 1. Attach Bearer Token from localStorage for mobile Safari & Android WebViews
   const localToken = localStorage.getItem("accessToken");
   if (localToken && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${localToken}`;
@@ -107,10 +107,12 @@ api.interceptors.response.use(
   (response) => {
     const payload = response.data;
 
-    // 👈 AUTOMATIC TOKEN CAPTURE: Store returned access tokens automatically for iOS users
+    // AUTOMATIC TOKEN CAPTURE: Store returned access tokens
     const newAccessToken =
       payload?.data?.accessToken ||
-      payload?.accessToken;
+      payload?.accessToken ||
+      payload?.data?.token ||
+      payload?.token;
 
     if (newAccessToken) {
       localStorage.setItem("accessToken", newAccessToken);
@@ -140,30 +142,42 @@ api.interceptors.response.use(
       "/auth/me",
       "/auth/refresh",
       "/auth/logout",
+      "/health",
     ].some((u) => url.includes(u));
 
     // ── Token Refresh on 401 ─────────────────────────────────────────────────
     if (status === 401 && !isAuthRoute && !error.config?._retry) {
       error.config._retry = true;
       try {
-        const refreshRes = await api.post("/auth/refresh");
-        const refreshedToken = refreshRes?.data?.accessToken || refreshRes?.accessToken;
+        // FIX #1: Use raw axios instance with withCredentials so refresh failures don't re-trigger interceptor!
+        const refreshRes = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+
+        const refreshedToken =
+          refreshRes?.data?.data?.accessToken ||
+          refreshRes?.data?.accessToken;
 
         if (refreshedToken) {
           localStorage.setItem("accessToken", refreshedToken);
           error.config.headers = error.config.headers || {};
           error.config.headers.Authorization = `Bearer ${refreshedToken}`;
+          return api.request(error.config);
         }
-
-        return api.request(error.config);
       } catch {
+        // Refresh failed (cookie blocked or session expired)
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("cgpapulse_was_logged_in");
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+        return Promise.reject({ status, message: "Session expired" });
       }
     }
 
     if (status === 401 && !isAuthRoute) {
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("cgpapulse_was_logged_in");
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
 
@@ -181,8 +195,8 @@ api.interceptors.response.use(
         error.config.headers = error.config.headers || {};
         error.config.headers["x-csrf-token"] = newToken;
 
-        // Re-issue request with updated instance
-        return axios(error.config);
+        // FIX #2: Use `api(error.config)` instead of raw `axios(error.config)`
+        return api(error.config);
       } catch (err) {
         console.error("CSRF retry failed:", err);
         return Promise.reject({
