@@ -43,7 +43,8 @@ function Shell() {
   const { screen, authLoading, user } = useAppData();
   const { c } = useTheme();
 
-  if (authLoading || (user && screen === "login")) {
+  // FIX: Only show loading spinner while AuthProvider is actively resolving session!
+  if (authLoading) {
     return (
       <div style={{
         minHeight: "100vh",
@@ -65,9 +66,12 @@ function Shell() {
     );
   }
 
+  // FIX: If user is logged in, ALWAYS render AppLayout. Otherwise render LoginPage.
+  const isAuthorized = Boolean(user);
+
   return (
     <Suspense fallback={null}>
-      {screen === "login" ? <LoginPage /> : <AppLayout />}
+      {isAuthorized ? <AppLayout /> : <LoginPage />}
     </Suspense>
   );
 }
@@ -79,7 +83,7 @@ function AppLayout() {
     setUser, setBranch, selectSem,
   } = useAppData();
 
-  // Theme State (FIXED: Get theme props from useTheme instead of useAppData)
+  // Theme State
   const { c, dark, inp, btn } = useTheme();
 
   const [showOnboarding,     setShowOnboarding]     = useState(false);
@@ -94,7 +98,6 @@ function AppLayout() {
     const needsOnboarding = !user.branch;
 
     if (needsOnboarding && !hasShownOnboarding) {
-      console.log(" User needs onboarding (no branch set):", user);
       setShowOnboarding(true);
       setHasShownOnboarding(true);
     }
@@ -165,10 +168,6 @@ function AppLayout() {
         width:    "100%",
         padding:  "1.5rem 1.25rem 2rem",
       }}>
-        {/*
-          If branch is still null (e.g. user closed modal or skipped), show BranchSelect.
-          Otherwise render the dashboard!
-        */}
         {!branch ? (
           <BranchSelect />
         ) : (
