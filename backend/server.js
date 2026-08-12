@@ -1,17 +1,27 @@
 import "dotenv/config";
-import app from "./src/app.js";
-import { connectDB } from "./src/config/db.js";
-import { validateEnv } from "./src/config/env.js";
-import { logger } from "./src/config/logger.js";
+import mongoose from "mongoose";
+import app      from "./src/app.js";
+import { connectDB }    from "./src/config/db.js";
+import { validateEnv }  from "./src/config/env.js";
+import { logger }       from "./src/config/logger.js";
 
-// Validate all required env vars before anything starts
 validateEnv();
 
+// Register BEFORE startServer — catches errors during DB connect and app init
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled Rejection:", reason);
+  process.exit(1);
+});
+
 const PORT = process.env.PORT || 5000;
- 
+
 async function startServer() {
   try {
-    // Connect to MongoDB first, then start listening
     await connectDB();
 
     const server = app.listen(PORT, () => {
@@ -19,37 +29,24 @@ async function startServer() {
     });
 
     server.on("error", (err) => {
-      if (err.code === "EADDRINUSE") {
-        logger.error(
-          `Port ${PORT} is already in use. Stop the existing server or set a different PORT in .env.`
-        );
-      } else {
-        logger.error("HTTP server error:", err);
-      }
+      logger.error(err.code === "EADDRINUSE"
+        ? `Port ${PORT} is already in use`
+        : `HTTP server error: ${err.message}`
+      );
       process.exit(1);
     });
 
-    // Graceful shutdown — close DB connection on termination signals
-    const shutdown = (signal) => {
+    const shutdown = async (signal) => {
       logger.info(`${signal} received — shutting down gracefully`);
-      server.close(() => {
-        logger.info("HTTP server closed");
+      server.close(async () => {
+        await mongoose.connection.close();
+        logger.info("HTTP server and DB connection closed");
         process.exit(0);
       });
     };
 
     process.on("SIGTERM", () => shutdown("SIGTERM"));
-    process.on("SIGINT", () => shutdown("SIGINT"));
-
-    process.on("uncaughtException", (err) => {
-      logger.error("Uncaught Exception:", err);
-      process.exit(1);
-    });
-
-    process.on("unhandledRejection", (reason) => {
-      logger.error("Unhandled Rejection:", reason);
-      process.exit(1);
-    });
+    process.on("SIGINT",  () => shutdown("SIGINT"));
 
   } catch (err) {
     logger.error("Failed to start server:", err);
