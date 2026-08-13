@@ -77,7 +77,6 @@ export function AuthProvider({ children }) {
         // 2. No redirect — skip restore for first-time visitors
         const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
         if (!wasLoggedIn) {
-          setAuthLoading(false); // Fix: set loading false immediately
           return;
         }
 
@@ -102,7 +101,7 @@ export function AuthProvider({ children }) {
           setUser(null);
         }
       } catch (e) {
-        setAuthErr(e.message || "Google login failed. Please try again.");
+      setAuthErr(e.message || "Something went wrong — please try again.");
         localStorage.removeItem(WAS_LOGGED_IN_KEY);
         setUser(null);
       } finally {
