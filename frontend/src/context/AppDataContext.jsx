@@ -78,8 +78,10 @@ export function AppDataProvider({ children }) {
 
   // ── Initial Load Effect ───────────────────────────────────────────
   useEffect(() => {
+    // 1. Wait until authentication state finishes resolving
     if (authLoading) return;
 
+    // 2. If no user is authenticated, explicitly clear state and return to login
     if (!user) {
       setScreen("login");
       setHist({});
@@ -91,6 +93,7 @@ export function AppDataProvider({ children }) {
       return;
     }
 
+    // 3. User is authenticated -> load data safely and direct to main app screen
     async function loadUserData() {
       try {
         setHist({});
@@ -100,57 +103,66 @@ export function AppDataProvider({ children }) {
         setLbOptInState(user.lbOptIn || false);
 
         if (user.branch) {
-          const { semesters } = await apiGetSemesters(user.branch);
-          const histMap = { [user.branch]: {} };
-          const backlogMap = { [user.branch]: {} };
-          const electiveMap = { [user.branch]: {} };
-          const customMap = { [user.branch]: {} };
-          const hiddenMap = { [user.branch]: {} };
+          try {
+            const { semesters } = await apiGetSemesters(user.branch);
+            const histMap = { [user.branch]: {} };
+            const backlogMap = { [user.branch]: {} };
+            const electiveMap = { [user.branch]: {} };
+            const customMap = { [user.branch]: {} };
+            const hiddenMap = { [user.branch]: {} };
 
-          for (const sem of semesters) {
-            const marksObj = {};
-            for (const m of (sem.marks || [])) {
-              marksObj[m.code] = { int: m.int, ext: m.ext };
+            for (const sem of (semesters || [])) {
+              const marksObj = {};
+              for (const m of (sem.marks || [])) {
+                marksObj[m.code] = { int: m.int, ext: m.ext };
+              }
+              const electiveNamesObj = sem.electiveNames
+                ? (sem.electiveNames instanceof Map ? Object.fromEntries(sem.electiveNames) : sem.electiveNames)
+                : {};
+
+              histMap[user.branch][sem.semNumber] = {
+                marks: marksObj,
+                sgpa: sem.sgpa,
+                credits: sem.credits,
+                isPartial: sem.isPartial,
+                mode: sem.mode,
+                savedAt: sem.savedAt ? new Date(sem.savedAt).toLocaleDateString("en-IN") : "",
+                electiveNames: electiveNamesObj,
+                backlogs: sem.backlogs || [],
+              };
+
+              backlogMap[user.branch][sem.semNumber] = sem.backlogs || [];
+
+              for (const [code, name] of Object.entries(electiveNamesObj)) {
+                electiveMap[user.branch][code] = name;
+              }
+
+              customMap[user.branch][sem.semNumber] = sem.customSubjects || [];
+              hiddenMap[user.branch][sem.semNumber] = sem.hiddenSubjects || [];
             }
-            const electiveNamesObj = sem.electiveNames
-              ? (sem.electiveNames instanceof Map ? Object.fromEntries(sem.electiveNames) : sem.electiveNames)
-              : {};
 
-            histMap[user.branch][sem.semNumber] = {
-              marks: marksObj,
-              sgpa: sem.sgpa,
-              credits: sem.credits,
-              isPartial: sem.isPartial,
-              mode: sem.mode,
-              savedAt: sem.savedAt ? new Date(sem.savedAt).toLocaleDateString("en-IN") : "",
-              electiveNames: electiveNamesObj,
-              backlogs: sem.backlogs || [],
-            };
-
-            backlogMap[user.branch][sem.semNumber] = sem.backlogs || [];
-
-            for (const [code, name] of Object.entries(electiveNamesObj)) {
-              electiveMap[user.branch][code] = name;
-            }
-
-            customMap[user.branch][sem.semNumber] = sem.customSubjects || [];
-            hiddenMap[user.branch][sem.semNumber] = sem.hiddenSubjects || [];
+            setCustomSubjects(customMap);
+            setHiddenSubjects(hiddenMap);
+            setHist(histMap);
+            setBacklogs(backlogMap);
+            setElectiveNames(electiveMap);
+          } catch (semErr) {
+            console.error("Failed to load semester data:", semErr);
           }
-
-          setCustomSubjects(customMap);
-          setHiddenSubjects(hiddenMap);
-          setHist(histMap);
-          setBacklogs(backlogMap);
-          setElectiveNames(electiveMap);
         }
 
-        // Fetch leaderboard only
-        const lbRes = await apiGetLeaderboard("ALL");
-        if (lbRes?.entries) setLbData(lbRes.entries);
+        // Fetch leaderboard independently
+        try {
+          const lbRes = await apiGetLeaderboard("ALL");
+          if (lbRes?.entries) setLbData(lbRes.entries);
+        } catch (lbErr) {
+          console.error("Failed to load leaderboard data:", lbErr);
+        }
 
-        setScreen("app");
       } catch (err) {
         console.error("Failed to load user data:", err.message, err);
+      } finally {
+        // Guarantee user lands on main app screen regardless of partial API errors
         setScreen("app");
       }
     }
