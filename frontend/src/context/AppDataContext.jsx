@@ -14,7 +14,7 @@ import {
   apiRemoveCustomSubject,
   apiToggleSubjectVisibility,
 } from "../services/semester.api.js";
-import { apiGetLeaderboard }          from "../services/leaderboard.api.js";
+import { apiGetLeaderboard } from "../services/leaderboard.api.js";
 import { apiUpdateBranch, apiUpdateLbOptIn } from "../services/user.api.js";
 
 const AppDataContext = createContext(null);
@@ -53,21 +53,21 @@ export function AppDataProvider({ children }) {
   const { user, authLoading, logout, authErr, setAuthErr, clearForm, googleLogin, setUser } = useAuth();
 
   // ── App state ──────────────────────────────────────────────────────────────
-  const [screen,         setScreen]         = useState("login");
-  const [tab,            setTab]            = useState("calculator");
-  const [saveMsg,        setSaveMsg]        = useState("");
-  const [branch,         setBranchState]    = useState(null);
-  const [hist,           setHist]           = useState({});
-  const [backlogs,       setBacklogs]       = useState({});
-  const [electiveNames,  setElectiveNames]  = useState({});
-  const [lbOptIn,        setLbOptInState]   = useState(false);
-  const [lbData,         setLbData]         = useState([]);
-  const [selSem,         setSelSem]         = useState(null);
-  const [marks,          setMarks]          = useState({});
-  const [saving,         setSaving]         = useState(false);
-  const [qSem,           setQSem]           = useState(null);
-  const [qVal,           setQVal]           = useState("");
-  const [qErr,           setQErr]           = useState("");
+  const [screen,          setScreen]         = useState("login");
+  const [tab,             setTab]            = useState("calculator");
+  const [saveMsg,         setSaveMsg]        = useState("");
+  const [branch,          setBranchState]    = useState(null);
+  const [hist,            setHist]           = useState({});
+  const [backlogs,        setBacklogs]       = useState({});
+  const [electiveNames,   setElectiveNames]  = useState({});
+  const [lbOptIn,         setLbOptInState]   = useState(false);
+  const [lbData,          setLbData]         = useState([]);
+  const [selSem,          setSelSem]         = useState(null);
+  const [marks,           setMarks]          = useState({});
+  const [saving,          setSaving]         = useState(false);
+  const [qSem,            setQSem]           = useState(null);
+  const [qVal,            setQVal]           = useState("");
+  const [qErr,            setQErr]           = useState("");
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [targetCGPA,     setTargetCGPA]     = useState("");
   const [targetResult,   setTargetResult]   = useState(null);
@@ -333,6 +333,7 @@ export function AppDataProvider({ children }) {
       await apiUpdateLbOptIn(next);
       setLbOptInState(next);
       await fetchLeaderboard();
+      return next;
     } catch (err) {
       console.error("toggleLbOptIn error:", err?.message || err?.status);
       throw err;

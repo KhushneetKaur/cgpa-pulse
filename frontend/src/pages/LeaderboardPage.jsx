@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTheme } from "../context/ThemeContext";
 import { BRANCHES } from "../data/branches";
@@ -13,12 +13,35 @@ function getMedal(idx) {
 }
 
 export default function LeaderboardPage() {
-  const { user, branch, cgpa, lbData, lbOptIn, toggleLbOptIn } = useAppData();
+  const { user, branch, cgpa, lbData, lbOptIn, toggleLbOptIn, fetchLeaderboard } = useAppData();
   const { c, dark, btn, cardSty, scoreClr } = useTheme();
 
   const [showOptInModal, setShowOptInModal] = useState(false);
-  const [optOutErr,      setOptOutErr]      = useState("");
-  const [isSubmitting,   setIsSubmitting]   = useState(false);
+  const [optOutErr, setOptOutErr] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Safely extract array regardless of initial context state
+  const entries = Array.isArray(lbData) ? lbData : (lbData?.leaderboard || []);
+
+  // Fetch leaderboard data when component mounts or opt-in status updates
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      if (typeof fetchLeaderboard === "function") {
+        try {
+          setLoading(true);
+          await fetchLeaderboard();
+        } catch (err) {
+          console.error("Failed to fetch leaderboard:", err);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => { isMounted = false; };
+  }, [fetchLeaderboard, lbOptIn]);
 
   async function handleToggle() {
     if (isSubmitting) return;
@@ -35,11 +58,11 @@ export default function LeaderboardPage() {
   }
 
   async function handleConfirmOptIn() {
-    setShowOptInModal(false);
     try {
       setIsSubmitting(true);
       setOptOutErr("");
       await toggleLbOptIn();
+      setShowOptInModal(false); 
     } catch (err) {
       setOptOutErr(err?.message || "Failed to opt in");
     } finally {
@@ -116,7 +139,11 @@ export default function LeaderboardPage() {
       )}
 
       {/* List */}
-      {lbData.length === 0 ? (
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "2rem 0" }}>
+          <p style={{ color: c.sub, fontSize: 13, margin: 0 }}>Loading leaderboard entries...</p>
+        </div>
+      ) : entries.length === 0 ? (
         <div style={{ textAlign: "center", padding: "2rem 0" }}>
           <p style={{ fontSize: 32, margin: "0 0 8px" }}>🏅</p>
           <p style={{ color: c.sub,   fontSize: 13, margin: 0 }}>No entries yet.</p>
@@ -124,12 +151,12 @@ export default function LeaderboardPage() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {lbData.map((entry, idx) => (
+          {entries.map((entry, idx) => (
             <LeaderboardRow
-              key={entry.id || `${entry.username}-${entry.branch}-${idx}`}
+              key={entry._id || entry.id || `${entry.username}-${entry.branch}-${idx}`}
               entry={entry}
               idx={idx}
-              isMe={entry.username === user?.username}
+              isMe={entry.username === user?.username || entry.userId === user?._id}
             />
           ))}
         </div>
@@ -137,11 +164,9 @@ export default function LeaderboardPage() {
 
       {showOptInModal && (
         <LeaderboardOptInModal
-          dark={dark}
-          c={c}
-          btn={btn}
           onConfirm={handleConfirmOptIn}
           onCancel={() => setShowOptInModal(false)}
+          isSubmitting={isSubmitting}
         />
       )}
     </div>
@@ -152,9 +177,11 @@ export default function LeaderboardPage() {
 const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
   const { c, scoreClr } = useTheme();
 
-  // Memoize branch lookup — only recomputes if entry.branch changes
-  const branchInfo = BRANCHES[entry.branch];
-  const medal      = getMedal(idx);
+  // Handle variations in entry keys from different backends
+  const username = entry.username || entry.name || "Anonymous User";
+  const branchKey = entry.branch || entry.branchCode;
+  const branchInfo = BRANCHES[branchKey];
+  const medal = getMedal(idx);
 
   return (
     <div
@@ -187,7 +214,7 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
       {/* Username + branch */}
       <div className="lb-info">
         <p style={{ margin: 0, fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? c.accentTxt : c.text }}>
-          {entry.username}
+          {username}
           {isMe && (
             <span style={{ fontSize: 10, color: c.accentTxt, marginLeft: 6, fontWeight: 400 }}>
               (you)
@@ -195,8 +222,8 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
           )}
         </p>
         <p style={{ margin: 0, fontSize: 11, color: c.muted }}>
-          {branchInfo?.name || entry.branch}
-          {entry.updatedAt ? ` · updated ${entry.updatedAt}` : ""}
+          {branchInfo?.name || branchKey || "General"}
+          {entry.updatedAt ? ` · updated ${new Date(entry.updatedAt).toLocaleDateString()}` : ""}
         </p>
       </div>
 
@@ -214,7 +241,7 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
           whiteSpace: "nowrap",
         }}
       >
-        {branchInfo?.short || entry.branch}
+        {branchInfo?.short || branchKey || "N/A"}
       </span>
 
       {/* CGPA */}

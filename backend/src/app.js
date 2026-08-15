@@ -13,7 +13,6 @@ import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const app = express();
 
-// Always trust the first proxy behind Render/load balancers for secure cookie handling
 app.set("trust proxy", 1);
 
 // ── Allowed origins ───────────────────────────────────────────────────────────
@@ -67,8 +66,8 @@ app.use(morgan(
   { stream: { write: (msg) => logger.http(msg.trim()) } }
 ));
 
-// ── Health check — pinged by cron-job.org to keep Render warm ────────────────
-app.get("/health", (req, res) => {
+// ── Health check — pinged by client & cron jobs to keep Render warm ─────────
+app.get(["/health", "/api/health"], (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.json({ status: "ok", ts: Date.now() });
 });

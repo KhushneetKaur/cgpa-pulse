@@ -34,7 +34,12 @@ export function AuthProvider({ children }) {
   const pingBackend = useCallback(() => {
     if (pingDone.current) return;
     pingDone.current = true;
-    fetch(`${import.meta.env.VITE_API_URL}/health`, {
+    
+    // Normalize URL to hit /api/health reliably
+    const baseUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, "") || "";
+    const healthUrl = baseUrl.endsWith("/api") ? `${baseUrl}/health` : `${baseUrl}/api/health`;
+
+    fetch(healthUrl, {
       signal: AbortSignal.timeout(12000),
     }).catch(() => {
       // Non-blocking ping catch
