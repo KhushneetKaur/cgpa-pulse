@@ -65,11 +65,15 @@ export function AuthProvider({ children }) {
 
         // 1. Check for Google OAuth redirect in URL
         if (token) {
-          window.history.replaceState(null, "", window.location.pathname);
           localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
-
           pingBackend(); // Non-blocking!
-          const { user: u } = await apiGoogleSignIn(token);
+
+          // Authenticate FIRST before wiping URL parameters
+          const res = await apiGoogleSignIn(token);
+          const u = res?.user ?? res;
+
+          // Clean URL parameters only after successful auth
+          window.history.replaceState(null, "", window.location.pathname);
           setUser(u);
           return;
         }
@@ -80,7 +84,7 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        // 3. Returning user — wake backend in parallel (NO AWAIT)
+        // 3. Returning user — wake backend in parallel
         pingBackend();
 
         // Fast path: access token still valid
@@ -94,14 +98,15 @@ export function AuthProvider({ children }) {
 
         // Slow path: use refresh token
         try {
-          const { user: u } = await apiRefresh();
+          const res = await apiRefresh();
+          const u = res?.user ?? res;
           setUser(u);
         } catch {
           localStorage.removeItem(WAS_LOGGED_IN_KEY);
           setUser(null);
         }
       } catch (e) {
-      setAuthErr(e.message || "Something went wrong — please try again.");
+        setAuthErr(e.message || "Something went wrong — please try again.");
         localStorage.removeItem(WAS_LOGGED_IN_KEY);
         setUser(null);
       } finally {
@@ -129,10 +134,11 @@ export function AuthProvider({ children }) {
   // ── Google login (called manually from button click) ────────────────
   const googleLogin = useCallback(async (accessToken) => {
     try {
-      const { user: u, isNewUser } = await apiGoogleSignIn(accessToken);
+      const res = await apiGoogleSignIn(accessToken);
+      const u = res?.user ?? res;
       setUser(u);
       localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
-      return { user: u, isNewUser };
+      return { user: u, isNewUser: res?.isNewUser };
     } catch (e) {
       setAuthErr(e.message || "Login failed");
       throw e;

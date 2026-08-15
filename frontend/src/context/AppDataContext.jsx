@@ -181,7 +181,6 @@ export function AppDataProvider({ children }) {
       const electiveMapForBranch = {};
 
       for (const sem of semesters) {
-        // FIX: Destructured _electiveNamesObj correctly instead of calling undefined `parsed`
         const { _electiveNamesObj, ...histEntry } = parseSemesterData(sem);
         histMap[key][sem.semNumber] = histEntry;
         for (const [code, name] of Object.entries(_electiveNamesObj)) {
