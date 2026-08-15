@@ -1,8 +1,21 @@
 import api from "./api.js";
 
-// Unwraps backend envelope: { success, statusCode, message, data: {...} }
-// With the axios interceptor, res IS already the envelope, so res.data = actual data
-const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
+/**
+ * Unwraps backend response envelope safely.
+ * Handles both response formats:
+ * 1. Express Envelope: { success: true, message: "...", data: { ... } }
+ * 2. Raw JSON payload: { ... }
+ */
+const unwrap = (res) => {
+  if (!res) return res;
+  
+  // If `res` is already the backend JSON body (via Axios response interceptor)
+  if (typeof res === "object" && res !== null && "data" in res) {
+    return res.data;
+  }
+  
+  return res;
+};
 
 export async function apiGetSemesters(branch) {
   const res = await api.get(`/semesters/${branch}`);
@@ -31,7 +44,7 @@ export async function apiToggleBacklog(branch, semNumber, subjectCode) {
 
 export async function apiUpdateElective(branch, semNumber, subjectCode, name) {
   const res = await api.put(`/semesters/${branch}/${semNumber}/elective`, { subjectCode, name });
-  return unwrap(res); // { electiveNames }
+  return unwrap(res); // { electiveNames: [...] }
 }
 
 export async function apiAddCustomSubject(branch, semNumber, subject) {
