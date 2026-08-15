@@ -4,21 +4,23 @@ import helmet          from "helmet";
 import morgan          from "morgan";
 import cookieParser    from "cookie-parser";
 import mongoSanitize   from "express-mongo-sanitize";
-import { logger }          from "./config/logger.js";
-import authRoutes          from "./routes/auth.routes.js";
-import userRoutes          from "./routes/user.routes.js";
-import semesterRoutes      from "./routes/semester.routes.js";
-import leaderboardRoutes   from "./routes/leaderboard.routes.js";
+import { logger }      from "./config/logger.js";
+import authRoutes      from "./routes/auth.routes.js";
+import userRoutes      from "./routes/user.routes.js";
+import semesterRoutes  from "./routes/semester.routes.js";
+import leaderboardRoutes from "./routes/leaderboard.routes.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const app = express();
 
 app.set("trust proxy", 1);
 
-// ── Allowed origins ───────────────────────────────────────────────────────────
+// ── Allowed origins — strip trailing slashes for iOS matching ───────────────
+const parseOrigin = (url) => url.trim().replace(/\/+$/, "");
+
 const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
   .split(",")
-  .map(o => o.trim())
+  .map(parseOrigin)
   .filter(Boolean);
 
 if (process.env.NODE_ENV !== "production") {
@@ -42,12 +44,23 @@ app.use(
 );
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-app.use(cors({
-  origin:         uniqueOrigins,
-  credentials:    true,
-  methods:        ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"], 
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, server-to-server, curl)
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = parseOrigin(origin);
+      if (uniqueOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials:     true,
+    methods:         ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders:  ["Content-Type", "Authorization", "X-Requested-With"],
+  })
+);
 
 // ── Body parsing ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "10kb" }));
@@ -61,10 +74,12 @@ app.use(mongoSanitize({
 }));
 
 // ── HTTP request logging ──────────────────────────────────────────────────────
-app.use(morgan(
-  process.env.NODE_ENV === "development" ? "dev" : "combined",
-  { stream: { write: (msg) => logger.http(msg.trim()) } }
-));
+app.use(
+  morgan(
+    process.env.NODE_ENV === "development" ? "dev" : "combined",
+    { stream: { write: (msg) => logger.http(msg.trim()) } }
+  )
+);
 
 // ── Health check — pinged by client & cron jobs to keep Render warm ─────────
 app.get(["/health", "/api/health"], (req, res) => {
