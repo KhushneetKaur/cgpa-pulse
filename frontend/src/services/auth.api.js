@@ -13,7 +13,9 @@ export async function apiGoogleSignIn(credential) {
 
 export async function apiGetMe() {
   const res = await api.get("/auth/me");
-  return unwrap(res).user; // user object directly
+  const unwrapped = unwrap(res);
+  // Safely fallback to unwrapped object if user property isn't nested
+  return unwrapped?.user ?? unwrapped;
 }
 
 export async function apiRefresh() {

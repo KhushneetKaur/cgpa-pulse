@@ -22,6 +22,9 @@ const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
+    // Tells Express to trust Render's reverse proxy so req.secure returns true for HTTPS.
+    app.set("trust proxy", 1);
+
     await connectDB();
 
     const server = app.listen(PORT, () => {

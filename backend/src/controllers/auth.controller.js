@@ -29,7 +29,10 @@ export function logout(req, res, next) {
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 export function getMe(req, res, next) {
   try {
-    sendResponse(res, 200, { user: req.user.toPublicJSON() }, "User fetched successfully");
+    const userPayload = typeof req.user.toPublicJSON === "function" 
+      ? req.user.toPublicJSON() 
+      : req.user;
+    sendResponse(res, 200, { user: userPayload }, "User fetched successfully");
   } catch (err) { next(err); }
 }
 
@@ -37,7 +40,7 @@ export function getMe(req, res, next) {
 export async function refresh(req, res, next) {
   try {
     const token = req.cookies?.refreshToken;
-    if (!token) throw ApiError.unauthorized("No refresh token");
+    if (!token) throw ApiError.unauthorized("No refresh token provided");
 
     const { user, accessToken, refreshToken: newRefreshToken } = await refreshAccessToken(token);
     setTokenCookie(res, accessToken);

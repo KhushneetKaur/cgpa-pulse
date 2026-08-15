@@ -7,10 +7,11 @@ import crypto from "crypto";
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getCookieOptions(maxAgeMs = MAX_AGE_MS) {
-  const isProd = process.env.NODE_ENV === "production";
+  const isProd = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
+  
   return {
     httpOnly: true,
-    secure:   isProd,
+    secure:   isProd || true, 
     sameSite: isProd ? "none" : "lax",
     path:     "/",
     maxAge:   maxAgeMs,
@@ -18,16 +19,16 @@ function getCookieOptions(maxAgeMs = MAX_AGE_MS) {
 }
 
 export function setTokenCookie(res, token) {
-  res.cookie("token", token, getCookieOptions());
+  res.cookie("accessToken", token, getCookieOptions(15 * 60 * 1000)); // 15 mins
 }
 
 export function setRefreshTokenCookie(res, token) {
-  res.cookie("refreshToken", token, getCookieOptions());
+  res.cookie("refreshToken", token, getCookieOptions(MAX_AGE_MS)); // 30 days
 }
 
 export function clearTokenCookie(res) {
   const opts = { ...getCookieOptions(0), expires: new Date(0) };
-  res.cookie("token",        "", opts);
+  res.cookie("accessToken",  "", opts);
   res.cookie("refreshToken", "", opts);
 }
 
@@ -76,7 +77,7 @@ export async function googleAuth(accessToken) {
 
     let username = base;
     let counter  = 1;
-    const MAX_RETRIES = 10; // prevent infinite loop on pathological collisions
+    const MAX_RETRIES = 10;
 
     while (counter <= MAX_RETRIES) {
       try {
@@ -89,7 +90,6 @@ export async function googleAuth(accessToken) {
           hasSetPassword:  false,
           role:            "student",
           lastLogin:       new Date(),
-          // usernameSetAt intentionally NOT set — triggers onboarding
         });
         break;
       } catch (err) {
@@ -119,7 +119,7 @@ export async function getCurrentUser(userId) {
   return user.toPublicJSON();
 }
 
-// ── Refresh tokens — rotates on every call for sliding 30-day window ──────────
+// ── Refresh tokens ────────────────────────────────────────────────────────────
 export async function refreshAccessToken(refreshToken) {
   if (!refreshToken) throw ApiError.unauthorized("No refresh token");
 

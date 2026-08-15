@@ -13,10 +13,8 @@ import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const app = express();
 
-// Trust proxy in production — required for correct IP detection behind Render/load balancers
-if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
-}
+// Always trust the first proxy behind Render/load balancers for secure cookie handling
+app.set("trust proxy", 1);
 
 // ── Allowed origins ───────────────────────────────────────────────────────────
 const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
@@ -36,7 +34,13 @@ if (process.env.NODE_ENV !== "production") {
 const uniqueOrigins = [...new Set(allowedOrigins)];
 
 // ── Security headers ──────────────────────────────────────────────────────────
-app.use(helmet());
+// Configured to allow cross-origin resource sharing for iOS Safari
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  })
+);
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 app.use(cors({
@@ -80,7 +84,7 @@ app.use((req, res) => {
   res.status(404).json({ success: false, error: `Route ${req.originalUrl} not found` });
 });
 
-// ── Global error handler  ───────────────────────────────────────
+// ── Global error handler ───────────────────────────────────────
 app.use(errorMiddleware);
 
 export default app;
