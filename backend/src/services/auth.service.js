@@ -1,5 +1,5 @@
-import jwt    from "jsonwebtoken";
-import User   from "../models/User.js";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "crypto";
 
@@ -11,10 +11,11 @@ function getCookieOptions(maxAgeMs = MAX_AGE_MS) {
   
   return {
     httpOnly: true,
-    secure:   isProd || true, 
+    secure: true, // Always true for modern cross-origin auth
     sameSite: isProd ? "none" : "lax",
-    path:     "/",
-    maxAge:   maxAgeMs,
+    partitioned: isProd ? true : undefined, // Essential for iOS 17+ Safari cross-site cookies
+    path: "/",
+    maxAge: maxAgeMs,
   };
 }
 
@@ -28,7 +29,7 @@ export function setRefreshTokenCookie(res, token) {
 
 export function clearTokenCookie(res) {
   const opts = { ...getCookieOptions(0), expires: new Date(0) };
-  res.cookie("accessToken",  "", opts);
+  res.cookie("accessToken", "", opts);
   res.cookie("refreshToken", "", opts);
 }
 
@@ -76,20 +77,20 @@ export async function googleAuth(accessToken) {
       .slice(0, 25) || "user";
 
     let username = base;
-    let counter  = 1;
+    let counter = 1;
     const MAX_RETRIES = 10;
 
     while (counter <= MAX_RETRIES) {
       try {
         user = await User.create({
           username,
-          email:           email.toLowerCase(),
+          email: email.toLowerCase(),
           googleId,
-          passwordHash:    crypto.randomBytes(32).toString("hex"),
+          passwordHash: crypto.randomBytes(32).toString("hex"),
           isEmailVerified: true,
-          hasSetPassword:  false,
-          role:            "student",
-          lastLogin:       new Date(),
+          hasSetPassword: false,
+          role: "student",
+          lastLogin: new Date(),
         });
         break;
       } catch (err) {
@@ -105,8 +106,8 @@ export async function googleAuth(accessToken) {
   }
 
   return {
-    user:         user.toPublicJSON(),
-    accessToken:  generateAccessToken(user._id),
+    user: user.toPublicJSON(),
+    accessToken: generateAccessToken(user._id),
     refreshToken: generateRefreshToken(user._id),
     isNewUser,
   };
@@ -136,8 +137,8 @@ export async function refreshAccessToken(refreshToken) {
   if (!user || !user.isActive) throw ApiError.unauthorized("User not found");
 
   return {
-    user:         user.toPublicJSON(),
-    accessToken:  generateAccessToken(user._id),
+    user: user.toPublicJSON(),
+    accessToken: generateAccessToken(user._id),
     refreshToken: generateRefreshToken(user._id),
   };
 }

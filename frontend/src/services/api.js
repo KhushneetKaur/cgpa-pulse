@@ -9,7 +9,7 @@ const api = axios.create({
 
 // ── Response interceptor ──────────────────────────────────────────────────────
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => response.data, // Returns backend body directly
 
   async (error) => {
     const status = error.response?.status;
@@ -27,12 +27,11 @@ api.interceptors.response.use(
       "/auth/me",
       "/auth/refresh",
       "/auth/logout",
-      "/auth/username", // Added username route protection
+      "/auth/username",
     ].some((u) => url.includes(u));
 
-    // ONLY trigger auth:unauthorized on explicit 401 responses, NEVER on network/timeout errors!
+    // ONLY trigger auth:unauthorized on explicit 401 responses
     if (status === 401) {
-      // 401 on standard data route — attempt silent refresh once
       if (!isAuthRoute && !error.config?._retry) {
         error.config._retry = true;
         try {
@@ -45,7 +44,6 @@ api.interceptors.response.use(
         }
       }
 
-      // 401 directly on core auth routes (token completely invalid)
       if (isAuthRoute) {
         localStorage.removeItem("cgpapulse_was_logged_in");
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));

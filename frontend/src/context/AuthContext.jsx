@@ -63,64 +63,72 @@ export function AuthProvider({ children }) {
   };
 
   // ── Session restore on mount ───────────────────────────────────────
-  useEffect(() => {
-    async function restoreSession() {
-      try {
-        const token = extractAccessToken();
+useEffect(() => {
+  async function restoreSession() {
+    try {
+      const token = extractAccessToken();
 
-        // 1. Check for Google OAuth redirect in URL
-        if (token) {
-          localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
-          pingBackend(); // Non-blocking!
-
-          // Authenticate FIRST before wiping URL parameters
-          const res = await apiGoogleSignIn(token);
-          const u = res?.user ?? res;
-
-          // Clean URL parameters only after successful auth
-          window.history.replaceState(null, "", window.location.pathname);
-          setUser(u);
-          return;
-        }
-
-        // 2. No redirect — skip restore for first-time visitors
-        const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
-        if (!wasLoggedIn) {
-          return;
-        }
-
-        // 3. Returning user — wake backend in parallel
+      // 1. Check for Google OAuth redirect in URL
+      if (token) {
+        localStorage.setItem(WAS_LOGGED_IN_KEY, "1");
         pingBackend();
 
-        // Fast path: access token still valid
         try {
-          const u = await apiGetMe();
-          setUser(u);
-          return;
-        } catch {
-          // Access token expired or cookie dropped — try refresh
-        }
-
-        // Slow path: use refresh token
-        try {
-          const res = await apiRefresh();
+          const res = await apiGoogleSignIn(token);
           const u = res?.user ?? res;
           setUser(u);
-        } catch {
+        } catch (err) {
+          console.error("Google auth restore error:", err);
+          setAuthErr(err?.response?.data?.message || err.message || "Google sign-in failed");
           localStorage.removeItem(WAS_LOGGED_IN_KEY);
           setUser(null);
+        } finally {
+          // Clean URL parameters only after processing attempt finishes
+          window.history.replaceState(null, "", window.location.pathname);
+          setAuthLoading(false);
         }
-      } catch (e) {
-        setAuthErr(e.message || "Something went wrong — please try again.");
+        return; 
+      }
+
+      // 2. No redirect — skip restore for first-time visitors
+      const wasLoggedIn = localStorage.getItem(WAS_LOGGED_IN_KEY) === "1";
+      if (!wasLoggedIn) {
+        setAuthLoading(false);
+        return;
+      }
+
+      // 3. Returning user — wake backend in parallel
+      pingBackend();
+
+      // Fast path: access token still valid
+      try {
+        const u = await apiGetMe();
+        setUser(u);
+        return;
+      } catch {
+        // Access token expired or cookie dropped — try refresh
+      }
+
+      // Slow path: use refresh token
+      try {
+        const res = await apiRefresh();
+        const u = res?.user ?? res;
+        setUser(u);
+      } catch {
         localStorage.removeItem(WAS_LOGGED_IN_KEY);
         setUser(null);
-      } finally {
-        setAuthLoading(false);
       }
+    } catch (e) {
+      setAuthErr(e.message || "Something went wrong — please try again.");
+      localStorage.removeItem(WAS_LOGGED_IN_KEY);
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
     }
+  }
 
-    restoreSession();
-  }, [pingBackend]);
+  restoreSession();
+}, [pingBackend]);
 
   // ── Listen for 401 from axios interceptor ─────────────────────────
   useEffect(() => {
