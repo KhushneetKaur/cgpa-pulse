@@ -15,20 +15,11 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
-  overscroll-behavior: none;
-  transition: background-color 0.15s ease;
 }
 
 html, body, #root {
   min-height: 100vh;
   min-height: 100dvh;
-  background: #080c18; /* Dark mode default */
-}
-
-html.light,
-html.light body,
-html.light #root {
-  background: #f4f3ff; /* Light mode override */
 }
 
 body {
@@ -36,7 +27,13 @@ body {
   font-weight: 400;
   line-height: 1.6;
   background-color: var(--bg, #080c18);
-  transition: background-color 0.15s ease;
+  color: var(--text, #f8fafc);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+html.light body {
+  --bg: #f4f3ff;
+  --text: #0f172a;
 }
 
 /* Scrollbar (Modern Standard + WebKit Fallback) */
@@ -108,7 +105,7 @@ input[type=number] {
   }
 }
 
-/* Optimized Performance Keyframes */
+/* Keyframes */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
@@ -188,15 +185,8 @@ input[type=number] {
   80%      { transform: translate(26px,12px) scale(0.94);  }
 }
 
-/* ── Global Smooth Theme Transitions ────────────────────────────────────── */
-*:not([style*="animation"]):not(canvas) {
-  transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 0.15s;
-  transition-timing-function: ease;
-}
-
-/* Interactive Element Hover & Motion Transitions */
-button, input, select, textarea, a {
+/* Scoped Interactive & Theme Transitions */
+button, input, select, textarea, a, .theme-transition {
   transition: background-color 0.15s ease,
               border-color 0.15s ease,
               color 0.15s ease,
