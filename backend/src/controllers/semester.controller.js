@@ -6,6 +6,7 @@ import { upsertLeaderboardEntry } from "../services/leaderboard.service.js";
 import { sendResponse } from "../utils/ApiResponse.js";
 import ApiError        from "../utils/ApiError.js";
 import SemesterData    from "../models/SemesterData.js";
+import User            from "../models/User.js"; // <-- Added missing import
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const parseSem = (semNumber) => {
@@ -18,12 +19,16 @@ const normBranch = (branch) => branch.toUpperCase().trim();
 
 async function syncLeaderboard(req, userId, branch, allSems) {
   if (!req.user?.lbOptIn) return;
+
+  const validSems = allSems.filter(s => s.sgpa != null && s.sgpa > 0);
+  const calculatedCgpa = calculateCGPA(allSems) ?? 0;
+
   await upsertLeaderboardEntry({
     userId,
     username: req.user.username || "Anonymous",
-    branch,
-    cgpa:     calculateCGPA(allSems) ?? 0,
-    semCount: allSems.filter(s => s.sgpa).length,
+    branch: req.user.branch || branch, // Prefer profile branch
+    cgpa: calculatedCgpa,
+    semCount: validSems.length,
   });
 }
 
@@ -33,7 +38,12 @@ export async function getAllSemesters(req, res, next) {
     const branch    = normBranch(req.params.branch);
     const userId    = req.user._id.toString();
     const semesters = await getUserSemesters(userId, branch);
-    sendResponse(res, 200, { semesters, cgpa: calculateCGPA(semesters) }, "Semesters fetched");
+    const cgpa      = calculateCGPA(semesters) ?? 0;
+
+    // Sync leaderboard on GET so existing user records update automatically
+    await syncLeaderboard(req, userId, branch, semesters || []);
+
+    sendResponse(res, 200, { semesters, cgpa }, "Semesters fetched");
   } catch (err) { next(err); }
 }
 
@@ -47,8 +57,17 @@ export async function saveSemesterHandler(req, res, next) {
     const saved   = await saveSemester(userId, { ...req.body, branch, semNumber: semNum });
     const allSems = await getUserSemesters(userId, branch) || [];
     const cgpa    = calculateCGPA(allSems) ?? 0;
-    await syncLeaderboard(req, userId, branch, allSems);
 
+    // ── Auto opt-in on first full semester save ───────────────────
+    const savedCount = allSems.filter(s => s.sgpa).length;
+    if (savedCount === 1 && !req.user.lbOptIn) {
+      await User.findByIdAndUpdate(userId, {
+        $set: { lbOptIn: true, lbOptInDate: new Date() },
+      });
+      req.user.lbOptIn     = true;  // update in-memory so syncLeaderboard sees it
+      req.user.lbOptInDate = new Date();
+    }
+    await syncLeaderboard(req, userId, branch, allSems);
     sendResponse(res, 200, { semester: saved, cgpa }, "Semester saved");
   } catch (err) { next(err); }
 }

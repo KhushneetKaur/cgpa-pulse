@@ -62,7 +62,7 @@ const LeaderboardOptInModal = memo(function LeaderboardOptInModal({ onConfirm, o
               Your branch will also be shown alongside your CGPA.
             </li>
             <li style={{ color: dark ? "#94a3b8" : "#92400e", fontWeight: 600 }}>
-              Once opted in, you cannot opt out for <strong>30 days</strong>.
+              Once opted in, you cannot opt out for <strong>45 days</strong>.
               After that, click the same button again to opt out.
             </li>
           </ul>

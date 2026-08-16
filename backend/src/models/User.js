@@ -66,12 +66,12 @@ const userSchema = new mongoose.Schema(
 
     lbOptIn: {
       type:    Boolean,
-      default: false,
+      default: true, // Updated to auto-enroll new users
     },
 
     lbOptInDate: {
       type:    Date,
-      default: null,
+      default: Date.now, // Timestamp when auto-enrolled
     },
 
     googleId: {
@@ -129,7 +129,7 @@ userSchema.methods.toPublicJSON = function () {
     appInstalled:   this.appInstalled,
     appInstalledAt: this.appInstalledAt,
     appInstalledOn: this.appInstalledOn,
-    lbOptIn:        this.lbOptIn,
+    lbOptIn:         this.lbOptIn,
     lbOptInDate:    this.lbOptInDate,
     hasSetPassword: this.hasSetPassword,
     lastLogin:      this.lastLogin,

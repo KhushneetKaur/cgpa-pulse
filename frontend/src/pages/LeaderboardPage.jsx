@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTheme } from "../context/ThemeContext";
 import { BRANCHES } from "../data/branches";
@@ -14,15 +14,26 @@ function getMedal(idx) {
 
 export default function LeaderboardPage() {
   const { user, branch, cgpa, lbData, lbOptIn, toggleLbOptIn, fetchLeaderboard } = useAppData();
-  const { c, dark, btn, cardSty, scoreClr } = useTheme();
+  const { c, btn, cardSty, scoreClr } = useTheme();
 
+  const [activeTab, setActiveTab] = useState("overall");
   const [showOptInModal, setShowOptInModal] = useState(false);
   const [optOutErr, setOptOutErr] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Safely extract array regardless of initial context state
-  const entries = Array.isArray(lbData) ? lbData : (lbData?.leaderboard || []);
+  const entries = useMemo(() => {
+    return Array.isArray(lbData) ? lbData : (lbData?.leaderboard || []);
+  }, [lbData]);
+
+  // Derived filtered arrays for overall vs department
+  const branchEntries = useMemo(() => {
+    if (!branch) return [];
+    return entries.filter(e => (e.branch || e.branchCode) === branch);
+  }, [entries, branch]);
+
+  const displayEntries = activeTab === "branch" ? branchEntries : entries;
 
   // Fetch leaderboard data when component mounts or opt-in status updates
   useEffect(() => {
@@ -74,27 +85,21 @@ export default function LeaderboardPage() {
     <div style={cardSty()}>
 
       {/* Header */}
-      <div
-        className="lb-header-row"
-        style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 10 }}
-      >
+      <div className="lb-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
         <div>
           <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: c.text }}>
             🏆 CGPA Leaderboard
           </p>
           <p style={{ margin: 0, fontSize: 13, color: c.sub }}>
-            Anonymous opt-in ranking
+            Auto-enrolled on first semester · opt out after 45 days
           </p>
         </div>
-
         <div>
           <button
             onClick={handleToggle}
             disabled={isSubmitting}
-            aria-busy={isSubmitting}
             style={{
-              ...btn("ghost"),
-              fontSize:    12,
+              ...btn("ghost"), fontSize: 12,
               borderColor: lbOptIn ? c.ok : c.border,
               color:       lbOptIn ? c.ok : c.sub,
               fontWeight:  lbOptIn ? 600 : 400,
@@ -102,61 +107,98 @@ export default function LeaderboardPage() {
               cursor:      isSubmitting ? "not-allowed" : "pointer",
             }}
           >
-            {isSubmitting ? "Updating..." : lbOptIn ? "✓ You're on the board · Opt out" : "Add my CGPA to the board"}
+            {isSubmitting
+              ? "Updating..."
+              : lbOptIn
+              ? "✓ On board · Opt out"
+              : "Join leaderboard"}
           </button>
-          {optOutErr && (
-            <p style={{ margin: "6px 0 0", fontSize: 11, color: c.bad, fontWeight: 500 }}>
-              {optOutErr}
-            </p>
-          )}
+          {optOutErr && <p style={{ margin: "6px 0 0", fontSize: 11, color: c.bad, fontWeight: 500 }}>{optOutErr}</p>}
         </div>
       </div>
 
       {/* Your standing */}
       {cgpa && (
-        <div
-          className="lb-your-standing"
-          style={{
-            padding: "10px 14px", background: c.accentLt,
-            border: `1px solid ${c.accentTxt}44`, borderRadius: 8,
-            marginBottom: 14, display: "flex", alignItems: "center", gap: 12,
-          }}
-        >
+        <div style={{ padding: "10px 14px", background: c.accentLt, border: `1px solid ${c.accentTxt}44`, borderRadius: 8, marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
           <div>
             <p style={{ margin: 0, fontSize: 11, color: c.sub }}>
               Your CGPA ({BRANCHES[branch]?.short || branch})
             </p>
-            <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: scoreClr(cgpa) }}>
-              {cgpa}
-            </p>
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: scoreClr(cgpa) }}>{cgpa}</p>
           </div>
           <p style={{ margin: 0, fontSize: 12, color: c.sub, flex: 1 }}>
             {lbOptIn
               ? "Your score is visible on the leaderboard below."
-              : "Click 'Add my CGPA' above to appear on the leaderboard."}
+              : "Save your first semester to appear automatically!"}
           </p>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{ display: "flex", borderBottom: `2px solid ${c.border}`, marginBottom: 16 }}>
+        {[
+          { key: "overall", label: "🌐 Overall" },
+          { key: "branch",  label: `🎓 ${BRANCHES[branch]?.short || "Dept"}` },
+        ].map(t => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            style={{
+              padding:      "8px 18px",
+              background:   "transparent",
+              border:       "none",
+              borderBottom: activeTab === t.key
+                ? `2px solid ${c.accent}`
+                : "2px solid transparent",
+              marginBottom: -2,
+              color:        activeTab === t.key ? c.accent : c.sub,
+              fontWeight:   activeTab === t.key ? 700 : 400,
+              fontSize:     13,
+              cursor:       "pointer",
+              fontFamily:   "inherit",
+              transition:   "all 0.15s",
+            }}
+          >
+            {t.label}
+            {t.key === "branch" && branchEntries.length > 0 && (
+              <span style={{ marginLeft: 6, fontSize: 10, background: c.accent, color: "#fff", borderRadius: 99, padding: "1px 6px" }}>
+                {branchEntries.length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Department legend — branch tab only */}
+      {activeTab === "branch" && (
+        <div style={{ fontSize: 11, color: c.muted, marginBottom: 10 }}>
+          Showing students from {BRANCHES[branch]?.name || branch}
         </div>
       )}
 
       {/* List */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "2rem 0" }}>
-          <p style={{ color: c.sub, fontSize: 13, margin: 0 }}>Loading leaderboard entries...</p>
+        <div style={{ textAlign: "center", padding: "2rem 0", color: c.sub, fontSize: 13 }}>
+          Loading leaderboard...
         </div>
-      ) : entries.length === 0 ? (
+      ) : displayEntries.length === 0 ? (
         <div style={{ textAlign: "center", padding: "2rem 0" }}>
           <p style={{ fontSize: 32, margin: "0 0 8px" }}>🏅</p>
           <p style={{ color: c.sub,   fontSize: 13, margin: 0 }}>No entries yet.</p>
-          <p style={{ color: c.muted, fontSize: 12, margin: "4px 0 0" }}>Be the first to opt in!</p>
+          <p style={{ color: c.muted, fontSize: 12, margin: "4px 0 0" }}>
+            {activeTab === "branch"
+              ? `Be the first from ${BRANCHES[branch]?.short || "your department"}!`
+              : "Save your first semester to appear here!"}
+          </p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {entries.map((entry, idx) => (
+          {displayEntries.map((entry, idx) => (
             <LeaderboardRow
-              key={entry._id || entry.id || `${entry.username}-${entry.branch}-${idx}`}
+              key={entry.id || `${entry.username}-${entry.branch}-${idx}`}
               entry={entry}
               idx={idx}
-              isMe={entry.username === user?.username || entry.userId === user?._id}
+              isMe={entry.username === user?.username}
             />
           ))}
         </div>
@@ -166,7 +208,6 @@ export default function LeaderboardPage() {
         <LeaderboardOptInModal
           onConfirm={handleConfirmOptIn}
           onCancel={() => setShowOptInModal(false)}
-          isSubmitting={isSubmitting}
         />
       )}
     </div>
@@ -211,7 +252,7 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
         {medal || `#${idx + 1}`}
       </span>
 
-      {/* Username + branch */}
+      {/* Username + department */}
       <div className="lb-info">
         <p style={{ margin: 0, fontSize: 13, fontWeight: isMe ? 700 : 400, color: isMe ? c.accentTxt : c.text }}>
           {username}

@@ -4,6 +4,7 @@ import app      from "./src/app.js";
 import { connectDB }    from "./src/config/db.js";
 import { validateEnv }  from "./src/config/env.js";
 import { logger }       from "./src/config/logger.js";
+import User             from "./src/models/User.js"; 
 
 validateEnv();
 
@@ -18,6 +19,26 @@ process.on("unhandledRejection", (reason) => {
   process.exit(1);
 });
 
+// ── One-time auto enrollment migration ──────────────────────────────────────
+async function autoMigrateLeaderboardOptIn() {
+  try {
+    // Force update ALL users in localhost database
+    const result = await User.updateMany(
+      {}, // Empty filter = targets every user in DB
+      { 
+        $set: { 
+          lbOptIn: true, 
+          lbOptInDate: new Date() 
+        } 
+      }
+    );
+    
+    logger.info(`[Migration] Updated ${result.modifiedCount} users to lbOptIn: true`);
+  } catch (error) {
+    logger.error("[Migration Error] Failed to update users:", error);
+  }
+}
+
 const PORT = process.env.PORT || 5000;
 
 async function startServer() {
@@ -26,6 +47,9 @@ async function startServer() {
     app.set("trust proxy", 1);
 
     await connectDB();
+
+    // Auto-enroll all existing users who haven't explicitly set opt-in status
+    await autoMigrateLeaderboardOptIn();
 
     const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);

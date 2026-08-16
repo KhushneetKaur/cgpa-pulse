@@ -2,50 +2,144 @@ import Leaderboard from "../models/Leaderboard.js";
 import User        from "../models/User.js";
 
 // ── Get leaderboard entries ───────────────────────────────────────────────────
-// branch = "ALL" returns global, otherwise filters by branch
+// Uses cached Leaderboard entry if populated; falls back to dynamic SemesterData aggregation.
 export async function getLeaderboard(branch = "ALL", limit = 50) {
-  const filter = branch === "ALL" ? {} : { branch };
-  
-  // 1. Fetch directly from Leaderboard collection first
-  let entries = await Leaderboard.find(filter)
-    .sort({ cgpa: -1, updatedAt: 1 })
-    .limit(limit)
-    .lean();
+  const parsedLimit = parseInt(limit, 10) || 50;
 
-  // 2. Fallback: If Leaderboard collection is empty, aggregate opted-in users directly
-  if (!entries || entries.length === 0) {
-    const userMatch = { 
-      lbOptIn: true, 
-      isActive: true,
-      ...(branch !== "ALL" && { branch }) 
-    };
+  const matchStage = {
+    lbOptIn: true,
+    isActive: true,
+  };
 
-    entries = await User.aggregate([
-      { $match: userMatch },
-      {
-        $lookup: {
-          from: "leaderboards",
-          localField: "_id",
-          foreignField: "userId",
-          as: "lbData"
-        }
-      },
-      { $unwind: "$lbData" },
-      {
-        $project: {
-          _id: "$lbData._id",
-          userId: "$_id",
-          username: 1,
-          branch: 1,
-          cgpa: "$lbData.cgpa",
-          semCount: "$lbData.semCount",
-          updatedAt: "$lbData.updatedAt"
-        }
-      },
-      { $sort: { cgpa: -1, updatedAt: 1 } },
-      { $limit: limit }
-    ]);
+  if (branch && branch !== "ALL") {
+    matchStage.branch = branch;
   }
+
+  const entries = await User.aggregate([
+    { 
+      $match: matchStage 
+    },
+    // 1. Join cached Leaderboard document
+    {
+      $lookup: {
+        from: "leaderboards",
+        localField: "_id",
+        foreignField: "userId",
+        as: "lbData"
+      }
+    },
+    { 
+      $unwind: { 
+        path: "$lbData", 
+        preserveNullAndEmptyArrays: true 
+      } 
+    },
+    // 2. Join SemesterData documents for unsynced users
+    {
+      $lookup: {
+        from: "semesterdatas",
+        localField: "_id",
+        foreignField: "userId",
+        as: "semData"
+      }
+    },
+    // 3. Filter valid semester records (where sgpa > 0)
+    {
+      $addFields: {
+        validSems: {
+          $filter: {
+            input: "$semData",
+            as: "sem",
+            cond: {
+              $and: [
+                { $ne: ["$$sem.sgpa", null] },
+                { $gt: ["$$sem.sgpa", 0] }
+              ]
+            }
+          }
+        }
+      }
+    },
+    // 4. Calculate weighted sum and total credits as dynamic fallback
+    {
+      $addFields: {
+        calcSemCount: { $size: "$validSems" },
+        calcTotalCredits: {
+          $sum: {
+            $map: {
+              input: "$validSems",
+              as: "s",
+              in: { $cond: [{ $gt: ["$$s.credits", 0] }, "$$s.credits", 1] }
+            }
+          }
+        },
+        calcWeightedSum: {
+          $reduce: {
+            input: "$validSems",
+            initialValue: 0,
+            in: {
+              $add: [
+                "$$value",
+                {
+                  $multiply: [
+                    "$$this.sgpa",
+                    { $cond: [{ $gt: ["$$this.credits", 0] }, "$$this.credits", 1] }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    // 5. Compute fallback dynamic CGPA rounded to 2 decimal places
+    {
+      $addFields: {
+        dynamicCgpa: {
+          $cond: [
+            { $gt: ["$calcTotalCredits", 0] },
+            {
+              $round: [
+                { $divide: ["$calcWeightedSum", "$calcTotalCredits"] },
+                2
+              ]
+            },
+            0
+          ]
+        }
+      }
+    },
+    // 6. Project result: Use cached lbData.cgpa if > 0, otherwise dynamic fallback
+    {
+      $project: {
+        _id: { $ifNull: ["$lbData._id", "$_id"] },
+        userId: "$_id",
+        username: 1,
+        branch: 1,
+        cgpa: {
+          $cond: [
+            { $gt: [{ $ifNull: ["$lbData.cgpa", 0] }, 0] },
+            "$lbData.cgpa",
+            "$dynamicCgpa"
+          ]
+        },
+        semCount: {
+          $cond: [
+            { $gt: [{ $ifNull: ["$lbData.semCount", 0] }, 0] },
+            "$lbData.semCount",
+            "$calcSemCount"
+          ]
+        },
+        updatedAt: { $ifNull: ["$lbData.updatedAt", "$updatedAt"] }
+      }
+    },
+    { 
+      $sort: { cgpa: -1, updatedAt: 1 } 
+    },
+    { 
+      $limit: parsedLimit 
+    }
+  ]);
 
   return entries;
 }

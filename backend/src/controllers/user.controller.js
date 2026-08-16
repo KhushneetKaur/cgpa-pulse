@@ -122,7 +122,7 @@ export async function updateLbOptIn(req, res, next) {
 
     if (!optIn && user.lbOptIn) {
       if (user.lbOptInDate) {
-        const daysLeft = 30 - getDaysSince(user.lbOptInDate);
+        const daysLeft = 45 - getDaysSince(user.lbOptInDate);
         if (daysLeft > 0)
           throw ApiError.badRequest(
             `You can opt out in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
