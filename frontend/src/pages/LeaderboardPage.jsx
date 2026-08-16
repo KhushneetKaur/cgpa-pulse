@@ -135,7 +135,7 @@ export default function LeaderboardPage() {
       )}
 
       {/* Tabs */}
-      <div style={{ display: "flex", borderBottom: `2px solid ${c.border}`, marginBottom: 16 }}>
+      <div style={{ display: "flex", borderBottom: `2px solid ${c.border}`, marginBottom: 12 }}>
         {[
           { key: "overall", label: "🌐 Overall" },
           { key: "branch",  label: `🎓 ${BRANCHES[branch]?.short || "Dept"}` },
@@ -169,8 +169,12 @@ export default function LeaderboardPage() {
         ))}
       </div>
 
-      {/* Department legend — branch tab only */}
-      {activeTab === "branch" && (
+      {/* Department / Overall legends */}
+      {activeTab === "overall" ? (
+        <div style={{ fontSize: 11, color: c.muted, marginBottom: 10 }}>
+          📌 Displaying top 50 rankings across all engineering branches
+        </div>
+      ) : (
         <div style={{ fontSize: 11, color: c.muted, marginBottom: 10 }}>
           Showing students from {BRANCHES[branch]?.name || branch}
         </div>

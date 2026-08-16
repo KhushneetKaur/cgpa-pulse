@@ -6,6 +6,15 @@ import { sendResponse }   from "../utils/ApiResponse.js";
 export async function getLeaderboardHandler(req, res, next) {
   try {
     const entries = await getLeaderboard(req.query.branch, req.query.limit);
-    sendResponse(res, 200, { entries, count: entries.length }, "Leaderboard fetched successfully");
+    sendResponse(
+      res, 
+      200, 
+      { 
+        entries, 
+        count: entries.length,
+        notice: "Displaying top 50 rankings across engineering branches"
+      }, 
+      "Leaderboard fetched successfully"
+    );
   } catch (err) { next(err); }
 }
