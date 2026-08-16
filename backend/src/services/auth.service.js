@@ -52,63 +52,76 @@ export function generateRefreshToken(userId) {
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
 export async function googleAuth(accessToken) {
-  const googleRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  // 1. Fetch Google User Info with a strict 5-second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  let googleRes;
+  try {
+    googleRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err.name === "AbortError") throw ApiError.badRequest("Google auth timed out — please try again");
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   if (!googleRes.ok) throw ApiError.unauthorized("Invalid Google token");
 
   const { id: googleId, email, name } = await googleRes.json();
+  const normalizedEmail = email.toLowerCase();
 
-  let user = await User.findOne({
-    $or: [{ googleId }, { email: email.toLowerCase() }],
-  });
+  // 2. Fast lookup by email first, fallback to googleId
+  let user = await User.findOne({ email: normalizedEmail }).lean();
+  if (!user && googleId) {
+    user = await User.findOne({ googleId }).lean();
+  }
 
   const isNewUser = !user;
 
   if (user) {
-    if (!user.googleId) user.googleId = googleId;
-    user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
+    // 3. Fire-and-forget non-blocking background update for lastLogin/googleId
+    User.updateOne(
+      { _id: user._id },
+      { 
+        $set: { 
+          lastLogin: new Date(),
+          ...(user.googleId ? {} : { googleId }) 
+        } 
+      }
+    ).catch(err => console.error("Background user update error:", err));
   } else {
-    const base = (name || email.split("@")[0])
+    // 4. Fast single-shot username generation
+    const base = (name || normalizedEmail.split("@")[0])
       .toLowerCase()
       .replace(/\s+/g, "_")
       .replace(/[^a-z0-9_]/g, "")
-      .slice(0, 25) || "user";
+      .slice(0, 15) || "user";
 
-    let username = base;
-    let counter = 1;
-    const MAX_RETRIES = 10;
+    const randomSuffix = crypto.randomInt(1000, 9999);
+    const username = `${base.slice(0, 10)}_${randomSuffix}`;
 
-    while (counter <= MAX_RETRIES) {
-      try {
-        user = await User.create({
-          username,
-          email: email.toLowerCase(),
-          googleId,
-          passwordHash: crypto.randomBytes(32).toString("hex"),
-          isEmailVerified: true,
-          hasSetPassword: false,
-          role: "student",
-          lastLogin: new Date(),
-        });
-        break;
-      } catch (err) {
-        if (err.code === 11000 && err.keyPattern?.username) {
-          username = `${base}${counter++}`;
-        } else {
-          throw err;
-        }
-      }
-    }
-
-    if (!user) throw ApiError.internal("Failed to generate a unique username — try again");
+    user = await User.create({
+      username,
+      email: normalizedEmail,
+      googleId,
+      passwordHash: crypto.randomBytes(16).toString("hex"),
+      isEmailVerified: true,
+      hasSetPassword: false,
+      role: "student",
+      lastLogin: new Date(),
+    });
   }
 
+  const userId = user._id;
+
   return {
-    user: user.toPublicJSON(),
-    accessToken: generateAccessToken(user._id),
-    refreshToken: generateRefreshToken(user._id),
+    user: typeof user.toPublicJSON === "function" ? user.toPublicJSON() : user,
+    accessToken: generateAccessToken(userId),
+    refreshToken: generateRefreshToken(userId),
     isNewUser,
   };
 }
@@ -117,7 +130,7 @@ export async function googleAuth(accessToken) {
 export async function getCurrentUser(userId) {
   const user = await User.findById(userId);
   if (!user) throw ApiError.notFound("User not found");
-  return user.toPublicJSON();
+  return typeof user.toPublicJSON === "function" ? user.toPublicJSON() : user;
 }
 
 // ── Refresh tokens ────────────────────────────────────────────────────────────
@@ -133,11 +146,12 @@ export async function refreshAccessToken(refreshToken) {
 
   if (decoded.type !== "refresh") throw ApiError.unauthorized("Invalid token type");
 
-  const user = await User.findById(decoded.id);
+  // Fast lean lookup
+  const user = await User.findById(decoded.id).lean();
   if (!user || !user.isActive) throw ApiError.unauthorized("User not found");
 
   return {
-    user: user.toPublicJSON(),
+    user: typeof user.toPublicJSON === "function" ? user.toPublicJSON() : user,
     accessToken: generateAccessToken(user._id),
     refreshToken: generateRefreshToken(user._id),
   };

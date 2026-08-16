@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { logger } from "./logger.js";
+import User from "../models/User.js"; 
 
 export async function connectDB() {
   try {
@@ -10,6 +11,14 @@ export async function connectDB() {
     });
 
     logger.info(`MongoDB connected: ${conn.connection.host}`);
+
+    // Create indexes for fast Google Auth lookups
+    User.collection.createIndex({ email: 1 }, { unique: true }).catch((err) => {
+      logger.error("Failed to create email index:", err);
+    });
+    User.collection.createIndex({ googleId: 1 }, { sparse: true }).catch((err) => {
+      logger.error("Failed to create googleId index:", err);
+    });
 
     // Log when connection drops
     mongoose.connection.on("disconnected", () => {
@@ -22,6 +31,6 @@ export async function connectDB() {
 
   } catch (err) {
     logger.error("MongoDB initial connection failed:", err.message);
-    throw err;  // let server.js handle the exit
+    throw err;  
   }
 }
