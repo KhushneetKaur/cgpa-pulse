@@ -317,14 +317,12 @@ html, body {
     row-gap: 4px !important;
   }
   .lb-rank  { grid-area: rank; }
+  .lb-info  { grid-area: info; min-width: 0; }
   .lb-badge { grid-area: badge; justify-self: start; }
   .lb-cgpa  { grid-area: cgpa; font-size: 15px !important; }
-  .lb-info  { 
-    grid-area: info;
-    min-width: 0;
-    overflow: hidden;
-  }
+  
   .lb-info p {
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -345,7 +343,6 @@ html, body {
 /* ── Compact Mini Screens (≤380px) ──────────────────────────────────────── */
 @media (max-width: 380px) {
   .branch-select-grid,
-  .summary-cards-grid,
   .target-pct-table {
     grid-template-columns: 1fr !important;
   }
