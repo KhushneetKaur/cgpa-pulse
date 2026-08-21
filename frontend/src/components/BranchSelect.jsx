@@ -1,35 +1,50 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { useTheme } from "../context/ThemeContext";
-import { BRANCHES } from "../data/branches";
-import MRSPTULogo from "./MRSPTULogo";
+import { useTheme }   from "../context/ThemeContext";
+import { BRANCHES }          from "../data/branches";
+import { PHARMACY_BRANCHES } from "../data/pharmacyBranches";
+import MRSPTULogo   from "./MRSPTULogo";
 import SkeletonCard from "./SkeletonCard";
 
-// Module-level constants — never recreated
-const BRANCH_ENTRIES = Object.entries(BRANCHES);
-const SKELETON_ITEMS = [1, 2, 3, 4, 5, 6];
+// Module-level — never recreated
+const ENG_BRANCH_ENTRIES   = Object.entries(BRANCHES);
+const PHARM_BRANCH_ENTRIES = Object.entries(PHARMACY_BRANCHES);
+const SKELETON_ITEMS       = [1, 2, 3, 4, 5, 6];
+
+const COPY = {
+  engineering: {
+    heading:    "Select Your Branch",
+    subheading: "Choose your engineering discipline to load the correct subjects and marks scheme.",
+    footer:     "You can switch between branches anytime from the top bar. Progress is saved separately for each branch.",
+  },
+  pharmacy: {
+    heading:    "Select Your Programme",
+    subheading: "Choose your pharmacy programme to load the correct subjects and grading scheme.",
+    footer:     "You can switch programmes anytime from your profile. Progress is saved separately for each programme.",
+  },
+};
 
 export default function BranchSelect() {
-  const { setBranch, hist, authLoading } = useAppData();
+  const { setBranch, hist, authLoading, faculty } = useAppData();
   const { c, dark, cardSty } = useTheme();
 
-  const card = cardSty(); 
+  const card = cardSty();
+  const copy = COPY[faculty] || COPY.engineering;
 
-  // Stable handler 
   const handleSelect = useCallback((key) => setBranch(key), [setBranch]);
 
-  // Memoize branch summaries 
-  const branchSummaries = useMemo(() =>
-    BRANCH_ENTRIES.map(([key, b]) => {
+  // faculty is the stable dep — ENG/PHARM_BRANCH_ENTRIES are module-level constants
+  const branchSummaries = useMemo(() => {
+    const entries = faculty === "pharmacy" ? PHARM_BRANCH_ENTRIES : ENG_BRANCH_ENTRIES;
+    return entries.map(([key, b]) => {
       const branchHist = hist[key];
       const savedSems  = branchHist
         ? Object.values(branchHist).filter(s => s?.sgpa).length
         : 0;
       const totalSems = Object.keys(b.semesters).length;
       return { key, b, savedSems, totalSems };
-    }),
-    [hist]
-  );
+    });
+  }, [faculty, hist]);
 
   if (authLoading) {
     return (
@@ -53,10 +68,10 @@ export default function BranchSelect() {
       </div>
 
       <h2 style={{ fontSize: 18, fontWeight: 600, color: c.text, margin: "0 0 6px" }}>
-        Select Your Branch
+        {copy.heading}
       </h2>
       <p style={{ fontSize: 13, color: c.sub, margin: "0 0 28px", lineHeight: 1.5 }}>
-        Choose your engineering discipline to load the correct subjects and marks scheme.
+        {copy.subheading}
       </p>
 
       <div
@@ -76,14 +91,13 @@ export default function BranchSelect() {
       </div>
 
       <p style={{ fontSize: 11, color: c.muted, marginTop: 24, lineHeight: 1.5 }}>
-        You can switch between branches anytime from the top bar.
-        Progress is saved separately for each branch.
+        {copy.footer}
       </p>
     </div>
   );
 }
 
-// ── Branch card  ──────────────────
+// ── Branch card — works for both engineering (short="CSE") and pharmacy (short="B.Pharm") ──
 const BranchCard = memo(function BranchCard({ branchKey, branch, savedSems, totalSems, onSelect }) {
   const { c } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -92,14 +106,19 @@ const BranchCard = memo(function BranchCard({ branchKey, branch, savedSems, tota
   const isComplete  = savedSems === totalSems;
   const progress    = Math.round((savedSems / totalSems) * 100);
 
-  const handleClick     = useCallback(() => onSelect(branchKey), [onSelect, branchKey]);
-  const handleHoverOn   = useCallback(() => setIsHovered(true),  []);
-  const handleHoverOff  = useCallback(() => setIsHovered(false), []);
+  // "Year" for Pharm.D, "Sem" for everything else
+  const unit = (branch.semLabel || "Sem").toLowerCase();
+
+  const handleClick    = useCallback(() => onSelect(branchKey), [onSelect, branchKey]);
+  const handleHoverOn  = useCallback(() => setIsHovered(true),  []);
+  const handleHoverOff = useCallback(() => setIsHovered(false), []);
 
   const cardLabel = `${branch.name} (${branch.short}). ${
     hasProgress
-      ? isComplete ? "All semesters saved." : `${savedSems} of ${totalSems} semesters saved.`
-      : "No semesters saved."
+      ? isComplete
+        ? `All ${unit}s saved.`
+        : `${savedSems} of ${totalSems} ${unit}s saved.`
+      : `No ${unit}s saved.`
   }`;
 
   return (
@@ -111,19 +130,19 @@ const BranchCard = memo(function BranchCard({ branchKey, branch, savedSems, tota
       onFocus={handleHoverOn}
       onBlur={handleHoverOff}
       style={{
-        padding:         "16px 12px",
-        background:      isHovered ? `${branch.color}11` : c.hover,
-        border:          `2px solid ${isHovered ? branch.color : c.border}`,
-        borderRadius:    10,
-        cursor:          "pointer",
-        display:         "flex",
-        flexDirection:   "column",
-        alignItems:      "center",
-        gap:             6,
-        transition:      "border-color 0.15s, background 0.15s, transform 0.15s",
-        transform:       isHovered ? "translateY(-2px)" : "none",
-        width:           "100%",
-        outline:         "none",
+        padding:       "16px 12px",
+        background:    isHovered ? `${branch.color}11` : c.hover,
+        border:        `2px solid ${isHovered ? branch.color : c.border}`,
+        borderRadius:  10,
+        cursor:        "pointer",
+        display:       "flex",
+        flexDirection: "column",
+        alignItems:    "center",
+        gap:           6,
+        transition:    "border-color 0.15s, background 0.15s, transform 0.15s",
+        transform:     isHovered ? "translateY(-2px)" : "none",
+        width:         "100%",
+        outline:       "none",
       }}
     >
       <span style={{ fontSize: 22, fontWeight: 700, color: branch.color }}>
@@ -145,7 +164,7 @@ const BranchCard = memo(function BranchCard({ branchKey, branch, savedSems, tota
             <div style={{ height: "100%", width: `${progress}%`, background: isComplete ? c.ok : branch.color, borderRadius: 2, transition: "width 0.3s ease" }} />
           </div>
           <span style={{ fontSize: 10, color: isComplete ? c.ok : c.muted, fontWeight: isComplete ? 600 : 400 }}>
-            {isComplete ? "All semesters saved ✓" : `${savedSems} / ${totalSems} saved`}
+            {isComplete ? `All ${unit}s saved ✓` : `${savedSems} / ${totalSems} saved`}
           </span>
         </div>
       )}

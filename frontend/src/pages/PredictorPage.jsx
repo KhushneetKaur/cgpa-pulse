@@ -1,51 +1,41 @@
 import { memo, useMemo } from "react";
-import { usePredictor } from "../hooks/usePredictor";
-import { useTheme } from "../context/ThemeContext";
-import { getMaxMarks } from "../data/gradeTable";
+import { usePredictor }  from "../hooks/usePredictor";
+import { useTheme }      from "../context/ThemeContext";
+import { useAppData }    from "../context/AppDataContext";
+import { getMaxMarks }   from "../data/gradeTable";
 
-// ── Static constants — extracted so they're never recreated ──────────────────
 const COL_HEADERS = ["Subject", "", "Internal", "External needed per grade"];
 
-// ── Grade chip — memoized so it only re-renders when its own props change ────
 const GradeChip = memo(function GradeChip({ g, isTarget, mx, c, scoreClr }) {
   return (
     <div style={{
-      display:    "flex",
-      alignItems: "center",
-      gap:        4,
-      padding:    "3px 8px",
-      borderRadius: 6,
-      fontSize:   11,
-      fontWeight: isTarget ? 700 : 400,
-      background: !g.achievable ? `${c.bad}10` : isTarget ? `${c.ok}18` : c.hover,
-      border:     `1px solid ${!g.achievable ? `${c.bad}40` : isTarget ? `${c.ok}55` : c.border}`,
-      color:      !g.achievable ? c.bad : isTarget ? c.ok : c.sub,
+      display: "flex", alignItems: "center", gap: 4,
+      padding: "3px 8px", borderRadius: 6, fontSize: 11,
+      fontWeight:  isTarget ? 700 : 400,
+      background:  !g.achievable ? `${c.bad}10` : isTarget ? `${c.ok}18` : c.hover,
+      border:      `1px solid ${!g.achievable ? `${c.bad}40` : isTarget ? `${c.ok}55` : c.border}`,
+      color:       !g.achievable ? c.bad : isTarget ? c.ok : c.sub,
     }}>
       <span style={{ fontWeight: 700, color: !g.achievable ? c.bad : scoreClr(g.points), minWidth: 18 }}>
         {g.grade}
       </span>
       <span style={{ color: c.muted }}>→</span>
       <span>
-        {g.achievable
-          ? g.minExt === 0 ? "✓ done" : `≥${g.minExt}/${mx.ext}`
-          : "not possible"}
+        {g.achievable ? (g.minExt === 0 ? "✓ done" : `≥${g.minExt}/${mx.ext}`) : "not possible"}
       </span>
       {isTarget && <span style={{ fontSize: 9, color: c.ok }}>★</span>}
     </div>
   );
 });
 
-// ── Semester pill — memoized ──────────────────────────────────────────────────
-const SemPill = memo(function SemPill({ s, active, onClick, c }) {
+// semLabel prop added — shows "Year 1" for Pharm.D, "Sem 1" for everything else
+const SemPill = memo(function SemPill({ s, active, onClick, semLabel, c }) {
   return (
     <button
       onClick={onClick}
       style={{
-        padding:    "6px 14px",
-        borderRadius: 99,
-        fontSize:   12,
-        cursor:     "pointer",
-        fontFamily: "inherit",
+        padding: "6px 14px", borderRadius: 99, fontSize: 12,
+        cursor: "pointer", fontFamily: "inherit",
         fontWeight: active ? 700 : 400,
         border:     `1px solid ${active ? c.accent : c.border}`,
         background: active ? c.accentLt : "transparent",
@@ -53,39 +43,30 @@ const SemPill = memo(function SemPill({ s, active, onClick, c }) {
         transition: "all 0.15s",
       }}
     >
-      Sem {s}
+      {semLabel} {s}
     </button>
   );
 });
 
-// ── Main component ────────────────────────────────────────────────────────────
 export default function PredictorPage() {
   const { c, cardSty, scoreClr, inp } = useTheme();
 
+  // Read semLabel for Pharm.D "Year" vs "Sem" label
+  const { branch, faculty } = useAppData();
+
   const {
-    semKeys,
-    predSem,
-    predDesiredSGPA,
-    predInt,
-    subs,
-    breakdown,
-    anyIntFilled,
-    selectPredSem,
-    setPredDesiredSGPA,
-    setPredIntForSub,
-    getDisplayName,
+    semKeys, predSem, predDesiredSGPA, predInt,
+    subs, breakdown, anyIntFilled,
+    selectPredSem, setPredDesiredSGPA, setPredIntForSub,
+    getDisplayName, semLabel,   // semLabel now exposed from usePredictor
   } = usePredictor();
 
-  // Convert subResults array to map for O(1) lookup instead of find() per row
   const subResultMap = useMemo(() => {
     if (!breakdown?.subResults) return {};
     return Object.fromEntries(breakdown.subResults.map(r => [r.sub.code, r]));
   }, [breakdown?.subResults]);
 
-  const totalCredits = useMemo(
-    () => subs.reduce((a, s) => a + s.credits, 0),
-    [subs]
-  );
+  const totalCredits = useMemo(() => subs.reduce((a, s) => a + s.credits, 0), [subs]);
 
   return (
     <div style={cardSty()}>
@@ -101,7 +82,7 @@ export default function PredictorPage() {
         </p>
       </div>
 
-      {/* Semester pills */}
+      {/* Semester / Year pills */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
         {semKeys.map(s => (
           <SemPill
@@ -109,6 +90,7 @@ export default function PredictorPage() {
             s={s}
             active={predSem === s}
             onClick={() => selectPredSem(s)}
+            semLabel={semLabel}  // "Sem" or "Year"
             c={c}
           />
         ))}
@@ -117,30 +99,20 @@ export default function PredictorPage() {
       {!predSem ? (
         <div style={{ textAlign: "center", padding: "2.5rem 0", color: c.muted, fontSize: 13 }}>
           <p style={{ fontSize: 32, margin: "0 0 10px" }}>👆</p>
-          Select a semester above to start predicting.
+          Select a {semLabel?.toLowerCase() || "semester"} above to start predicting.
         </div>
       ) : (
         <>
-          {/* Top grid: desired SGPA + range */}
           <div
             className="predictor-top-grid"
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}
           >
-            {/* Desired SGPA */}
-            <div style={{
-              padding:      "14px",
-              background:   c.accentLt,
-              borderRadius: 12,
-              border:       `1px solid ${c.accent}33`,
-            }}>
+            <div style={{ padding: "14px", background: c.accentLt, borderRadius: 12, border: `1px solid ${c.accent}33` }}>
               <p style={{ margin: "0 0 8px", fontSize: 10, color: c.sub, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>
                 Desired SGPA
               </p>
               <input
-                type="number"
-                min="0"
-                max="10"
-                step="0.01"
+                type="number" min="0" max="10" step="0.01"
                 value={predDesiredSGPA}
                 onChange={e => setPredDesiredSGPA(e.target.value)}
                 placeholder="e.g. 8.0"
@@ -153,13 +125,12 @@ export default function PredictorPage() {
                     {breakdown.targetGrade.grade} ({breakdown.targetGrade.points} pts)
                   </strong>
                   <span style={{ color: c.muted, fontSize: 10, display: "block", marginTop: 2 }}>
-                    not necessarily A+
+                    not necessarily the top grade
                   </span>
                 </p>
               )}
             </div>
 
-            {/* SGPA range */}
             <div style={{ padding: "14px", background: c.hover, borderRadius: 12, border: `1px solid ${c.border}` }}>
               <p style={{ margin: "0 0 8px", fontSize: 10, color: c.sub, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8 }}>
                 Your SGPA Range
@@ -172,8 +143,8 @@ export default function PredictorPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   {[
                     { label: "WORST", value: breakdown?.worstCaseSGPA, sub: "0 in external" },
-                    null, // divider
-                    { label: "BEST",  value: breakdown?.bestCaseSGPA,  sub: "max external" },
+                    null,
+                    { label: "BEST",  value: breakdown?.bestCaseSGPA,  sub: "max external"  },
                   ].map((item, i) => {
                     if (!item) return (
                       <div key="div" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
@@ -197,35 +168,15 @@ export default function PredictorPage() {
             </div>
           </div>
 
-          {/* Marks scheme note */}
-          <div style={{
-            padding:      "8px 12px",
-            background:   c.hover,
-            border:       `1px solid ${c.border}`,
-            borderRadius: 8,
-            marginBottom: 14,
-            fontSize:     11,
-            color:        c.sub,
-            display:      "flex",
-            gap:          16,
-            flexWrap:     "wrap",
-          }}>
-            <span><strong style={{ color: c.text }}>Sem {predSem}</strong> · {totalCredits} credits</span>
+          <div style={{ padding: "8px 12px", background: c.hover, border: `1px solid ${c.border}`, borderRadius: 8, marginBottom: 14, fontSize: 11, color: c.sub, display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <span><strong style={{ color: c.text }}>{semLabel} {predSem}</strong> · {totalCredits} credits</span>
             <span><strong style={{ color: c.accent }}>Theory:</strong> Int 40 + Ext 60</span>
             <span><strong style={{ color: c.ok }}>Lab:</strong> Int 60 + Ext 40</span>
           </div>
 
-          {/* Column headers */}
           <div
             className="predictor-col-headers"
-            style={{
-              display:             "grid",
-              gridTemplateColumns: "1fr 36px 88px 1fr",
-              gap:                 8,
-              padding:             "6px 10px",
-              borderBottom:        `2px solid ${c.border}`,
-              marginBottom:        4,
-            }}
+            style={{ display: "grid", gridTemplateColumns: "1fr 36px 88px 1fr", gap: 8, padding: "6px 10px", borderBottom: `2px solid ${c.border}`, marginBottom: 4 }}
           >
             {COL_HEADERS.map(h => (
               <p key={h} style={{ margin: 0, fontSize: 10, color: c.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
@@ -234,30 +185,20 @@ export default function PredictorPage() {
             ))}
           </div>
 
-          {/* Subject rows */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             {subs.map((sub, idx) => {
               const mx     = getMaxMarks(sub.type);
               const isLab  = sub.type === "lab";
               const iRaw   = predInt[sub.code];
               const iV     = iRaw !== undefined && iRaw !== "" ? Number(iRaw) : null;
-              const result = subResultMap[sub.code]; // O(1) lookup
+              const result = subResultMap[sub.code];
 
               return (
                 <div
                   key={sub.code}
                   className="predictor-row-grid"
-                  style={{
-                    display:             "grid",
-                    gridTemplateColumns: "1fr 36px 88px 1fr",
-                    gap:                 8,
-                    padding:             "10px",
-                    borderRadius:        8,
-                    background:          idx % 2 === 0 ? `${c.hover}88` : "transparent",
-                    alignItems:          "start",
-                  }}
+                  style={{ display: "grid", gridTemplateColumns: "1fr 36px 88px 1fr", gap: 8, padding: "10px", borderRadius: 8, background: idx % 2 === 0 ? `${c.hover}88` : "transparent", alignItems: "start" }}
                 >
-                  {/* Name */}
                   <div className="pr-name">
                     <p style={{ margin: 0, fontSize: 12, color: c.text, fontWeight: 500, lineHeight: 1.3 }}>
                       {getDisplayName(sub)}
@@ -265,38 +206,23 @@ export default function PredictorPage() {
                     <p style={{ margin: 0, fontSize: 10, color: c.muted }}>{sub.credits} cr</p>
                   </div>
 
-                  {/* Type badge */}
                   <div className="pr-type" style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 3 }}>
-                    <span style={{
-                      fontSize:     9,
-                      fontWeight:   700,
-                      borderRadius: 5,
-                      padding:      "2px 5px",
-                      background:   isLab ? `${c.ok}15` : `${c.accent}10`,
-                      color:        isLab ? c.ok : c.accent,
-                      letterSpacing: 0.3,
-                    }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, borderRadius: 5, padding: "2px 5px", background: isLab ? `${c.ok}15` : `${c.accent}10`, color: isLab ? c.ok : c.accent, letterSpacing: 0.3 }}>
                       {isLab ? "LAB" : "TH"}
                     </span>
                   </div>
 
-                  {/* Internal input */}
                   <div className="pr-int">
                     <input
-                      type="number"
-                      min="0"
-                      max={mx.int}
+                      type="number" min="0" max={mx.int}
                       value={predInt[sub.code] ?? ""}
                       onChange={e => setPredIntForSub(sub.code, e.target.value)}
                       placeholder={`0–${mx.int}`}
                       style={inp({ textAlign: "center", fontSize: 13, fontWeight: 600, padding: "6px 4px" })}
                     />
-                    <p style={{ margin: "2px 0 0", fontSize: 9, color: c.muted, textAlign: "center" }}>
-                      max {mx.int}
-                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 9, color: c.muted, textAlign: "center" }}>max {mx.int}</p>
                   </div>
 
-                  {/* Grade chips */}
                   <div className="pr-chips" style={{ paddingTop: 2 }}>
                     {iV === null ? (
                       <p style={{ margin: 0, fontSize: 11, color: c.muted, paddingTop: 4 }}>← enter marks</p>

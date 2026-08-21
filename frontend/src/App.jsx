@@ -1,29 +1,31 @@
-import React, { useState, useEffect, Suspense, useCallback } from "react";
-import { AuthProvider }             from "./context/AuthContext";
-import { ThemeProvider, useTheme }  from "./context/ThemeContext";
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from "react";
+import { AuthProvider }              from "./context/AuthContext";
+import { ThemeProvider, useTheme }   from "./context/ThemeContext";
 import { AppDataProvider, useAppData } from "./context/AppDataContext";
-import { Toaster }                  from "react-hot-toast";
+import { Toaster }                   from "react-hot-toast";
 
-import NavBar              from "./components/NavBar";
-import DisclaimerModal     from "./components/DisclaimerModal";
-import QuickSGPAModal      from "./components/QuickSGPAModal";
-import BranchSelect        from "./components/BranchSelect";
-import SummaryCards        from "./components/SummaryCards";
-import UsernameSetupModal  from "./components/UsernameSetupModal";
-import BottomTabBar        from "./components/BottomTabBar";
-import OnboardingModal     from "./components/OnboardingModal";
-import InstallPromptToast  from "./components/InstallPromptToast";
+import NavBar             from "./components/NavBar";
+import DisclaimerModal    from "./components/DisclaimerModal";
+import QuickSGPAModal     from "./components/QuickSGPAModal";
+import BranchSelect       from "./components/BranchSelect";
+import SummaryCards       from "./components/SummaryCards";
+import UsernameSetupModal from "./components/UsernameSetupModal";
+import BottomTabBar       from "./components/BottomTabBar";
+import OnboardingModal    from "./components/OnboardingModal";
+import InstallPromptToast from "./components/InstallPromptToast";
 
-const LoginPage      = React.lazy(() => import("./pages/login/LoginPage"));
-const CalculatorPage = React.lazy(() => import("./pages/CalculatorPage"));
-const HistoryPage    = React.lazy(() => import("./pages/HistoryPage"));
-const TargetPage     = React.lazy(() => import("./pages/TargetPage"));
-const PredictorPage  = React.lazy(() => import("./pages/PredictorPage"));
-const BacklogsPage   = React.lazy(() => import("./pages/BacklogsPage"));
-const LeaderboardPage = React.lazy(() => import("./pages/LeaderboardPage"));
-const GradeTablePage = React.lazy(() => import("./pages/GradeTablePage"));
+// Code-split pages
+const LoginPage          = React.lazy(() => import("./pages/login/LoginPage"));
+const CalculatorPage     = React.lazy(() => import("./pages/CalculatorPage"));
+const HistoryPage        = React.lazy(() => import("./pages/HistoryPage"));
+const TargetPage         = React.lazy(() => import("./pages/TargetPage"));
+const PredictorPage      = React.lazy(() => import("./pages/PredictorPage"));
+const BacklogsPage       = React.lazy(() => import("./pages/BacklogsPage"));
+const LeaderboardPage    = React.lazy(() => import("./pages/LeaderboardPage"));
+const GradeTablePage     = React.lazy(() => import("./pages/GradeTablePage"));
+const DepartmentPickerPage = React.lazy(() => import("./pages/DepartmentPickerPage"));
 
-// ── Spinner — extracted so it's not recreated on every render ─────────────────
+// ── Spinner ───────────────────────────────────────────────────────────────────
 function Spinner({ bg }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: bg || "#0a0c16" }}>
@@ -40,6 +42,7 @@ function Spinner({ bg }) {
   );
 }
 
+// ── Root ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <AuthProvider>
@@ -52,13 +55,11 @@ export default function App() {
   );
 }
 
+// ── Shell — guards auth + data loading ───────────────────────────────────────
 function Shell() {
   const { screen, authLoading, user } = useAppData();
   const { c } = useTheme();
 
-  // Show spinner while:
-  // 1. Auth is resolving (authLoading)
-  // 2. User is set but AppDataContext hasn't finished loadUserData yet (user && screen !== "app")
   if (authLoading || (user && screen !== "app")) {
     return <Spinner bg={c?.bg} />;
   }
@@ -70,22 +71,39 @@ function Shell() {
   );
 }
 
+// ── App layout ────────────────────────────────────────────────────────────────
 function AppLayout() {
-  const { user, branch, tab, setUser, setBranch, selectSem } = useAppData();
-  const { c, dark }  = useTheme();
+  const {
+    user, branch, faculty, tab,
+    setUser, setBranch, setFaculty, selectSem,
+  } = useAppData();
+  const { c, dark } = useTheme();
 
   const [showOnboarding,     setShowOnboarding]     = useState(false);
-  const [showUsernameModal,  setShowUsernameModal]  = useState(false);
-  const [hasShownOnboarding, setHasShownOnboarding] = useState(false);
+  const [showUsernameModal,  setShowUsernameModal]   = useState(false);
+  const [hasShownOnboarding, setHasShownOnboarding]  = useState(false);
 
-  // Trigger onboarding for new users — branch is null until onboarding completes
+  // ── Main content to render ──────────────────────────────────────────────────
+  // Priority order:
+  //   1. No faculty yet → DepartmentPickerPage
+  //   2. Faculty set, no branch → BranchSelect (filtered by faculty)
+  //   3. Both set → main app
+  const mainContent = useMemo(() => {
+    if (!faculty) return "dept";
+    if (!branch)  return "branch";
+    return "app";
+  }, [faculty, branch]);
+
+  // ── Onboarding trigger ──────────────────────────────────────────────────────
+  // Only fires AFTER faculty is picked (so OnboardingModal knows which branches to show)
+  // For existing engineering users faculty is auto-set in AppDataContext — they skip this
   useEffect(() => {
-    if (!user || hasShownOnboarding) return;
+    if (!user || !faculty || hasShownOnboarding) return;
     if (!user.branch) {
       setShowOnboarding(true);
       setHasShownOnboarding(true);
     }
-  }, [user, hasShownOnboarding]);
+  }, [user, faculty, hasShownOnboarding]);
 
   const handleOnboardingDone = useCallback(async (chosenUsername, chosenBranch, chosenSem) => {
     if (chosenBranch) setBranch(chosenBranch);
@@ -129,10 +147,12 @@ function AppLayout() {
 
       <DisclaimerModal />
       <QuickSGPAModal />
-      <NavBar />
+
+      {/* NavBar hidden on dept picker — user hasn't set up yet */}
+      {faculty && <NavBar />}
 
       {showOnboarding && (
-        <OnboardingModal user={user} onDone={handleOnboardingDone} />
+        <OnboardingModal user={user} faculty={faculty} onDone={handleOnboardingDone} />
       )}
 
       {showUsernameModal && (
@@ -140,24 +160,26 @@ function AppLayout() {
       )}
 
       <main style={{ flex: 1, maxWidth: 1080, margin: "0 auto", width: "100%", padding: "1.5rem 1.25rem 2rem" }}>
-        {!branch ? (
-          <BranchSelect />
-        ) : (
-          <>
-            <SummaryCards />
-            <Suspense fallback={null}>
+        <Suspense fallback={null}>
+          {mainContent === "dept" && <DepartmentPickerPage />}
+          {mainContent === "branch" && <BranchSelect />}
+          {mainContent === "app"    && (
+            <>
+              <SummaryCards />
               <TabContent tab={tab} />
-            </Suspense>
-          </>
-        )}
+            </>
+          )}
+        </Suspense>
       </main>
 
-      <InstallPromptToast />
-      <BottomTabBar />
+      {/* Bottom bar hidden until user is fully set up */}
+      {faculty && branch && <InstallPromptToast />}
+      {faculty && branch && <BottomTabBar />}
     </div>
   );
 }
 
+// ── Tab router ────────────────────────────────────────────────────────────────
 function TabContent({ tab }) {
   switch (tab) {
     case "calculator":  return <CalculatorPage />;

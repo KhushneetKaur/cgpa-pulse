@@ -10,13 +10,17 @@ const getDaysSince = (date) =>
 
 async function syncLeaderboard(user, userId) {
   if (!user.lbOptIn || !user.branch) return;
-  const allSems = await getUserSemesters(userId, user.branch) || [];
+  const allSems = (await getUserSemesters(userId, user.branch)) || [];
+  const validSems = allSems.filter((s) => s.sgpa != null && s.sgpa > 0);
+
+  if (validSems.length === 0) return; // Only show on leaderboard if valid semesters exist
+
   await upsertLeaderboardEntry({
     userId,
     username: user.username || "Anonymous",
-    branch:   user.branch,
-    cgpa:     calculateCGPA(allSems) ?? 0,
-    semCount: allSems.filter(s => s.sgpa).length,
+    branch: user.branch,
+    cgpa: calculateCGPA(allSems) ?? 0,
+    semCount: validSems.length,
   });
 }
 
@@ -30,7 +34,7 @@ export function getProfile(req, res, next) {
 // ── PUT /api/user/username ────────────────────────────────────────────────────
 export async function updateUsername(req, res, next) {
   try {
-    const username = req.body.username.trim(); // schema already validated
+    const username = req.body.username.trim();
     const userId   = req.user._id.toString();
     const user     = await User.findById(userId);
     if (!user) throw ApiError.notFound("User not found");
@@ -43,7 +47,6 @@ export async function updateUsername(req, res, next) {
         );
     }
 
-    // Case-insensitive uniqueness check — consistent with update behaviour
     const existing = await User.findOne({
       username: { $regex: new RegExp(`^${username}$`, "i") },
       _id:      { $ne: userId },
@@ -67,7 +70,6 @@ export async function checkUsername(req, res, next) {
 
     const base = username.trim();
 
-    // Case-insensitive check — consistent with updateUsername uniqueness check
     const existing  = await User.findOne({ username: { $regex: new RegExp(`^${base}$`, "i") } });
     const available = !existing;
 
@@ -89,12 +91,17 @@ export async function checkUsername(req, res, next) {
 export async function updateBranch(req, res, next) {
   try {
     const userId = req.user._id.toString();
-    const user   = await User.findByIdAndUpdate(
+
+    // Clean up existing leaderboard entry under old branch before updating
+    await removeLeaderboardEntry(userId);
+
+    const user = await User.findByIdAndUpdate(
       userId,
       { $set: { branch: req.body.branch } },
       { new: true, runValidators: true }
     );
     if (!user) throw ApiError.notFound("User not found");
+
     await syncLeaderboard(user, userId);
     sendResponse(res, 200, { branch: user.branch }, "Branch updated");
   } catch (err) { next(err); }
@@ -120,24 +127,30 @@ export async function updateLbOptIn(req, res, next) {
     const user      = await User.findById(userId);
     if (!user) throw ApiError.notFound("User not found");
 
+    // Block Opt-Out within 45 days
     if (!optIn && user.lbOptIn) {
-      if (user.lbOptInDate) {
-        const daysLeft = 45 - getDaysSince(user.lbOptInDate);
-        if (daysLeft > 0)
-          throw ApiError.badRequest(
-            `You can opt out in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
-          );
+      const lockStartDate = user.lbOptInDate || user.createdAt;
+      const daysLeft = 45 - getDaysSince(lockStartDate);
+      if (daysLeft > 0) {
+        throw ApiError.badRequest(
+          `You can opt out in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
+        );
       }
       await removeLeaderboardEntry(userId);
     }
 
-    if (optIn) {
+    // Set lock start date on first opt-in initialization
+    if (optIn && !user.lbOptInDate) {
       user.lbOptInDate = new Date();
-      await syncLeaderboard({ ...user.toObject(), lbOptIn: true }, userId);
     }
 
     user.lbOptIn = optIn;
     await user.save();
+
+    if (optIn) {
+      await syncLeaderboard(user, userId);
+    }
+
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Leaderboard preference updated");
   } catch (err) { next(err); }
 }

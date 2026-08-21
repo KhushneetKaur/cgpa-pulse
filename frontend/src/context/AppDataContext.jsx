@@ -1,20 +1,16 @@
 import { createContext, useContext, useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { BRANCHES } from "../data/branches";
+import { BRANCHES }          from "../data/branches";
+import { PHARMACY_BRANCHES } from "../data/pharmacyBranches";
 import { calcSGPA, calcCGPA, calcTarget } from "../utils/calculations";
-import { useAuth } from "../context/AuthContext";
+import { useAuth }           from "../context/AuthContext";
+import { getMaxMarks }       from "../data/gradeTable";
 import toast from "react-hot-toast";
 import {
-  apiGetSemesters,
-  apiSaveSemester,
-  apiSaveQuickSgpa,
-  apiDeleteSemester,
-  apiToggleBacklog,
-  apiUpdateElective,
-  apiAddCustomSubject,
-  apiRemoveCustomSubject,
-  apiToggleSubjectVisibility,
+  apiGetSemesters, apiSaveSemester, apiSaveQuickSgpa,
+  apiDeleteSemester, apiToggleBacklog, apiUpdateElective,
+  apiAddCustomSubject, apiRemoveCustomSubject, apiToggleSubjectVisibility,
 } from "../services/semester.api.js";
-import { apiGetLeaderboard } from "../services/leaderboard.api.js";
+import { apiGetLeaderboard }           from "../services/leaderboard.api.js";
 import { apiUpdateBranch, apiUpdateLbOptIn } from "../services/user.api.js";
 
 const AppDataContext = createContext(null);
@@ -25,62 +21,90 @@ export function useAppData() {
   return ctx;
 }
 
-// ── Helper: parse semester data from API response into local shape ─────────────
+// ── Parse API semester response into local shape ──────────────────────────────
 function parseSemesterData(sem) {
   const marksObj = {};
-  for (const m of (sem.marks || [])) {
+  for (const m of sem.marks || []) {
     marksObj[m.code] = { int: m.int, ext: m.ext };
   }
-  const electiveNamesObj = sem.electiveNames
-    ? (sem.electiveNames instanceof Map
-        ? Object.fromEntries(sem.electiveNames)
-        : sem.electiveNames)
-    : {};
+  let electiveNamesObj = {};
+  if (sem.electiveNames) {
+    electiveNamesObj = sem.electiveNames instanceof Map
+      ? Object.fromEntries(sem.electiveNames)
+      : typeof sem.electiveNames === "object"
+      ? sem.electiveNames : {};
+  }
   return {
-    marks:          marksObj,
-    sgpa:           sem.sgpa,
-    credits:        sem.credits,
-    isPartial:      sem.isPartial,
-    mode:           sem.mode,
-    savedAt:        sem.savedAt ? new Date(sem.savedAt).toLocaleDateString("en-IN") : "",
-    electiveNames: electiveNamesObj,
-    backlogs:       sem.backlogs || [],
+    marks:             marksObj,
+    sgpa:              sem.sgpa,
+    credits:           sem.credits,
+    isPartial:         sem.isPartial,
+    mode:              sem.mode,
+    savedAt:           sem.savedAt ? new Date(sem.savedAt).toISOString() : "", // ISO string — safe on iOS Safari
+    electiveNames:     electiveNamesObj,
+    backlogs:          sem.backlogs || [],
     _electiveNamesObj: electiveNamesObj,
   };
 }
 
+// ── Branch helpers — both engineering and pharmacy aware ──────────────────────
+function getBranchData(branch, faculty) {
+  if (!branch) return null;
+  if (faculty === "pharmacy") return PHARMACY_BRANCHES[branch] || null;
+  return BRANCHES[branch] || null;
+}
+
+function getBranchSemesters(branch, faculty) {
+  return getBranchData(branch, faculty)?.semesters || {};
+}
+
+// Infer faculty from branch key — used to auto-detect existing users on load
+function inferFaculty(branch) {
+  if (!branch) return null;
+  if (PHARMACY_BRANCHES[branch]) return "pharmacy";
+  if (BRANCHES[branch])          return "engineering";
+  return null;
+}
+
 export function AppDataProvider({ children }) {
-  const { user, authLoading, logout, authErr, setAuthErr, clearForm, googleLogin, setUser } = useAuth();
+  const {
+    user, authLoading, logout,
+    authErr, setAuthErr, clearForm, googleLogin, setUser,
+  } = useAuth();
 
   // ── App state ──────────────────────────────────────────────────────────────
-  const [screen,          setScreen]         = useState("login");
-  const [tab,             setTab]            = useState("calculator");
-  const [saveMsg,         setSaveMsg]        = useState("");
-  const [branch,          setBranchState]    = useState(null);
-  const [hist,            setHist]           = useState({});
-  const [backlogs,        setBacklogs]       = useState({});
-  const [electiveNames,   setElectiveNames]  = useState({});
-  const [lbOptIn,         setLbOptInState]   = useState(false);
-  const [lbData,          setLbData]         = useState([]);
-  const [selSem,          setSelSem]         = useState(null);
-  const [marks,           setMarks]          = useState({});
-  const [saving,          setSaving]         = useState(false);
-  const [qSem,            setQSem]           = useState(null);
-  const [qVal,            setQVal]           = useState("");
-  const [qErr,            setQErr]           = useState("");
-  const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [targetCGPA,     setTargetCGPA]     = useState("");
-  const [targetResult,   setTargetResult]   = useState(null);
-  const [predSem,        setPredSem]        = useState(null);
-  const [predInt,        setPredInt]        = useState({});
-  const [predDesiredSGPA,setPredDesiredSGPA]= useState("");
-  const [customSubjects, setCustomSubjects] = useState({});
-  const [hiddenSubjects, setHiddenSubjects] = useState({});
+  const [screen,          setScreen]          = useState("login");
+  const [tab,             setTab]             = useState("calculator");
+  const [saveMsg,         setSaveMsg]         = useState("");
+  const [branch,          setBranchState]     = useState(null);
+  const [faculty,         setFaculty]         = useState(null);
+  const [hist,            setHist]            = useState({});
+  const [backlogs,        setBacklogs]        = useState({});
+  const [electiveNames,   setElectiveNames]   = useState({});
+  const [lbOptIn,         setLbOptInState]    = useState(false);
+  const [lbData,          setLbData]          = useState([]);
+  const [selSem,          setSelSem]          = useState(null);
+  const [marks,           setMarks]           = useState({});
+  const [saving,          setSaving]          = useState(false);
+  const [qSem,            setQSem]            = useState(null);
+  const [qVal,            setQVal]            = useState("");
+  const [qErr,            setQErr]            = useState("");
+  const [showDisclaimer,  setShowDisclaimer]  = useState(false);
+  const [targetCGPA,      setTargetCGPA]      = useState("");
+  const [targetResult,    setTargetResult]    = useState(null);
+  const [predSem,         setPredSem]         = useState(null);
+  const [predInt,         setPredInt]         = useState({});
+  const [predDesiredSGPA, setPredDesiredSGPA] = useState("");
+  const [customSubjects,  setCustomSubjects]  = useState({});
+  const [hiddenSubjects,  setHiddenSubjects]  = useState({});
 
   const hasLoaded = useRef(false);
 
-  const bCustomSubjects = useMemo(() => branch ? (customSubjects[branch] || {}) : {}, [branch, customSubjects]);
-  const bHiddenSubjects = useMemo(() => branch ? (hiddenSubjects[branch] || {}) : {}, [branch, hiddenSubjects]);
+  const bCustomSubjects = useMemo(() => (branch ? customSubjects[branch] || {} : {}), [branch, customSubjects]);
+  const bHiddenSubjects = useMemo(() => (branch ? hiddenSubjects[branch] || {} : {}), [branch, hiddenSubjects]);
+
+  // Grade scheme derived from branch — drives getGrade() boundaries in calcSGPA
+  const scheme = useMemo(() => getBranchData(branch, faculty)?.scheme || "engineering", [branch, faculty]);
 
   const flashSave = useCallback((msg = "Saved!") => {
     setSaveMsg(msg);
@@ -98,6 +122,7 @@ export function AppDataProvider({ children }) {
       setBacklogs({});
       setElectiveNames({});
       setBranchState(null);
+      setFaculty(null);
       setSelSem(null);
       setMarks({});
       return;
@@ -110,28 +135,33 @@ export function AppDataProvider({ children }) {
 
     async function loadUserData() {
       try {
-        setBranchState(user.branch || null);
+        const userBranch = user.branch || null;
+        setBranchState(userBranch);
         setLbOptInState(user.lbOptIn || false);
 
-        if (user.branch) {
+        // Detect faculty — from user record (new) or inferred from branch (existing users)
+        const detectedFaculty = user.faculty || inferFaculty(userBranch);
+        if (detectedFaculty) setFaculty(detectedFaculty);
+
+        if (userBranch) {
           try {
-            const result = await apiGetSemesters(user.branch);
+            const result    = await apiGetSemesters(userBranch);
             const semesters = result?.semesters || result?.data?.semesters || [];
 
-            const histMap = { [user.branch]: {} };
-            const backlogMap = { [user.branch]: {} };
-            const electiveMap = { [user.branch]: {} };
-            const customMap = { [user.branch]: {} };
-            const hiddenMap = { [user.branch]: {} };
+            const histMap     = { [userBranch]: {} };
+            const backlogMap  = { [userBranch]: {} };
+            const electiveMap = { [userBranch]: {} };
+            const customMap   = { [userBranch]: {} };
+            const hiddenMap   = { [userBranch]: {} };
 
             for (const sem of semesters) {
               const { _electiveNamesObj, ...histEntry } = parseSemesterData(sem);
-              histMap[user.branch][sem.semNumber] = histEntry; 
-              backlogMap[user.branch][sem.semNumber] = sem.backlogs || [];
-              customMap[user.branch][sem.semNumber]  = sem.customSubjects || [];
-              hiddenMap[user.branch][sem.semNumber]  = sem.hiddenSubjects || [];
+              histMap[userBranch][sem.semNumber]    = histEntry;
+              backlogMap[userBranch][sem.semNumber] = sem.backlogs || [];
+              customMap[userBranch][sem.semNumber]  = sem.customSubjects || [];
+              hiddenMap[userBranch][sem.semNumber]  = sem.hiddenSubjects || [];
               for (const [code, name] of Object.entries(_electiveNamesObj)) {
-                electiveMap[user.branch][code] = name;
+                electiveMap[userBranch][code] = name;
               }
             }
 
@@ -145,7 +175,7 @@ export function AppDataProvider({ children }) {
           }
         }
       } catch (err) {
-        console.error("Failed to load user data:", err.message, err);
+        console.error("Failed to load user data:", err?.message || err);
       } finally {
         setScreen("app");
       }
@@ -154,7 +184,7 @@ export function AppDataProvider({ children }) {
     loadUserData();
   }, [user, authLoading]);
 
-  // ── Fetch leaderboard ──────────────────────────────────────────────────────
+  // ── Leaderboard ───────────────────────────────────────────────────────────
   const fetchLeaderboard = useCallback(async () => {
     try {
       const result  = await apiGetLeaderboard("ALL");
@@ -165,9 +195,27 @@ export function AppDataProvider({ children }) {
     }
   }, []);
 
+  // Days remaining in 45-day opt-out lock — specific field deps, not whole user object
+  const lbDaysRemaining = useMemo(() => {
+    if (!user?.lbOptIn) return 0;
+    const lockStart = user.lbOptInDate || user.createdAt;
+    if (!lockStart) return 0;
+    const daysPassed = Math.floor((Date.now() - new Date(lockStart).getTime()) / 86400000);
+    return Math.max(0, 45 - daysPassed);
+  }, [user?.lbOptIn, user?.lbOptInDate, user?.createdAt]);
+
+  // Plain boolean — no useMemo needed since lbDaysRemaining is already memoized
+  const isLbLocked = lbDaysRemaining > 0;
+
   // ── setBranch ─────────────────────────────────────────────────────────────
   const setBranch = useCallback(async (key) => {
-    if (!BRANCHES[key]) return;
+    const isPharmacy    = !!PHARMACY_BRANCHES[key];
+    const isEngineering = !!BRANCHES[key];
+    if (!isPharmacy && !isEngineering) return;
+
+    if (isPharmacy) setFaculty("pharmacy");
+    else            setFaculty("engineering");
+
     setBranchState(key);
     setSelSem(null);
     setMarks({});
@@ -177,51 +225,63 @@ export function AppDataProvider({ children }) {
       await apiUpdateBranch(key);
       const result    = await apiGetSemesters(key);
       const semesters = result?.semesters || result?.data?.semesters || [];
-      const histMap   = { [key]: {} };
+      const branchHist           = {};
       const electiveMapForBranch = {};
 
       for (const sem of semesters) {
         const { _electiveNamesObj, ...histEntry } = parseSemesterData(sem);
-        histMap[key][sem.semNumber] = histEntry;
+        branchHist[sem.semNumber] = histEntry;
         for (const [code, name] of Object.entries(_electiveNamesObj)) {
           electiveMapForBranch[code] = name;
         }
       }
 
       setElectiveNames(prev => ({ ...prev, [key]: { ...(prev[key] || {}), ...electiveMapForBranch } }));
-      setHist(prev => ({ ...prev, ...histMap }));
+      setHist(prev => ({ ...prev, [key]: branchHist }));
     } catch (err) {
       console.error("setBranch error:", err);
     }
   }, []);
 
-  const selectSem = useCallback((s) => {
-    setSelSem(s);
-    setSaveMsg("");
-  }, []);
+  const selectSem = useCallback((s) => { setSelSem(s); setSaveMsg(""); }, []);
 
-  // Sync marks whenever selSem or branch changes
+  // Sync marks when selSem/branch/hist changes — iOS-safe pattern (no inline in selectSem)
   useEffect(() => {
-    setMarks(branch && selSem ? (hist[branch]?.[selSem]?.marks || {}) : {});
+    setMarks(branch && selSem ? hist[branch]?.[selSem]?.marks || {} : {});
   }, [selSem, branch, hist]);
 
-  const changeMark = useCallback((code, field, val) => {
+  // Scheme-aware max enforcement — pharmacy subjects have different int/ext limits
+  const changeMark = useCallback((code, field, val, subType) => {
     if (val !== "" && isNaN(val)) return;
+    if (val !== "" && subType) {
+      const mx  = getMaxMarks(subType, scheme);
+      const max = field === "int" ? mx.int : mx.ext;
+      if (Number(val) > max) return;
+    }
     setMarks(prev => ({ ...prev, [code]: { ...prev[code], [field]: val } }));
-  }, []);
+  }, [scheme]);
 
   const saveSem = useCallback(async () => {
     if (!selSem || !branch) return;
     setSaving(true);
     try {
+      const branchSems    = getBranchSemesters(branch, faculty);
       const hiddenCodes   = bHiddenSubjects[selSem] || [];
-      const hardcodedSubs = BRANCHES[branch].semesters[selSem].subjects.filter(s => !hiddenCodes.includes(s.code));
+      const hardcodedSubs = (branchSems[selSem]?.subjects || []).filter(s => !hiddenCodes.includes(s.code));
       const customSubs    = bCustomSubjects[selSem] || [];
       const subs          = [...hardcodedSubs, ...customSubs];
-      const res           = calcSGPA(subs, marks);
-      const marksArray    = subs.map(sub => ({ code: sub.code, int: marks[sub.code]?.int ?? null, ext: marks[sub.code]?.ext ?? null }));
+      const res           = calcSGPA(subs, marks, scheme);
+      const marksArray    = subs.map(sub => ({
+        code: sub.code,
+        int:  marks[sub.code]?.int ?? null,
+        ext:  marks[sub.code]?.ext ?? null,
+      }));
 
-      const result   = await apiSaveSemester(branch, selSem, { branch, semNumber: selSem, marks: marksArray, sgpa: res?.sgpa || null, credits: res?.credits || 0, isPartial: res?.isPartial || false, mode: "detailed" });
+      const result   = await apiSaveSemester(branch, selSem, {
+        branch, semNumber: selSem, marks: marksArray,
+        sgpa: res?.sgpa || null, credits: res?.credits || 0,
+        isPartial: res?.isPartial || false, mode: "detailed",
+      });
       const semester = result?.semester || result?.data?.semester || result;
 
       setHist(prev => ({
@@ -234,10 +294,24 @@ export function AppDataProvider({ children }) {
             credits:   semester.credits,
             isPartial: semester.isPartial,
             mode:      "detailed",
-            savedAt:   new Date(semester.savedAt).toLocaleDateString("en-IN"),
+            savedAt:   semester.savedAt
+              ? new Date(semester.savedAt).toISOString()
+              : new Date().toISOString(),
           },
         },
       }));
+
+      // Refresh profile to pick up backend auto opt-in (fires on first save)
+      // Don't optimistically set lbOptIn — backend decides, not frontend
+      try {
+        const { apiGetProfile } = await import("../services/user.api.js");
+        const updatedUser = await apiGetProfile();
+        if (updatedUser) {
+          setUser(updatedUser);
+          setLbOptInState(updatedUser.lbOptIn || false);
+        }
+      } catch { /* non-critical — profile refresh failure doesn't affect save */ }
+
       toast.success("Semester saved!");
     } catch (err) {
       toast.error("Save failed — try again");
@@ -245,7 +319,7 @@ export function AppDataProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [selSem, branch, bHiddenSubjects, bCustomSubjects, marks]);
+  }, [selSem, branch, faculty, bHiddenSubjects, bCustomSubjects, marks, scheme, setUser]);
 
   const deleteSemRecord = useCallback(async (sem = selSem) => {
     if (!branch || !sem) return;
@@ -260,9 +334,9 @@ export function AppDataProvider({ children }) {
     }
   }, [branch, selSem]);
 
-  const openQuick = useCallback((s) => {
+  const openQuick  = useCallback((s) => {
     setQSem(s);
-    setQVal(branch ? (hist[branch]?.[s]?.sgpa || "") : "");
+    setQVal(branch ? hist[branch]?.[s]?.sgpa || "" : "");
     setQErr("");
   }, [branch, hist]);
 
@@ -272,8 +346,9 @@ export function AppDataProvider({ children }) {
     const v = parseFloat(qVal);
     if (isNaN(v) || v < 0 || v > 10) { setQErr("Enter a valid SGPA between 0.00 and 10.00."); return; }
     try {
+      const branchSems    = getBranchSemesters(branch, faculty);
       const hiddenCodes   = bHiddenSubjects[qSem] || [];
-      const hardcodedSubs = BRANCHES[branch].semesters[qSem].subjects.filter(s => !hiddenCodes.includes(s.code));
+      const hardcodedSubs = (branchSems[qSem]?.subjects || []).filter(s => !hiddenCodes.includes(s.code));
       const customSubs    = bCustomSubjects[qSem] || [];
       const totalCr       = [...hardcodedSubs, ...customSubs].reduce((a, sub) => a + sub.credits, 0);
 
@@ -284,16 +359,36 @@ export function AppDataProvider({ children }) {
         ...prev,
         [branch]: {
           ...(prev[branch] || {}),
-          [qSem]: { marks: prev[branch]?.[qSem]?.marks || {}, sgpa: semester.sgpa, credits: semester.credits, isPartial: false, mode: "quick", savedAt: new Date(semester.savedAt).toLocaleDateString("en-IN") },
+          [qSem]: {
+            marks:     prev[branch]?.[qSem]?.marks || {},
+            sgpa:      semester.sgpa,
+            credits:   semester.credits,
+            isPartial: false,
+            mode:      "quick",
+            savedAt:   semester.savedAt
+              ? new Date(semester.savedAt).toISOString()
+              : new Date().toISOString(),
+          },
         },
       }));
+
+      // Refresh profile to pick up backend auto opt-in
+      try {
+        const { apiGetProfile } = await import("../services/user.api.js");
+        const updatedUser = await apiGetProfile();
+        if (updatedUser) {
+          setUser(updatedUser);
+          setLbOptInState(updatedUser.lbOptIn || false);
+        }
+      } catch { /* non-critical */ }
+
       closeQuick();
       toast.success("SGPA saved!");
     } catch (err) {
       setQErr("Failed to save — try again");
       console.error("saveQuick error:", err);
     }
-  }, [qVal, branch, qSem, bHiddenSubjects, bCustomSubjects, closeQuick]);
+  }, [qVal, branch, qSem, faculty, bHiddenSubjects, bCustomSubjects, closeQuick, setUser]);
 
   const deleteQuick = useCallback(async () => {
     if (!branch || !qSem) return;
@@ -310,7 +405,7 @@ export function AppDataProvider({ children }) {
 
   const toggleBacklog = useCallback(async (sem, code) => {
     try {
-      const result         = await apiToggleBacklog(branch, sem, code);
+      const result          = await apiToggleBacklog(branch, sem, code);
       const updatedBacklogs = result?.backlogs || result?.data?.backlogs || [];
       setBacklogs(prev => ({ ...prev, [branch]: { ...(prev[branch] || {}), [sem]: updatedBacklogs } }));
     } catch (err) {
@@ -328,44 +423,64 @@ export function AppDataProvider({ children }) {
   }, [branch, selSem]);
 
   const toggleLbOptIn = useCallback(async () => {
+    const next = !lbOptIn;
+    setLbOptInState(next); // optimistic
     try {
-      const next = !lbOptIn;
-      await apiUpdateLbOptIn(next);
-      setLbOptInState(next);
+      const res         = await apiUpdateLbOptIn(next);
+      const updatedUser = res?.user || res?.data?.user;
+      if (updatedUser) setUser(updatedUser);
       await fetchLeaderboard();
       return next;
     } catch (err) {
-      console.error("toggleLbOptIn error:", err?.message || err?.status);
+      setLbOptInState(!next); // revert
+      toast.error(err?.message || "Failed to update leaderboard preference");
+      console.error("toggleLbOptIn error:", err);
       throw err;
     }
-  }, [lbOptIn, fetchLeaderboard]);
+  }, [lbOptIn, fetchLeaderboard, setUser]);
 
   const runCalcTarget = useCallback(() => {
     if (!branch || !targetCGPA) return;
-    const semKeysLocal       = Object.keys(BRANCHES[branch].semesters).map(Number);
+    const branchSems         = getBranchSemesters(branch, faculty);
+    const semKeysLocal       = Object.keys(branchSems).map(Number);
     const bHistLocal         = hist[branch] || {};
     const semCreditsOverride = {};
     for (const s of semKeysLocal) {
       const hiddenCodes   = bHiddenSubjects[s] || [];
-      const hardcodedSubs = BRANCHES[branch].semesters[s].subjects.filter(sub => !hiddenCodes.includes(sub.code));
+      const hardcodedSubs = (branchSems[s]?.subjects || []).filter(sub => !hiddenCodes.includes(sub.code));
       const customSubs    = bCustomSubjects[s] || [];
       semCreditsOverride[s] = [...hardcodedSubs, ...customSubs].reduce((t, sub) => t + sub.credits, 0);
     }
     setTargetResult(calcTarget(branch, semKeysLocal, bHistLocal, targetCGPA, semCreditsOverride));
-  }, [branch, targetCGPA, hist, bHiddenSubjects, bCustomSubjects]);
+  }, [branch, faculty, targetCGPA, hist, bHiddenSubjects, bCustomSubjects]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const semKeys      = useMemo(() => branch ? Object.keys(BRANCHES[branch].semesters).map(Number) : [], [branch]);
-  const bHist        = useMemo(() => branch ? (hist[branch] || {}) : {}, [branch, hist]);
-  const bBacklogs    = useMemo(() => branch ? (backlogs[branch] || {}) : {}, [branch, backlogs]);
-  const bElectiveNames = useMemo(() => branch ? (electiveNames[branch] || {}) : {}, [branch, electiveNames]);
-  const cgpa         = useMemo(() => branch ? calcCGPA(semKeys.map(s => bHist[s] || {})) : null, [branch, semKeys, bHist]);
-  const doneSems     = useMemo(() => branch ? semKeys.filter(s => bHist[s]?.sgpa).length : 0, [branch, semKeys, bHist]);
+  const semKeys = useMemo(() => {
+    if (!branch) return [];
+    return Object.keys(getBranchSemesters(branch, faculty)).map(Number);
+  }, [branch, faculty]);
+
+  const bHist          = useMemo(() => (branch ? hist[branch] || {} : {}),          [branch, hist]);
+  const bBacklogs      = useMemo(() => (branch ? backlogs[branch] || {} : {}),      [branch, backlogs]);
+  const bElectiveNames = useMemo(() => (branch ? electiveNames[branch] || {} : {}), [branch, electiveNames]);
+
+  const cgpa = useMemo(() => (branch ? calcCGPA(semKeys.map(s => bHist[s] || {})) : null), [branch, semKeys, bHist]);
+
+  const doneSems = useMemo(() => (branch ? semKeys.filter(s => bHist[s]?.sgpa).length : 0), [branch, semKeys, bHist]);
+
   const totalBacklogs = useMemo(() => Object.values(bBacklogs).reduce((a, arr) => a + (arr?.length || 0), 0), [bBacklogs]);
-  const curSubs      = useMemo(() => (selSem && branch)
-    ? [...BRANCHES[branch].semesters[selSem].subjects.filter(s => !(bHiddenSubjects[selSem] || []).includes(s.code)), ...(bCustomSubjects[selSem] || [])]
-    : [], [selSem, branch, bHiddenSubjects, bCustomSubjects]);
-  const liveRes      = useMemo(() => (selSem && branch) ? calcSGPA(curSubs, marks) : null, [selSem, branch, curSubs, marks]);
+
+  const curSubs = useMemo(() => {
+    if (!selSem || !branch) return [];
+    const branchSems = getBranchSemesters(branch, faculty);
+    return [
+      ...(branchSems[selSem]?.subjects || []).filter(s => !(bHiddenSubjects[selSem] || []).includes(s.code)),
+      ...(bCustomSubjects[selSem] || []),
+    ];
+  }, [selSem, branch, faculty, bHiddenSubjects, bCustomSubjects]);
+
+  // scheme passed through so pharmacy gets O/A/B/C/D/F not A+/A/B+...
+  const liveRes = useMemo(() => (selSem && branch ? calcSGPA(curSubs, marks, scheme) : null), [selSem, branch, curSubs, marks, scheme]);
 
   const subDisplayName = useCallback((sub) => bElectiveNames[sub.code] || sub.name, [bElectiveNames]);
 
@@ -386,21 +501,21 @@ export function AppDataProvider({ children }) {
   }, [branch]);
 
   const toggleHiddenSubject = useCallback(async (semNumber, code, hidden) => {
-    setHiddenSubjects(prev => {
-      const current = prev[branch]?.[semNumber] || [];
-      const updated = hidden ? [...current.filter(c => c !== code), code] : current.filter(c => c !== code);
-      return { ...prev, [branch]: { ...(prev[branch] || {}), [semNumber]: updated } };
-    });
+    const currentHidden  = bHiddenSubjects[semNumber] || [];
+    const newHiddenCodes = hidden
+      ? [...currentHidden.filter(c => c !== code), code]
+      : currentHidden.filter(c => c !== code);
+
+    // Optimistic update
+    setHiddenSubjects(prev => ({ ...prev, [branch]: { ...(prev[branch] || {}), [semNumber]: newHiddenCodes } }));
 
     if (bHist[semNumber]?.marks) {
-      const newHiddenCodes = hidden
-        ? [...(bHiddenSubjects[semNumber] || []).filter(c => c !== code), code]
-        : (bHiddenSubjects[semNumber] || []).filter(c => c !== code);
-      const allSubs = [
-        ...BRANCHES[branch].semesters[semNumber].subjects.filter(s => !newHiddenCodes.includes(s.code)),
+      const branchSems = getBranchSemesters(branch, faculty);
+      const allSubs    = [
+        ...(branchSems[semNumber]?.subjects || []).filter(s => !newHiddenCodes.includes(s.code)),
         ...(bCustomSubjects[semNumber] || []),
       ];
-      const recalc = calcSGPA(allSubs, bHist[semNumber].marks);
+      const recalc = calcSGPA(allSubs, bHist[semNumber].marks, scheme);
       setHist(prev => ({
         ...prev,
         [branch]: {
@@ -417,22 +532,19 @@ export function AppDataProvider({ children }) {
     try {
       await apiToggleSubjectVisibility(branch, semNumber, code, hidden);
     } catch (err) {
-      setHiddenSubjects(prev => {
-        const current  = prev[branch]?.[semNumber] || [];
-        const reverted = hidden ? current.filter(c => c !== code) : [...current, code];
-        return { ...prev, [branch]: { ...(prev[branch] || {}), [semNumber]: reverted } };
-      });
+      // Revert optimistic update on failure
+      setHiddenSubjects(prev => ({ ...prev, [branch]: { ...(prev[branch] || {}), [semNumber]: currentHidden } }));
       console.error("toggleHiddenSubject error:", err);
       throw err;
     }
-  }, [branch, bHist, bHiddenSubjects, bCustomSubjects]);
+  }, [branch, faculty, bHist, bHiddenSubjects, bCustomSubjects, scheme]);
 
   // ── Context value ──────────────────────────────────────────────────────────
   const value = useMemo(() => ({
     screen, setScreen, tab, setTab, saveMsg,
-    branch, setBranch, hist, bHist,
-    backlogs, bBacklogs, electiveNames, bElectiveNames,
-    lbOptIn, toggleLbOptIn, lbData, fetchLeaderboard,
+    branch, setBranch, faculty, setFaculty, scheme,
+    hist, bHist, backlogs, bBacklogs, electiveNames, bElectiveNames,
+    lbOptIn, toggleLbOptIn, lbData, fetchLeaderboard, isLbLocked, lbDaysRemaining,
     selSem, selectSem, marks, changeMark,
     saving, saveSem, deleteSemRecord, curSubs, liveRes,
     qSem, qVal, setQVal, qErr, openQuick, closeQuick, saveQuick, deleteQuick,
@@ -445,16 +557,18 @@ export function AppDataProvider({ children }) {
     bCustomSubjects, bHiddenSubjects,
     addCustomSubject, removeCustomSubject, toggleHiddenSubject,
   }), [
-    screen, tab, saveMsg, branch, setBranch, hist, bHist,
-    backlogs, bBacklogs, electiveNames, bElectiveNames,
-    lbOptIn, toggleLbOptIn, lbData, fetchLeaderboard,
-    selSem, selectSem, marks, changeMark,
-    saving, saveSem, deleteSemRecord, curSubs, liveRes,
-    qSem, qVal, qErr, openQuick, closeQuick, saveQuick, deleteQuick,
+    screen, tab, saveMsg,
+    branch, setBranch, faculty, scheme,
+    hist, bHist, backlogs, bBacklogs, electiveNames, bElectiveNames,
+    lbOptIn, lbData, fetchLeaderboard, toggleLbOptIn, lbDaysRemaining,
+    selSem, marks, saving, curSubs, liveRes,
+    qSem, qVal, qErr,
     showDisclaimer, targetCGPA, targetResult, runCalcTarget,
     predSem, predInt, predDesiredSGPA,
     semKeys, cgpa, doneSems, totalBacklogs,
     subDisplayName, toggleBacklog, setElectiveName, flashSave,
+    selectSem, changeMark, saveSem, deleteSemRecord,
+    openQuick, closeQuick, saveQuick, deleteQuick,
     user, setUser, logout, authErr, setAuthErr, authLoading, clearForm, googleLogin,
     bCustomSubjects, bHiddenSubjects,
     addCustomSubject, removeCustomSubject, toggleHiddenSubject,

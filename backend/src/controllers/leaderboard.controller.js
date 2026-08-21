@@ -5,14 +5,20 @@ import { sendResponse }   from "../utils/ApiResponse.js";
 // branch and limit already validated + defaulted by validateQuery middleware
 export async function getLeaderboardHandler(req, res, next) {
   try {
-    const entries = await getLeaderboard(req.query.branch, req.query.limit);
+    const branch = req.query.branch || "ALL";
+    const limit  = Number(req.query.limit) || 50;
+
+    const entries = await getLeaderboard(branch, limit);
+
+    const branchLabel = branch === "ALL" ? "all branches" : `${branch} branch`;
+
     sendResponse(
       res, 
       200, 
       { 
-        entries, 
-        count: entries.length,
-        notice: "Displaying top 50 rankings across engineering branches"
+        entries: entries || [], 
+        count: entries?.length || 0,
+        notice: `Displaying top ${limit} rankings across ${branchLabel}`
       }, 
       "Leaderboard fetched successfully"
     );

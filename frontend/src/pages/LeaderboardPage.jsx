@@ -52,7 +52,7 @@ export default function LeaderboardPage() {
     }
     loadData();
     return () => { isMounted = false; };
-  }, [fetchLeaderboard, lbOptIn]);
+  }, [fetchLeaderboard]);
 
   async function handleToggle() {
     if (isSubmitting) return;

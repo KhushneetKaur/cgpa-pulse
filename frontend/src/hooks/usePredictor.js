@@ -1,90 +1,94 @@
+import { useCallback, useMemo } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { BRANCHES } from "../data/branches";
-import { getMaxMarks } from "../data/gradeTable";
+import { useTheme }   from "../context/ThemeContext";
+import { BRANCHES }          from "../data/branches";
+import { PHARMACY_BRANCHES } from "../data/pharmacyBranches";
+import { getMaxMarks }       from "../data/gradeTable";
 import { getPredictorBreakdown } from "../utils/calculations";
-
-// Encapsulates all predictor-specific state and derived values.
 
 export function usePredictor() {
   const {
-  branch,
-  semKeys,
-  predSem, setPredSem,
-  predInt, setPredInt,
-  predDesiredSGPA, setPredDesiredSGPA,
-  bElectiveNames,
-  bCustomSubjects,
-  bHiddenSubjects,
-  c, cardSty, btn, scoreClr, inp,
-} = useAppData();
+    branch, faculty, scheme,
+    semKeys,
+    predSem,          setPredSem,
+    predInt,          setPredInt,
+    predDesiredSGPA,  setPredDesiredSGPA,
+    bElectiveNames,
+    bCustomSubjects,
+    bHiddenSubjects,
+  } = useAppData();
 
-  // Subjects for the selected predictor semester
-  const subs = (predSem && branch)
-  ? [
-      ...BRANCHES[branch].semesters[predSem].subjects
+  const { c, cardSty, btn, scoreClr, inp } = useTheme();
+
+  // "Year" for Pharm.D, "Sem" for everything else
+  const semLabel = useMemo(() => {
+    const bd = BRANCHES[branch] || PHARMACY_BRANCHES[branch];
+    return bd?.semLabel || "Sem";
+  }, [branch]);
+
+  // Subjects — faculty-aware, memoized
+  const subs = useMemo(() => {
+    if (!predSem || !branch) return [];
+    const allBranches = faculty === "pharmacy" ? PHARMACY_BRANCHES : BRANCHES;
+    const branchData  = allBranches[branch];
+    if (!branchData) return [];
+    return [
+      ...(branchData.semesters[predSem]?.subjects || [])
         .filter(s => !(bHiddenSubjects[predSem] || []).includes(s.code)),
       ...(bCustomSubjects[predSem] || []),
-    ]
-  : [];
+    ];
+  }, [predSem, branch, faculty, bHiddenSubjects, bCustomSubjects]);
 
-  // Full breakdown from calculation utility
-  const breakdown = (predSem && branch && subs.length)
-    ? getPredictorBreakdown(subs, predInt, predDesiredSGPA)
-    : null;
+  // Breakdown — memoized, scheme passed for correct pharmacy grade table
+  const breakdown = useMemo(() => {
+    if (!predSem || !subs.length) return null;
+    return getPredictorBreakdown(subs, predInt, predDesiredSGPA, scheme);
+  }, [predSem, subs, predInt, predDesiredSGPA, scheme]);
 
   // Whether any internal marks have been entered
-  const anyIntFilled = Object.values(predInt).some(v => v !== "" && v !== undefined);
+  const anyIntFilled = useMemo(() =>
+    Object.values(predInt).some(v => v !== "" && v !== undefined),
+    [predInt]
+  );
 
-  // Display name for a subject (respects elective overrides)
-  function getDisplayName(sub) {
+  // Display name — respects elective overrides
+  const getDisplayName = useCallback((sub) => {
     const name = bElectiveNames[sub.code];
     return name && name !== "__other__" ? name : sub.name;
-  }
+  }, [bElectiveNames]);
 
-  // Per-subject predictor data
-  function getSubjectPrediction(sub) {
-    const mx   = getMaxMarks(sub.type);
-    const iRaw = predInt[sub.code];
-    const iV   = iRaw !== undefined && iRaw !== ""
-                   ? Number(iRaw) : null;
-
-    const result = breakdown?.subResults?.find(
-      r => r.sub.code === sub.code
-    );
-
+  // Per-subject prediction — scheme-aware max marks
+  const getSubjectPrediction = useCallback((sub) => {
+    const mx     = getMaxMarks(sub.type, scheme); // scheme so pharmacy gets 25/75 not 40/60
+    const iRaw   = predInt[sub.code];
+    const iV     = iRaw !== undefined && iRaw !== "" ? Number(iRaw) : null;
+    const result = breakdown?.subResults?.find(r => r.sub.code === sub.code);
     return { mx, iV, result };
-  }
+  }, [predInt, breakdown, scheme]);
 
-  // Reset predictor state when switching semester
-  function selectPredSem(s) {
+  // Reset when switching semester
+  const selectPredSem = useCallback((s) => {
     setPredSem(s);
     setPredInt({});
     setPredDesiredSGPA("");
-  }
+  }, [setPredSem, setPredInt, setPredDesiredSGPA]);
 
-  // Update a single subject's internal marks
-  function setPredIntForSub(code, val) {
+  const setPredIntForSub = useCallback((code, val) => {
     setPredInt(prev => ({ ...prev, [code]: val }));
-  }
+  }, [setPredInt]);
 
   return {
-    // State
     branch, semKeys,
     predSem, predDesiredSGPA,
     predInt,
     subs, breakdown,
     anyIntFilled,
-
-    // Actions
+    semLabel,           
     selectPredSem,
     setPredDesiredSGPA,
     setPredIntForSub,
-
-    // Helpers
     getDisplayName,
     getSubjectPrediction,
-
-    // Style
     c, cardSty, btn, scoreClr, inp,
   };
 }

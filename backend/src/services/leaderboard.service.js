@@ -16,9 +16,8 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
   }
 
   const entries = await User.aggregate([
-    { 
-      $match: matchStage 
-    },
+    { $match: matchStage },
+
     // 1. Join cached Leaderboard document
     {
       $lookup: {
@@ -28,13 +27,9 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
         as: "lbData"
       }
     },
-    { 
-      $unwind: { 
-        path: "$lbData", 
-        preserveNullAndEmptyArrays: true 
-      } 
-    },
-    // 2. Join SemesterData documents for unsynced users
+    { $unwind: { path: "$lbData", preserveNullAndEmptyArrays: true } },
+
+    // 2. Join SemesterData documents
     {
       $lookup: {
         from: "semesterdatas",
@@ -43,6 +38,7 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
         as: "semData"
       }
     },
+
     // 3. Filter valid semester records (where sgpa > 0)
     {
       $addFields: {
@@ -60,7 +56,8 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
         }
       }
     },
-    // 4. Calculate weighted sum and total credits as dynamic fallback
+
+    // 4. Calculate weighted sum, total credits, AND find the latest semester edit date
     {
       $addFields: {
         calcSemCount: { $size: "$validSems" },
@@ -89,10 +86,13 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
               ]
             }
           }
-        }
+        },
+        // Get the most recent update timestamp among semester records
+        latestSemUpdatedAt: { $max: "$validSems.updatedAt" }
       }
     },
-    // 5. Compute fallback dynamic CGPA rounded to 2 decimal places
+
+    // 5. Compute fallback dynamic CGPA
     {
       $addFields: {
         dynamicCgpa: {
@@ -109,7 +109,8 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
         }
       }
     },
-    // 6. Project result: Use cached lbData.cgpa if > 0, otherwise dynamic fallback
+
+    // 6. Project result (Fixes stale date fallback issue)
     {
       $project: {
         _id: { $ifNull: ["$lbData._id", "$_id"] },
@@ -130,15 +131,17 @@ export async function getLeaderboard(branch = "ALL", limit = 50) {
             "$calcSemCount"
           ]
         },
-        updatedAt: { $ifNull: ["$lbData.updatedAt", "$updatedAt"] }
+        // Prioritize Leaderboard updatedAt -> latest Semester update -> User model updatedAt
+        updatedAt: {
+          $ifNull: [
+            "$lbData.updatedAt",
+            { $ifNull: ["$latestSemUpdatedAt", "$updatedAt"] }
+          ]
+        }
       }
     },
-    { 
-      $sort: { cgpa: -1, updatedAt: 1 } 
-    },
-    { 
-      $limit: parsedLimit 
-    }
+    { $sort: { cgpa: -1, updatedAt: 1 } },
+    { $limit: parsedLimit }
   ]);
 
   return entries;

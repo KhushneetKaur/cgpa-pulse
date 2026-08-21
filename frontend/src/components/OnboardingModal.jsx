@@ -81,10 +81,10 @@ export default function OnboardingModal({ user, onDone }) {
   const [usernameStatus, setUsernameStatus] = useState(null);
   const [suggestions,    setSuggestions]    = useState([]);
   const checkTimer = useRef(null);
-
   const [username, setUsername] = useState(() =>
     user?.username ? user.username.replace(/_[a-z0-9]{4}$/i, "") : ""
   );
+  const confirmedUsername = useRef(user?.username || null);
 
   // Use stable user ID 
   const userId = user?.id || user?._id;
@@ -97,41 +97,61 @@ export default function OnboardingModal({ user, onDone }) {
 
   // Stable handlers
   const handleUsernameChange = useCallback((e) => {
-    const val = e.target.value;
-    setUsername(val);
-    setErr("");
-    setSuggestions([]);
-    setUsernameStatus(null);
+  const val = e.target.value;
+  setUsername(val);
+  setErr("");
+  setSuggestions([]);
+
+  // Own username — always available, no API call needed
+  if (val.trim() === confirmedUsername.current || val.trim() === user?.username) {
+    setUsernameStatus("available");
     if (checkTimer.current) clearTimeout(checkTimer.current);
-    if (!isValidUsername(val).ok) return;
-    setUsernameStatus("checking");
-    checkTimer.current = setTimeout(async () => {
-      try {
-        const { apiCheckUsername } = await import("../services/user.api.js");
-        const { available, suggestions: sugg } = await apiCheckUsername(val.trim());
-        setUsernameStatus(available ? "available" : "taken");
-        setSuggestions(sugg || []);
-      } catch {
-        setUsernameStatus(null);
-      }
-    }, 600);
-  }, []);
+    return;
+  }
+
+  setUsernameStatus(null);
+  if (checkTimer.current) clearTimeout(checkTimer.current);
+  if (!isValidUsername(val).ok) return;
+
+  setUsernameStatus("checking");
+  checkTimer.current = setTimeout(async () => {
+    try {
+      const { apiCheckUsername } = await import("../services/user.api.js");
+      const { available, suggestions: sugg } = await apiCheckUsername(val.trim());
+      setUsernameStatus(available ? "available" : "taken");
+      setSuggestions(sugg || []);
+    } catch {
+      setUsernameStatus(null);
+    }
+  }, 600);
+}, [user?.username]);
 
   const handleUsernameNext = useCallback(async (e) => {
-    if (e) e.preventDefault();
-    const check = isValidUsername(username);
-    if (!check.ok) { setErr(check.msg); return; }
-    setErr("");
-    setLoading(true);
-    try {
-      await apiUpdateUsername(username.trim());
-      setStep(2);
-    } catch (err) {
-      setErr(err.message || "Username taken — try another");
-    } finally {
-      setLoading(false);
-    }
-  }, [username]);
+  if (e) e.preventDefault();
+  const trimmed = username.trim();
+  const check = isValidUsername(trimmed);
+  if (!check.ok) { setErr(check.msg); return; }
+  setErr("");
+
+  // If username matches what's already saved — skip API, just advance
+  if (trimmed === confirmedUsername.current || trimmed === user?.username) {
+    confirmedUsername.current = trimmed;
+    setStep(2);
+    return;
+  }
+
+  // Username actually changed — call API (backend enforces 30-day cooldown)
+  setLoading(true);
+  try {
+    await apiUpdateUsername(trimmed);
+    confirmedUsername.current = trimmed; // update confirmed after success
+    setStep(2);
+  } catch (err) {
+    setErr(err.message || "Username taken — try another");
+  } finally {
+    setLoading(false);
+  }
+}, [username, user?.username]);
 
   const handleBranchNext = useCallback(async () => {
     if (!branch) { setErr("Please select your branch"); return; }
@@ -173,7 +193,12 @@ export default function OnboardingModal({ user, onDone }) {
     setSuggestions([]);
   }, []);
 
-  const isStep1Disabled = loading || usernameStatus === "taken" || usernameStatus === "checking";
+ const isOwnUsername = username.trim() === confirmedUsername.current 
+  || username.trim() === user?.username;
+
+ const isStep1Disabled = loading
+  || (!isOwnUsername && usernameStatus === "taken")
+  || (!isOwnUsername && usernameStatus === "checking");
 
   return (
     <div style={{

@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema(
       ],
     },
 
-    // Placeholder hash for Google users — app is Google-only so never a real password
     passwordHash: {
       type:     String,
       required: false,
@@ -48,8 +47,7 @@ const userSchema = new mongoose.Schema(
 
     branch: {
       type:    String,
-      enum:    ["CSE", "AIML", "ECE", "EE", "ME", "CIVIL", "TE", null],
-      default: null,
+      default: null, // Removed restrictive enum to support Pharmacy & Engineering branches dynamic validation
     },
 
     currentSem: {
@@ -66,16 +64,16 @@ const userSchema = new mongoose.Schema(
 
     lbOptIn: {
       type:    Boolean,
-      default: true, // Updated to auto-enroll new users
+      default: true, // Auto-enrolled by default
     },
 
     lbOptInDate: {
       type:    Date,
-      default: Date.now, // Timestamp when auto-enrolled
+      default: null, // CRITICAL: Set to null initially. Set to new Date() upon FIRST semester save.
     },
 
     googleId: {
-      type:   String,
+      type:    String,
       default: null,
       select:  false,
       sparse:  true,
@@ -112,9 +110,8 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────────────
-// branch index supports leaderboard branch-filtered queries
-userSchema.index({ branch: 1 });
+// ── Compound Index for Optimized Leaderboard Queries ──────────────────────────
+userSchema.index({ lbOptIn: 1, isActive: 1, branch: 1 });
 
 // ── Instance method: safe public profile ──────────────────────────────────────
 userSchema.methods.toPublicJSON = function () {
@@ -129,7 +126,7 @@ userSchema.methods.toPublicJSON = function () {
     appInstalled:   this.appInstalled,
     appInstalledAt: this.appInstalledAt,
     appInstalledOn: this.appInstalledOn,
-    lbOptIn:         this.lbOptIn,
+    lbOptIn:        this.lbOptIn,
     lbOptInDate:    this.lbOptInDate,
     hasSetPassword: this.hasSetPassword,
     lastLogin:      this.lastLogin,
