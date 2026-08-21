@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useTheme } from "../context/ThemeContext";
-import { GRADE_TABLE } from "../data/gradeTable";
+import { ENGINEERING_GRADES } from "../data/gradeTable";
 
 // ── Module-level constants — never recreated ─────────────────────────────────
 const GRID_COLS = "110px 90px 56px 72px 1fr";
@@ -113,7 +113,6 @@ const FormulaBox = memo(function FormulaBox({ box }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function GradeTablePage() {
-  // Remove dark, btn, inp, toggleDark — unused
   const { c, cardSty, scoreClr } = useTheme();
   const card = cardSty();
 
