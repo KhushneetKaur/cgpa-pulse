@@ -1,49 +1,30 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { useTheme } from "../context/ThemeContext";
-import { BRANCHES } from "../data/branches";
+import { BRANCHES }          from "../data/branches";
+import { PHARMACY_BRANCHES } from "../data/pharmacyBranches";
 import {
   apiUpdateUsername,
   apiUpdateBranch,
   apiUpdateCurrentSem,
 } from "../services/user.api.js";
 
-// ── Module-level constants — never recreated ──────────────────────────────────
+// ── Module-level constants ────────────────────────────────────────────────────
 const PROGRESS_STEPS = [1, 2, 3, 4];
-const SEM_NUMBERS    = [1, 2, 3, 4, 5, 6, 7, 8];
-const BRANCH_ENTRIES = Object.entries(BRANCHES);
+const ENG_ENTRIES    = Object.entries(BRANCHES);
+const PHARM_ENTRIES  = Object.entries(PHARMACY_BRANCHES);
 
 const TIPS = [
   {
     icon:      "📲",
     title:     "Install CGPA Pulse on your phone",
-    desc:      'Tap the Share button in Safari (iOS) or the menu in Chrome (Android) and select "Add to Home Screen" — works like a native app, no App Store needed.',
+    desc:      'Tap Share in Safari (iOS) or the menu in Chrome (Android) and select "Add to Home Screen" — works like a native app, no App Store needed.',
     highlight: true,
   },
-  {
-    icon:  "👤",
-    title: "Your profile is in the top-right avatar",
-    desc:  "Tap your initials button to change username, switch branch, view CGPA, or sign out.",
-  },
-  {
-    icon:  "📝",
-    title: "Enter marks in the Calculator tab",
-    desc:  "Select a semester, enter internal + external marks for each subject, then hit Save.",
-  },
-  {
-    icon:  "⚡",
-    title: "Already have your SGPA? Use Quick SGPA",
-    desc:  "Tap ⚡ inside the Calculator to directly enter a known SGPA for any semester — no need to enter every mark.",
-  },
-  {
-    icon:  "✏️",
-    title: "Customise subjects if your syllabus changed",
-    desc:  "Use the Customise button inside the calculator to hide removed subjects or add new ones.",
-  },
-  {
-    icon:  "🏆",
-    title: "Join the leaderboard anytime",
-    desc:  "Go to the Leaderboard tab and opt in to show your CGPA to other students.",
-  },
+  { icon: "👤", title: "Your profile is in the top-right avatar",    desc: "Tap your initials to change username, switch branch, view CGPA, or sign out." },
+  { icon: "📝", title: "Enter marks in the Calculator tab",           desc: "Select a semester, enter internal + external marks for each subject, then hit Save." },
+  { icon: "⚡", title: "Already have your SGPA? Use Quick SGPA",     desc: "Tap ⚡ inside the Calculator to directly enter a known SGPA — no need to enter every mark." },
+  { icon: "✏️", title: "Customise subjects if your syllabus changed", desc: "Use the Customise button inside the calculator to hide removed subjects or add new ones." },
+  { icon: "🏆", title: "You're automatically on the leaderboard",    desc: "When you save your first semester your CGPA appears on the leaderboard. You can opt out after 45 days." },
 ];
 
 function isValidUsername(u) {
@@ -55,22 +36,18 @@ function isValidUsername(u) {
   return { ok: true };
 }
 
-// ── Back button  ────────────────────────────────────────────
 const BackBtn = memo(function BackBtn({ label, onClick }) {
   const { c } = useTheme();
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{ background: "none", border: "none", color: c.sub, cursor: "pointer", fontSize: 12, marginBottom: 12, padding: 0 }}
-    >
+    <button type="button" onClick={onClick}
+      style={{ background: "none", border: "none", color: c.sub, cursor: "pointer", fontSize: 12, marginBottom: 12, padding: 0 }}>
       {label}
     </button>
   );
 });
 
 // ── Main modal ────────────────────────────────────────────────────────────────
-export default function OnboardingModal({ user, onDone }) {
+export default function OnboardingModal({ user, faculty, onDone }) {
   const { dark, c, btn, inp } = useTheme();
 
   const [step,           setStep]           = useState(1);
@@ -81,77 +58,117 @@ export default function OnboardingModal({ user, onDone }) {
   const [usernameStatus, setUsernameStatus] = useState(null);
   const [suggestions,    setSuggestions]    = useState([]);
   const checkTimer = useRef(null);
-  const [username, setUsername] = useState(() =>
-    user?.username ? user.username.replace(/_[a-z0-9]{4}$/i, "") : ""
-  );
-  const confirmedUsername = useRef(user?.username || null);
 
-  // Use stable user ID 
+  // Strip auto-generated 4-char suffix (e.g. khushneet_g4f2 → khushneet)
+  const strippedUsername = user?.username?.replace(/_[a-z0-9]{4}$/i, "") || "";
+  const [username, setUsername] = useState(() => strippedUsername);
+
+  // Track last successfully confirmed username — prevents re-calling API on back-navigation
+  // null = haven't passed step 1 yet on this modal session
+  const confirmedUsername = useRef(null);
+
+  // ── Sync if user prop changes ──────────────────────────────────────────────
   const userId = user?.id || user?._id;
   useEffect(() => {
     if (!user) return;
     if (user.username) setUsername(user.username.replace(/_[a-z0-9]{4}$/i, ""));
-    if (user.branch)   setBranch(user.branch);
-    if (user.currentSem) setCurrentSem(user.currentSem);
+    if (user.branch)      setBranch(user.branch);
+    if (user.currentSem)  setCurrentSem(user.currentSem);
   }, [userId]);
 
-  // Stable handlers
+  // ── Branch entries — faculty-aware ─────────────────────────────────────────
+  const branchEntries = faculty === "pharmacy" ? PHARM_ENTRIES : ENG_ENTRIES;
+
+  // ── Semester numbers — derived from selected branch ────────────────────────
+  const semInfo = (() => {
+    const bd = faculty === "pharmacy"
+      ? PHARMACY_BRANCHES[branch]
+      : BRANCHES[branch];
+    const count = bd ? Object.keys(bd.semesters).length : 8;
+    const label = bd?.semLabel || "Sem";
+    return {
+      numbers: Array.from({ length: count }, (_, i) => i + 1),
+      label,
+    };
+  })();
+
+  // ── Branch name for welcome step ───────────────────────────────────────────
+  const branchShort = (() => {
+    if (!branch) return "Selected Branch";
+    const bd = faculty === "pharmacy"
+      ? PHARMACY_BRANCHES[branch]
+      : BRANCHES[branch];
+    return bd?.short || branch;
+  })();
+
+  // ── "Is own username" — true if input matches confirmed, stripped, or DB value ──
+  const isOwnName = (val) =>
+    val === strippedUsername ||
+    val === user?.username   ||
+    (confirmedUsername.current !== null && val === confirmedUsername.current);
+
+  // ── Username input change ──────────────────────────────────────────────────
   const handleUsernameChange = useCallback((e) => {
-  const val = e.target.value;
-  setUsername(val);
-  setErr("");
-  setSuggestions([]);
+    const val = e.target.value;
+    setUsername(val);
+    setErr("");
+    setSuggestions([]);
 
-  // Own username — always available, no API call needed
-  if (val.trim() === confirmedUsername.current || val.trim() === user?.username) {
-    setUsernameStatus("available");
-    if (checkTimer.current) clearTimeout(checkTimer.current);
-    return;
-  }
-
-  setUsernameStatus(null);
-  if (checkTimer.current) clearTimeout(checkTimer.current);
-  if (!isValidUsername(val).ok) return;
-
-  setUsernameStatus("checking");
-  checkTimer.current = setTimeout(async () => {
-    try {
-      const { apiCheckUsername } = await import("../services/user.api.js");
-      const { available, suggestions: sugg } = await apiCheckUsername(val.trim());
-      setUsernameStatus(available ? "available" : "taken");
-      setSuggestions(sugg || []);
-    } catch {
-      setUsernameStatus(null);
+    if (isOwnName(val.trim())) {
+      setUsernameStatus("available");
+      if (checkTimer.current) clearTimeout(checkTimer.current);
+      return;
     }
-  }, 600);
-}, [user?.username]);
 
+    setUsernameStatus(null);
+    if (checkTimer.current) clearTimeout(checkTimer.current);
+    if (!isValidUsername(val).ok) return;
+
+    setUsernameStatus("checking");
+    checkTimer.current = setTimeout(async () => {
+      try {
+        const { apiCheckUsername } = await import("../services/user.api.js");
+        const { available, suggestions: sugg } = await apiCheckUsername(val.trim());
+        setUsernameStatus(available ? "available" : "taken");
+        setSuggestions(sugg || []);
+      } catch {
+        setUsernameStatus(null);
+      }
+    }, 600);
+  }, [strippedUsername, user?.username]); 
+
+  // ── Step 1 — Continue ──────────────────────────────────────────────────────
   const handleUsernameNext = useCallback(async (e) => {
-  if (e) e.preventDefault();
-  const trimmed = username.trim();
-  const check = isValidUsername(trimmed);
-  if (!check.ok) { setErr(check.msg); return; }
-  setErr("");
+    if (e) e.preventDefault();
+    const trimmed = username.trim();
+    const check = isValidUsername(trimmed);
+    if (!check.ok) { setErr(check.msg); return; }
+    setErr("");
 
-  // If username matches what's already saved — skip API, just advance
-  if (trimmed === confirmedUsername.current || trimmed === user?.username) {
-    confirmedUsername.current = trimmed;
-    setStep(2);
-    return;
-  }
+    // Returning after going back — same as what was confirmed last time → skip API
+    if (confirmedUsername.current !== null && trimmed === confirmedUsername.current) {
+      setStep(2);
+      return;
+    }
 
-  // Username actually changed — call API (backend enforces 30-day cooldown)
-  setLoading(true);
-  try {
-    await apiUpdateUsername(trimmed);
-    confirmedUsername.current = trimmed; // update confirmed after success
-    setStep(2);
-  } catch (err) {
-    setErr(err.message || "Username taken — try another");
-  } finally {
-    setLoading(false);
-  }
-}, [username, user?.username]);
+    if (trimmed === user?.username) {
+      confirmedUsername.current = trimmed;
+      setStep(2);
+      return;
+    }
+
+    // Actual change (includes stripped version on first pass) → call API
+    setLoading(true);
+    try {
+      await apiUpdateUsername(trimmed);
+      confirmedUsername.current = trimmed;
+      setStep(2);
+    } catch (err) {
+      setErr(err.message || "Username taken — try another");
+    } finally {
+      setLoading(false);
+    }
+  }, [username, user?.username]);
 
   const handleBranchNext = useCallback(async () => {
     if (!branch) { setErr("Please select your branch"); return; }
@@ -168,37 +185,30 @@ export default function OnboardingModal({ user, onDone }) {
   }, [branch]);
 
   const handleSemesterNext = useCallback(async () => {
-    if (!currentSem) { setErr("Please select your current semester"); return; }
+    if (!currentSem) { setErr(`Please select your current ${semInfo.label.toLowerCase()}`); return; }
     setErr("");
     setLoading(true);
-    try {
-      await apiUpdateCurrentSem(currentSem);
-    } catch {
-    } finally {
-      setLoading(false);
-      setStep(4);
-    }
-  }, [currentSem]);
+    try { await apiUpdateCurrentSem(currentSem); } catch { /* non-critical */ }
+    finally { setLoading(false); setStep(4); }
+  }, [currentSem, semInfo.label]);
 
   const handleFinish = useCallback((e) => {
     if (e) e.preventDefault();
     onDone(username.trim(), branch, currentSem);
   }, [onDone, username, branch, currentSem]);
 
-  // Suggestion click — stable per suggestion
   const handleSuggestionClick = useCallback((s) => {
     setUsername(s);
     setErr("");
     setUsernameStatus("available");
     setSuggestions([]);
+    confirmedUsername.current = null; // reset — suggestion is a new choice
   }, []);
 
- const isOwnUsername = username.trim() === confirmedUsername.current 
-  || username.trim() === user?.username;
-
- const isStep1Disabled = loading
-  || (!isOwnUsername && usernameStatus === "taken")
-  || (!isOwnUsername && usernameStatus === "checking");
+  const isStep1Own      = isOwnName(username.trim());
+  const isStep1Disabled = loading
+    || (!isStep1Own && usernameStatus === "taken")
+    || (!isStep1Own && usernameStatus === "checking");
 
   return (
     <div style={{
@@ -209,33 +219,27 @@ export default function OnboardingModal({ user, onDone }) {
       padding: "1rem",
     }}>
       <div style={{
-        background:    dark ? "#0f1424" : "#fff",
-        border:        `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
-        borderRadius:  20,
-        padding:       "32px 28px",
-        maxWidth:      440,
-        width:         "100%",
-        maxHeight:     "90vh",
-        overflowY:     "auto",
-        scrollbarWidth: "none",
-        boxShadow:     dark ? "0 24px 80px rgba(0,0,0,0.7)" : "0 24px 80px rgba(109,40,217,0.18)",
-        animation:     "scaleIn 0.25s ease both",
+        background: dark ? "#0f1424" : "#fff",
+        border:     `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
+        borderRadius: 20, padding: "32px 28px",
+        maxWidth: 440, width: "100%", maxHeight: "90vh",
+        overflowY: "auto", scrollbarWidth: "none",
+        boxShadow: dark ? "0 24px 80px rgba(0,0,0,0.7)" : "0 24px 80px rgba(109,40,217,0.18)",
+        animation: "scaleIn 0.25s ease both",
       }}>
 
         {/* Progress dots */}
         <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 24 }}>
           {PROGRESS_STEPS.map(s => (
             <div key={s} style={{
-              width:        s === step ? 20 : 8,
-              height:       8,
-              borderRadius: 99,
-              background:   s === step ? c.accent : s < step ? `${c.accent}60` : dark ? "#1e2540" : "#e4e2f0",
-              transition:   "all 0.3s",
+              width: s === step ? 20 : 8, height: 8, borderRadius: 99,
+              background: s === step ? c.accent : s < step ? `${c.accent}60` : dark ? "#1e2540" : "#e4e2f0",
+              transition: "all 0.3s",
             }} />
           ))}
         </div>
 
-        {/* ── Step 1: Username ─────────────────────────────────── */}
+        {/* ── Step 1: Username ───────────────────────────────── */}
         {step === 1 && (
           <form onSubmit={handleUsernameNext}>
             <p style={{ margin: "0 0 6px", fontSize: 24, textAlign: "center" }}>👋</p>
@@ -243,16 +247,12 @@ export default function OnboardingModal({ user, onDone }) {
               Welcome to CGPA Pulse!
             </h2>
             <p style={{ margin: "0 0 24px", fontSize: 13, color: c.sub, textAlign: "center", lineHeight: 1.6 }}>
-              Let's set up your profile. First, choose a username — this is how
-              others will see you on the leaderboard.
+              Let's set up your profile. Choose a username — this is how others will see you on the leaderboard.
             </p>
 
-            <label style={{ fontSize: 12, fontWeight: 600, color: c.sub, display: "block", marginBottom: 6 }}>
-              Username
-            </label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: c.sub, display: "block", marginBottom: 6 }}>Username</label>
             <input
-              type="text"
-              value={username}
+              type="text" value={username}
               onChange={handleUsernameChange}
               placeholder="e.g. khushneet_k"
               style={{ ...inp(), marginBottom: 6, fontSize: 15, padding: "12px 14px" }}
@@ -260,11 +260,8 @@ export default function OnboardingModal({ user, onDone }) {
             />
 
             {usernameStatus && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                marginTop: 4, marginBottom: 6, fontSize: 12, fontWeight: 600,
-                color: usernameStatus === "available" ? c.ok : usernameStatus === "taken" ? c.bad : c.muted,
-              }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, marginBottom: 6, fontSize: 12, fontWeight: 600,
+                color: usernameStatus === "available" ? c.ok : usernameStatus === "taken" ? c.bad : c.muted }}>
                 {usernameStatus === "checking" && (
                   <>
                     <div style={{ width: 10, height: 10, borderRadius: "50%", border: `2px solid ${c.muted}`, borderTop: `2px solid ${c.accent}`, animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
@@ -281,12 +278,8 @@ export default function OnboardingModal({ user, onDone }) {
                 <p style={{ margin: "0 0 6px", fontSize: 11, color: c.muted }}>Try one of these:</p>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {suggestions.map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => handleSuggestionClick(s)}
-                      style={{ padding: "4px 10px", borderRadius: 8, border: `1px solid ${c.accent}`, background: `${c.accent}12`, color: c.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-                    >
+                    <button key={s} type="button" onClick={() => handleSuggestionClick(s)}
+                      style={{ padding: "4px 10px", borderRadius: 8, border: `1px solid ${c.accent}`, background: `${c.accent}12`, color: c.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
                       {s}
                     </button>
                   ))}
@@ -300,41 +293,39 @@ export default function OnboardingModal({ user, onDone }) {
 
             {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad, fontWeight: 500 }}>⚠ {err}</p>}
 
-            <button
-              type="submit"
-              disabled={isStep1Disabled}
-              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center", opacity: isStep1Disabled ? 0.6 : 1, cursor: isStep1Disabled ? "not-allowed" : "pointer" }}
-            >
+            <button type="submit" disabled={isStep1Disabled}
+              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center",
+                opacity: isStep1Disabled ? 0.6 : 1, cursor: isStep1Disabled ? "not-allowed" : "pointer" }}>
               {loading ? "Checking..." : "Continue →"}
             </button>
           </form>
         )}
 
-        {/* ── Step 2: Branch ───────────────────────────────────── */}
+        {/* ── Step 2: Branch ─────────────────────────────────── */}
         {step === 2 && (
           <>
             <BackBtn label="← Back to username" onClick={() => { setStep(1); setErr(""); }} />
             <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: c.text, textAlign: "center" }}>
-              Your Branch
+              Your {faculty === "pharmacy" ? "Programme" : "Branch"}
             </h2>
             <p style={{ margin: "0 0 20px", fontSize: 13, color: c.sub, textAlign: "center", lineHeight: 1.6 }}>
               Hey <strong style={{ color: c.accent }}>@{username || "there"}</strong>! 🎉{" "}
-              Now select your engineering branch so we can load the right subjects.
+              {faculty === "pharmacy"
+                ? "Select your pharmacy programme so we can load the right subjects."
+                : "Select your engineering branch so we can load the right subjects."}
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
-              {BRANCH_ENTRIES.map(([key, b]) => {
+              {branchEntries.map(([key, b]) => {
                 const isSelected = branch === key;
                 return (
-                  <button
-                    key={key}
-                    type="button"
+                  <button key={key} type="button"
                     onClick={() => { setBranch(key); setErr(""); }}
                     style={{
                       padding: "12px 10px", borderRadius: 12, cursor: "pointer",
                       fontFamily: "inherit", textAlign: "left", transition: "all 0.15s",
-                      border:      isSelected ? `2px solid ${b.color}` : `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
-                      background:  isSelected ? `${b.color}14`          : dark ? "#080c18" : "#f9f8ff",
+                      border:     isSelected ? `2px solid ${b.color}` : `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
+                      background: isSelected ? `${b.color}14`          : dark ? "#080c18" : "#f9f8ff",
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
@@ -353,40 +344,35 @@ export default function OnboardingModal({ user, onDone }) {
 
             {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad, fontWeight: 500 }}>⚠ {err}</p>}
 
-            <button
-              type="button"
-              onClick={handleBranchNext}
-              disabled={!branch || loading}
-              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center", opacity: !branch || loading ? 0.6 : 1, cursor: !branch ? "not-allowed" : "pointer" }}
-            >
+            <button type="button" onClick={handleBranchNext} disabled={!branch || loading}
+              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center",
+                opacity: !branch || loading ? 0.6 : 1, cursor: !branch ? "not-allowed" : "pointer" }}>
               {loading ? "Saving..." : "Continue →"}
             </button>
           </>
         )}
 
-        {/* ── Step 3: Semester ─────────────────────────────────── */}
+        {/* ── Step 3: Semester / Year ─────────────────────────── */}
         {step === 3 && (
           <>
-            <BackBtn label="← Back to branch" onClick={() => { setStep(2); setErr(""); }} />
+            <BackBtn label={`← Back to ${faculty === "pharmacy" ? "programme" : "branch"}`} onClick={() => { setStep(2); setErr(""); }} />
             <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: c.text, textAlign: "center" }}>
-              Which semester are you in?
+              Which {semInfo.label.toLowerCase()} are you in?
             </h2>
             <p style={{ margin: "0 0 20px", fontSize: 13, color: c.sub, textAlign: "center", lineHeight: 1.6 }}>
-              We'll open your current semester automatically.
+              We'll open your current {semInfo.label.toLowerCase()} automatically.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 }}>
-              {SEM_NUMBERS.map(s => (
-                <button
-                  key={s}
-                  type="button"
+              {semInfo.numbers.map(s => (
+                <button key={s} type="button"
                   onClick={() => { setCurrentSem(s); setErr(""); }}
                   style={{
                     padding: "14px 8px", borderRadius: 12, cursor: "pointer",
                     fontFamily: "inherit", fontSize: 16, fontWeight: 700, transition: "all 0.15s",
-                    border:      currentSem === s ? `2px solid ${c.accent}` : `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
-                    background:  currentSem === s ? `${c.accent}14`          : dark ? "#080c18" : "#f9f8ff",
-                    color:       currentSem === s ? c.accent : c.text,
+                    border:     currentSem === s ? `2px solid ${c.accent}` : `1px solid ${dark ? "#1e2540" : "#e4e2f0"}`,
+                    background: currentSem === s ? `${c.accent}14`          : dark ? "#080c18" : "#f9f8ff",
+                    color:      currentSem === s ? c.accent : c.text,
                   }}
                 >
                   {s}
@@ -394,7 +380,7 @@ export default function OnboardingModal({ user, onDone }) {
               ))}
             </div>
 
-            {currentSem && currentSem > 1 && (
+            {currentSem && currentSem > 1 && faculty !== "pharmacy" && (
               <div style={{
                 padding: "12px 14px", borderRadius: 10, marginBottom: 16,
                 fontSize: 12, color: c.sub, lineHeight: 1.6,
@@ -402,37 +388,31 @@ export default function OnboardingModal({ user, onDone }) {
                 border:     `1px solid ${dark ? "rgba(124,131,245,0.2)" : "rgba(109,40,217,0.12)"}`,
               }}>
                 💡 <strong style={{ color: c.text }}>Tip:</strong> For Semesters 1–{currentSem - 1},
-                use the <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> button inside
-                the Calculator to enter your final SGPA directly.
+                use the <strong style={{ color: c.accent }}>⚡ Quick SGPA</strong> button to enter your final SGPA directly.
               </div>
             )}
 
             {err && <p style={{ margin: "0 0 12px", fontSize: 12, color: c.bad }}>⚠ {err}</p>}
 
-            <button
-              type="button"
-              onClick={handleSemesterNext}
-              disabled={!currentSem || loading}
-              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center", opacity: !currentSem || loading ? 0.6 : 1, cursor: !currentSem ? "not-allowed" : "pointer" }}
-            >
+            <button type="button" onClick={handleSemesterNext} disabled={!currentSem || loading}
+              style={{ ...btn("primary"), width: "100%", padding: "13px", fontSize: 14, justifyContent: "center",
+                opacity: !currentSem || loading ? 0.6 : 1, cursor: !currentSem ? "not-allowed" : "pointer" }}>
               {loading ? "Saving..." : "Continue →"}
             </button>
           </>
         )}
 
-        {/* ── Step 4: Welcome ──────────────────────────────────── */}
+        {/* ── Step 4: Welcome ────────────────────────────────── */}
         {step === 4 && (
           <form onSubmit={handleFinish}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <p style={{ fontSize: 48, margin: "0 0 12px" }}>🎓</p>
-              <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 900, color: c.text }}>
-                You're all set!
-              </h2>
+              <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 900, color: c.text }}>You're all set!</h2>
               <p style={{ margin: 0, fontSize: 13, color: c.sub, lineHeight: 1.6 }}>
                 Welcome to CGPA Pulse,{" "}
                 <strong style={{ color: c.accent }}>@{username}</strong>!
-                Your branch is set to{" "}
-                <strong style={{ color: c.text }}>{BRANCHES[branch]?.short || branch || "Selected Branch"}</strong>.
+                Your programme is set to{" "}
+                <strong style={{ color: c.text }}>{branchShort}</strong>.
               </p>
             </div>
 
@@ -453,9 +433,7 @@ export default function OnboardingModal({ user, onDone }) {
                     <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: tip.highlight ? c.accent : c.text }}>
                       {tip.title}
                       {tip.highlight && (
-                        <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: "#fff", background: c.accent, borderRadius: 4, padding: "1px 5px", verticalAlign: "middle" }}>
-                          NEW
-                        </span>
+                        <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: "#fff", background: c.accent, borderRadius: 4, padding: "1px 5px", verticalAlign: "middle" }}>NEW</span>
                       )}
                     </p>
                     <p style={{ margin: 0, fontSize: 11, color: c.sub, lineHeight: 1.5 }}>{tip.desc}</p>
@@ -464,11 +442,8 @@ export default function OnboardingModal({ user, onDone }) {
               ))}
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ ...btn("primary"), width: "100%", padding: "14px", fontSize: 15, justifyContent: "center", opacity: loading ? 0.7 : 1 }}
-            >
+            <button type="submit" disabled={loading}
+              style={{ ...btn("primary"), width: "100%", padding: "14px", fontSize: 15, justifyContent: "center", opacity: loading ? 0.7 : 1 }}>
               {loading ? "Finishing..." : "Let's go! 🚀"}
             </button>
           </form>
