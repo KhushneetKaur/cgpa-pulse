@@ -3,20 +3,21 @@ import mongoose from "mongoose";
 const subjectMarksSchema = new mongoose.Schema(
   {
     code: { type: String, required: true },
-    int:  { type: Number, default: null, min: 0, max: 60 },
-    ext:  { type: Number, default: null, min: 0, max: 60 },
+    int:  { type: Number, default: null, min: 0, max: 150 },
+    ext:  { type: Number, default: null, min: 0, max: 150 },
   },
   { _id: false }
 );
 
+// Custom subject subdoc — flexible type for future programmes
 const customSubjectSchema = new mongoose.Schema(
   {
     code:    { type: String, required: true },
     name:    { type: String, required: true },
-    credits: { type: Number, min: 0, max: 10, required: true },
-    type:    { type: String, enum: ["theory", "lab"], default: "theory" },
+    credits: { type: Number, min: 0, max: 30, required: true }, 
+    type:    { type: String, default: "theory" }, 
   },
-  { _id: false } 
+  { _id: false }
 );
 
 const semesterDataSchema = new mongoose.Schema(
@@ -30,14 +31,13 @@ const semesterDataSchema = new mongoose.Schema(
     branch: {
       type:     String,
       required: true,
-      enum:     ["CSE", "AIML", "ECE", "EE", "ME", "CIVIL", "TE"],
     },
 
     semNumber: {
       type:     Number,
       required: true,
       min:      1,
-      max:      8,
+      max:      12,
     },
 
     marks: {
@@ -55,6 +55,8 @@ const semesterDataSchema = new mongoose.Schema(
     credits: {
       type:    Number,
       default: 0,
+      min:     0,
+      max:     300,
     },
 
     isPartial: {
@@ -62,14 +64,12 @@ const semesterDataSchema = new mongoose.Schema(
       default: false,
     },
 
-    // "detailed" = marks entered, "quick" = SGPA entered directly
     mode: {
       type:    String,
       enum:    ["detailed", "quick"],
       default: "detailed",
     },
 
-    // Elective name overrides — { "BCSED1-51X": "Machine Learning" }
     electiveNames: {
       type:    Map,
       of:      String,
@@ -81,7 +81,6 @@ const semesterDataSchema = new mongoose.Schema(
       default: [],
     },
 
-    // Explicit save timestamp — distinct from updatedAt which changes on any write
     savedAt: {
       type:    Date,
       default: Date.now,
@@ -93,16 +92,13 @@ const semesterDataSchema = new mongoose.Schema(
     },
 
     hiddenSubjects: {
-      type:    [String],   
+      type:    [String],
       default: [],
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Compound unique index 
 semesterDataSchema.index({ userId: 1, branch: 1, semNumber: 1 }, { unique: true });
 
 export default mongoose.model("SemesterData", semesterDataSchema);
