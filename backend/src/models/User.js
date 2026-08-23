@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+const VALID_BRANCHES = [
+  // Engineering
+  "CSE", "AIML", "ECE", "EE", "ME", "CIVIL", "TE",
+  // Pharmacy
+  "BPHARM", "PHARMD", "MPHARM",
+  // Future programmes — add here
+];
+
+const VALID_FACULTIES = ["engineering", "pharmacy"];
+// Future: "science", "bca" etc.
+
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -45,16 +56,34 @@ const userSchema = new mongoose.Schema(
       default: "student",
     },
 
+    // No enum — validated at Joi layer (validators.js VALID_BRANCHES)
+    // Keeping flexible so adding new programmes only requires validators.js change
     branch: {
       type:    String,
-      default: null, // Removed restrictive enum to support Pharmacy & Engineering branches dynamic validation
+      default: null,
     },
 
+    // "engineering" | "pharmacy" | future faculties
+    // Persisted so inferFaculty() is never needed after first login
+    faculty: {
+      type:    String,
+      enum:    [...VALID_FACULTIES, null],
+      default: null,
+    },
+
+    joiningYear: {
+      type:    Number,
+      default: null,
+      min:     2018,
+      max:     2035,
+    },
+
+    // max 12 — covers 8-sem B.Tech, 5-year Pharm.D, future programmes
     currentSem: {
       type:    Number,
       default: null,
       min:     1,
-      max:     8,
+      max:     12,
     },
 
     usernameSetAt: {
@@ -62,14 +91,17 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    // lbOptIn is always true — leaderboard is mandatory, no opt-out
+    // Kept in schema for data migration compatibility
+    // lbOptInDate repurposed as "first semester saved date" for display
     lbOptIn: {
       type:    Boolean,
-      default: true, // Auto-enrolled by default
+      default: true,
     },
 
     lbOptInDate: {
       type:    Date,
-      default: null, // CRITICAL: Set to null initially. Set to new Date() upon FIRST semester save.
+      default: null,
     },
 
     googleId: {
@@ -91,7 +123,7 @@ const userSchema = new mongoose.Schema(
     },
 
     appInstalledOn: {
-      type:    String, // "android" | "ios" | "desktop"
+      type:    String,
       default: null,
     },
 
@@ -105,15 +137,12 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// ── Compound Index for Optimized Leaderboard Queries ──────────────────────────
-userSchema.index({ lbOptIn: 1, isActive: 1, branch: 1 });
+// Branch + faculty index — covers leaderboard branch filter queries
+userSchema.index({ branch: 1, faculty: 1, isActive: 1 });
 
-// ── Instance method: safe public profile ──────────────────────────────────────
 userSchema.methods.toPublicJSON = function () {
   return {
     id:             this._id,
@@ -121,6 +150,8 @@ userSchema.methods.toPublicJSON = function () {
     email:          this.email,
     role:           this.role,
     branch:         this.branch,
+    faculty:        this.faculty,
+    joiningYear:    this.joiningYear,
     currentSem:     this.currentSem,
     usernameSetAt:  this.usernameSetAt,
     appInstalled:   this.appInstalled,
