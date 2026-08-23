@@ -71,13 +71,6 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-    joiningYear: {
-      type:    Number,
-      default: null,
-      min:     2018,
-      max:     2035,
-    },
-
     // max 12 — covers 8-sem B.Tech, 5-year Pharm.D, future programmes
     currentSem: {
       type:    Number,
