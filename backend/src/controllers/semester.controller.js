@@ -36,19 +36,16 @@ async function ensureLeaderboardOptIn(req, userId, validSemsCount) {
 }
 
 async function syncLeaderboard(req, userId, branch, allSems) {
-  if (!req.user?.lbOptIn) return;
-
-  const validSems = allSems.filter(s => s.sgpa != null && s.sgpa > 0);
-  if (validSems.length === 0) return; // Don't index empty profiles
-
-  const calculatedCgpa = calculateCGPA(allSems) ?? 0;
-
+   const cgpa     = calculateCGPA(allSems) ?? 0;
+   const semCount = allSems.filter(s => s.sgpa).length;
+  if (semCount === 0) return;
   await upsertLeaderboardEntry({
     userId,
     username: req.user.username || "Anonymous",
     branch: req.user.branch || branch,
-    cgpa: calculatedCgpa,
-    semCount: validSems.length,
+    faculty:  req.user.faculty  || null, 
+    cgpa,
+    semCount,
   });
 }
 

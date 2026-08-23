@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import { sendResponse } from "../utils/ApiResponse.js";
-import { upsertLeaderboardEntry, removeLeaderboardEntry } from "../services/leaderboard.service.js";
+import { upsertLeaderboardEntry } from "../services/leaderboard.service.js";
 import { getUserSemesters, calculateCGPA } from "../services/semester.service.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -9,18 +9,18 @@ const getDaysSince = (date) =>
   Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
 
 async function syncLeaderboard(user, userId) {
-  if (!user.lbOptIn || !user.branch) return;
-  const allSems = (await getUserSemesters(userId, user.branch)) || [];
-  const validSems = allSems.filter((s) => s.sgpa != null && s.sgpa > 0);
-
-  if (validSems.length === 0) return; // Only show on leaderboard if valid semesters exist
+  if (!user.branch) return;
+  const allSems = await getUserSemesters(userId, user.branch) || [];
+  const semCount = allSems.filter(s => s.sgpa).length;
+  if (semCount === 0) return; 
 
   await upsertLeaderboardEntry({
     userId,
     username: user.username || "Anonymous",
-    branch: user.branch,
-    cgpa: calculateCGPA(allSems) ?? 0,
-    semCount: validSems.length,
+    branch:   user.branch,
+    faculty:  user.faculty  || null, 
+    cgpa:     calculateCGPA(allSems) ?? 0,
+    semCount,
   });
 }
 
@@ -116,42 +116,6 @@ export async function updateCurrentSem(req, res, next) {
       { new: true }
     );
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Current semester updated");
-  } catch (err) { next(err); }
-}
-
-// ── PUT /api/user/leaderboard ─────────────────────────────────────────────────
-export async function updateLbOptIn(req, res, next) {
-  try {
-    const { optIn } = req.body;
-    const userId    = req.user._id.toString();
-    const user      = await User.findById(userId);
-    if (!user) throw ApiError.notFound("User not found");
-
-    // Block Opt-Out within 45 days
-    if (!optIn && user.lbOptIn) {
-      const lockStartDate = user.lbOptInDate || user.createdAt;
-      const daysLeft = 45 - getDaysSince(lockStartDate);
-      if (daysLeft > 0) {
-        throw ApiError.badRequest(
-          `You can opt out in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
-        );
-      }
-      await removeLeaderboardEntry(userId);
-    }
-
-    // Set lock start date on first opt-in initialization
-    if (optIn && !user.lbOptInDate) {
-      user.lbOptInDate = new Date();
-    }
-
-    user.lbOptIn = optIn;
-    await user.save();
-
-    if (optIn) {
-      await syncLeaderboard(user, userId);
-    }
-
-    sendResponse(res, 200, { user: user.toPublicJSON() }, "Leaderboard preference updated");
   } catch (err) { next(err); }
 }
 
