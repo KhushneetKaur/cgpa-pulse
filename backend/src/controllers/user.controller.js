@@ -1,25 +1,28 @@
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import { sendResponse } from "../utils/ApiResponse.js";
-import { upsertLeaderboardEntry } from "../services/leaderboard.service.js";
+import { upsertLeaderboardEntry, removeLeaderboardEntry } from "../services/leaderboard.service.js";
 import { getUserSemesters, calculateCGPA } from "../services/semester.service.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getDaysSince = (date) =>
   Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
 
+const escapeRegex = (string) =>
+  string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 async function syncLeaderboard(user, userId) {
   if (!user.branch) return;
-  const allSems = await getUserSemesters(userId, user.branch) || [];
-  const semCount = allSems.filter(s => s.sgpa).length;
-  if (semCount === 0) return; 
+  const allSems = (await getUserSemesters(userId, user.branch)) || [];
+  const semCount = allSems.filter((s) => s.sgpa).length;
+  if (semCount === 0) return;
 
   await upsertLeaderboardEntry({
     userId,
     username: user.username || "Anonymous",
-    branch:   user.branch,
-    faculty:  user.faculty  || null, 
-    cgpa:     calculateCGPA(allSems) ?? 0,
+    branch: user.branch,
+    faculty: user.faculty || null,
+    cgpa: calculateCGPA(allSems) ?? 0,
     semCount,
   });
 }
@@ -28,15 +31,17 @@ async function syncLeaderboard(user, userId) {
 export function getProfile(req, res, next) {
   try {
     sendResponse(res, 200, { user: req.user.toPublicJSON() }, "Profile fetched");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── PUT /api/user/username ────────────────────────────────────────────────────
 export async function updateUsername(req, res, next) {
   try {
     const username = req.body.username.trim();
-    const userId   = req.user._id.toString();
-    const user     = await User.findById(userId);
+    const userId = req.user._id.toString();
+    const user = await User.findById(userId);
     if (!user) throw ApiError.notFound("User not found");
 
     if (user.usernameSetAt) {
@@ -48,18 +53,20 @@ export async function updateUsername(req, res, next) {
     }
 
     const existing = await User.findOne({
-      username: { $regex: new RegExp(`^${username}$`, "i") },
-      _id:      { $ne: userId },
+      username: { $regex: new RegExp(`^${escapeRegex(username)}$`, "i") },
+      _id: { $ne: userId },
     });
     if (existing) throw ApiError.conflict("Username is already taken");
 
-    user.username      = username;
+    user.username = username;
     user.usernameSetAt = new Date();
     await user.save();
     await syncLeaderboard(user, userId);
 
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Username updated");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── GET /api/user/check-username ──────────────────────────────────────────────
@@ -70,21 +77,26 @@ export async function checkUsername(req, res, next) {
 
     const base = username.trim();
 
-    const existing  = await User.findOne({ username: { $regex: new RegExp(`^${base}$`, "i") } });
+    const existing = await User.findOne({
+      username: { $regex: new RegExp(`^${escapeRegex(base)}$`, "i") },
+    });
     const available = !existing;
 
     let suggestions = [];
     if (!available) {
       const candidates = [`${base}_`, `${base}2`, `${base}25`, `${base}_mrsptu`, `${base}cse`];
-      const taken      = new Set(
-        (await User.find({ username: { $in: candidates } }, "username").lean())
-          .map(u => u.username)
+      const taken = new Set(
+        (await User.find({ username: { $in: candidates } }, "username").lean()).map(
+          (u) => u.username
+        )
       );
-      suggestions = candidates.filter(c => !taken.has(c)).slice(0, 3);
+      suggestions = candidates.filter((c) => !taken.has(c)).slice(0, 3);
     }
 
     sendResponse(res, 200, { available, suggestions }, "");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── PUT /api/user/branch ──────────────────────────────────────────────────────
@@ -104,7 +116,9 @@ export async function updateBranch(req, res, next) {
 
     await syncLeaderboard(user, userId);
     sendResponse(res, 200, { branch: user.branch }, "Branch updated");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── PUT /api/user/current-sem ─────────────────────────────────────────────────
@@ -116,7 +130,9 @@ export async function updateCurrentSem(req, res, next) {
       { new: true }
     );
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Current semester updated");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ── POST /api/user/app-install ────────────────────────────────────────────────
@@ -124,9 +140,17 @@ export async function recordAppInstall(req, res, next) {
   try {
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { $set: { appInstalled: true, appInstalledAt: new Date(), appInstalledOn: req.body.platform } },
+      {
+        $set: {
+          appInstalled: true,
+          appInstalledAt: new Date(),
+          appInstalledOn: req.body.platform,
+        },
+      },
       { new: true }
     );
     sendResponse(res, 200, { user: user.toPublicJSON() }, "Install recorded");
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
