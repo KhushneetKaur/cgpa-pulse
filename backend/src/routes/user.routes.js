@@ -2,7 +2,6 @@ import { Router } from "express";
 import {
   getProfile,
   updateBranch,
-  updateLbOptIn,
   updateUsername,
   updateCurrentSem,
   checkUsername,
@@ -13,7 +12,6 @@ import { validate }                  from "../middleware/validate.middleware.js"
 import { readLimiter, saveLimiter }  from "../middleware/rateLimit.middleware.js";
 import {
   updateBranchSchema,
-  updateLbOptInSchema,
   updateUsernameSchema,
   updateCurrentSemSchema,
   appInstallSchema,
@@ -30,7 +28,6 @@ router.get("/check-username", readLimiter,                                    ch
 // ── Write ─────────────────────────────────────────────────────────────────────
 router.put("/username",    saveLimiter, validate(updateUsernameSchema),    updateUsername);
 router.put("/branch",      saveLimiter, validate(updateBranchSchema),      updateBranch);
-router.put("/leaderboard", saveLimiter, validate(updateLbOptInSchema),     updateLbOptIn);
 router.put("/current-sem", saveLimiter, validate(updateCurrentSemSchema),  updateCurrentSem);
 router.post("/app-install", saveLimiter, validate(appInstallSchema),       recordAppInstall);
 
