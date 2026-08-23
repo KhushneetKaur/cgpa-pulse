@@ -18,7 +18,11 @@ const leaderboardSchema = new mongoose.Schema(
     branch: {
       type:     String,
       required: true,
-      enum:     ["CSE", "AIML", "ECE", "EE", "ME", "CIVIL", "TE"],
+    },
+
+    faculty: {
+      type:    String,
+      default: null,
     },
 
     cgpa: {
@@ -34,15 +38,13 @@ const leaderboardSchema = new mongoose.Schema(
       min:     0,
     },
   },
-  {
-    timestamps: true, 
-  }
+  { timestamps: true }
 );
 
-// Branch leaderboard with stable tie-breaking sort
+leaderboardSchema.index({ cgpa: -1, updatedAt: 1 });
+
 leaderboardSchema.index({ branch: 1, cgpa: -1, updatedAt: 1 });
 
-// Global leaderboard with stable tie-breaking sort
-leaderboardSchema.index({ cgpa: -1, updatedAt: 1 });
+leaderboardSchema.index({ faculty: 1, cgpa: -1, updatedAt: 1 });
 
 export default mongoose.model("Leaderboard", leaderboardSchema);

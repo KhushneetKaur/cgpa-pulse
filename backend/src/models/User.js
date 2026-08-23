@@ -84,9 +84,6 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-    // lbOptIn is always true — leaderboard is mandatory, no opt-out
-    // Kept in schema for data migration compatibility
-    // lbOptInDate repurposed as "first semester saved date" for display
     lbOptIn: {
       type:    Boolean,
       default: true,
