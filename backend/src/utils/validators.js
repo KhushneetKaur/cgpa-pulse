@@ -153,7 +153,7 @@ export const toggleVisibilitySchema = Joi.object({
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
 export const leaderboardQuerySchema = Joi.object({
-  // ALL = global, any branch code = filtered
-  branch: Joi.string().uppercase().valid(...VALID_BRANCHES, "ALL").default("ALL"),
-  limit:  Joi.number().integer().min(1).max(100).default(50),
+  branch:  Joi.string().uppercase().valid(...VALID_BRANCHES, "ALL").default("ALL"),
+  faculty: Joi.string().valid(...VALID_FACULTIES).optional(),
+  limit:   Joi.number().integer().min(1).max(100).default(50),
 });
