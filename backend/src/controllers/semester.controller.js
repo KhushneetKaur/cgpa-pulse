@@ -35,12 +35,19 @@ async function ensureLeaderboardOptIn(req, userId, validSemsCount) {
   }
 }
 
-async function syncLeaderboard(req, userId, branch, allSems) {
-  const cgpa     = calculateCGPA(allSems) ?? 0;
-  const semCount = allSems.filter(s => s.sgpa != null && s.sgpa > 0).length;
+async function syncLeaderboard(req, userId) {
+  // Always lock leaderboard sync to the user's primary registered branch
+  const primaryBranch = normBranch(req.user.branch || "CSE");
+
+  // Fetch semesters strictly for their primary branch
+  const primarySems = (await getUserSemesters(userId, primaryBranch)) || [];
+  const cgpa = calculateCGPA(primarySems) ?? 0;
+
+  // Count semesters that have a valid SGPA under the primary branch only
+  const validSems = primarySems.filter((s) => s.sgpa != null && !isNaN(Number(s.sgpa)));
+  const semCount = validSems.length;
 
   if (semCount === 0) {
-    // If no valid semesters remain, remove user from leaderboard if function exists
     if (typeof removeLeaderboardEntry === "function") {
       await removeLeaderboardEntry(userId);
     }
@@ -49,10 +56,10 @@ async function syncLeaderboard(req, userId, branch, allSems) {
 
   await upsertLeaderboardEntry({
     userId,
-    username: req.user.username || "Anonymous",
-    branch: req.user.branch || branch,
-    faculty:  req.user.faculty  || null,
-    cgpa,
+    username: req.user.username || req.user.name || "Anonymous",
+    branch: primaryBranch,
+    faculty: req.user.faculty || null,
+    cgpa: Number(cgpa.toFixed(2)),
     semCount,
   });
 }
@@ -65,7 +72,8 @@ export async function getAllSemesters(req, res, next) {
     const semesters = await getUserSemesters(userId, branch);
     const cgpa      = calculateCGPA(semesters) ?? 0;
 
-    await syncLeaderboard(req, userId, branch, semesters || []);
+    // Sync leaderboard using user's registered primary branch
+    await syncLeaderboard(req, userId);
 
     sendResponse(res, 200, { semesters, cgpa }, "Semesters fetched");
   } catch (err) { next(err); }
@@ -82,9 +90,9 @@ export async function saveSemesterHandler(req, res, next) {
     const allSems = await getUserSemesters(userId, branch) || [];
     const cgpa    = calculateCGPA(allSems) ?? 0;
 
-    const validSemsCount = allSems.filter(s => s.sgpa != null && s.sgpa > 0).length;
+    const validSemsCount = allSems.filter(s => s.sgpa != null && !isNaN(Number(s.sgpa))).length;
     await ensureLeaderboardOptIn(req, userId, validSemsCount);
-    await syncLeaderboard(req, userId, branch, allSems);
+    await syncLeaderboard(req, userId);
 
     sendResponse(res, 200, { semester: saved, cgpa }, "Semester saved");
   } catch (err) { next(err); }
@@ -101,9 +109,9 @@ export async function saveQuickSgpaHandler(req, res, next) {
     const allSems = await getUserSemesters(userId, branch) || [];
     const cgpa    = calculateCGPA(allSems) ?? 0;
 
-    const validSemsCount = allSems.filter(s => s.sgpa != null && s.sgpa > 0).length;
+    const validSemsCount = allSems.filter(s => s.sgpa != null && !isNaN(Number(s.sgpa))).length;
     await ensureLeaderboardOptIn(req, userId, validSemsCount);
-    await syncLeaderboard(req, userId, branch, allSems);
+    await syncLeaderboard(req, userId);
 
     sendResponse(res, 200, { semester: saved, cgpa }, "SGPA saved");
   } catch (err) { next(err); }
@@ -117,9 +125,10 @@ export async function deleteSemesterHandler(req, res, next) {
     const userId  = req.user._id.toString();
 
     const result  = await deleteSemester(userId, branch, semNum);
-    const allSems = await getUserSemesters(userId, branch) || [];
-    const cgpa    = calculateCGPA(allSems) ?? 0;
-    await syncLeaderboard(req, userId, branch, allSems);
+    await syncLeaderboard(req, userId);
+
+    const primarySems = await getUserSemesters(userId, normBranch(req.user.branch || "CSE")) || [];
+    const cgpa = calculateCGPA(primarySems) ?? 0;
 
     sendResponse(res, 200, { ...result, cgpa }, "Semester deleted");
   } catch (err) { next(err); }
