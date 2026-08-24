@@ -149,7 +149,7 @@ export default function GradeTablePage() {
 
         {/* Grade rows */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {GRADE_TABLE.map(row => (
+          {ENGINEERING_GRADES.map(row => (
             <GradeRow key={row.grade} row={row} />
           ))}
         </div>
