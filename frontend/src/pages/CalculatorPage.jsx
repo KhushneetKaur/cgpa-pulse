@@ -2,17 +2,25 @@ import { useState, useMemo, memo } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useTheme } from "../context/ThemeContext";
 import { BRANCHES } from "../data/branches";
-import SemesterSidebar      from "../components/SemesterSidebar";
-import SubjectRow           from "../components/SubjectRow";
+import { PHARMACY_BRANCHES } from "../data/pharmacyBranches";
+import SemesterSidebar       from "../components/SemesterSidebar";
+import SubjectRow            from "../components/SubjectRow";
 import CustomiseSubjectsModal from "../components/CustomiseSubjectsModal";
 import MobileSemesterPills  from "../components/MobileSemesterPills";
 import MobileMarksPanel     from "../components/MobileMarksPanel";
+
+// ── Helper ───────────────────────────────────────────────────────────────────
+function getBranchData(branch, faculty) {
+  if (!branch) return null;
+  if (faculty === "pharmacy") return PHARMACY_BRANCHES[branch] || null;
+  return BRANCHES[branch] || null;
+}
 
 // ── Module-level constants ────────────────────────────────────────────────────
 const COL_HEADERS = ["Subject", "", "Internal", "External", "Total", "Grade", "GP", "BL"];
 
 const MARKS_SCHEME = [
-  { label: "Theory",                 int: 40, ext: 60 },
+  { label: "Theory",                     int: 40, ext: 60 },
   { label: "Lab / Practical / Training", int: 60, ext: 40 },
 ];
 
@@ -116,7 +124,7 @@ export default function CalculatorPage() {
 // ── Marks panel ───────────────────────────────────────────────────────────────
 function MarksPanel() {
   const {
-    branch, selSem,
+    branch, faculty, selSem,
     saving, saveSem,
     liveRes,
     bBacklogs, toggleBacklog,
@@ -126,14 +134,16 @@ function MarksPanel() {
     addCustomSubject, removeCustomSubject, toggleHiddenSubject,
   } = useAppData();
 
-  const { c, btn, inp, cardSty, scoreClr } = useTheme();
+  const { c, btn, cardSty, scoreClr } = useTheme();
 
   const [showCustomise, setShowCustomise] = useState(false);
 
+  const branchData = useMemo(() => getBranchData(branch, faculty), [branch, faculty]);
+
   const { subs, totalCr } = useMemo(() => {
-    if (!branch || !selSem) return { subs: [], totalCr: 0 };
+    if (!branchData || !selSem) return { subs: [], totalCr: 0 };
     const hiddenCodes   = (bHiddenSubjects?.[selSem]) || [];
-    const hardcodedSubs = (BRANCHES[branch]?.semesters?.[selSem]?.subjects || [])
+    const hardcodedSubs = (branchData?.semesters?.[selSem]?.subjects || [])
       .filter(s => !hiddenCodes.includes(s.code));
     const customSubs    = (bCustomSubjects?.[selSem] || []).map(s => ({ ...s, isCustom: true }));
     const combined      = [...hardcodedSubs, ...customSubs];
@@ -141,7 +151,9 @@ function MarksPanel() {
       subs:    combined,
       totalCr: combined.reduce((a, s) => a + s.credits, 0),
     };
-  }, [branch, selSem, bHiddenSubjects, bCustomSubjects]);
+  }, [branchData, selSem, bHiddenSubjects, bCustomSubjects]);
+
+  const semName = branchData?.semesters?.[selSem]?.name || `Semester ${selSem}`;
 
   return (
     <>
@@ -151,7 +163,7 @@ function MarksPanel() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
           <div>
             <p style={{ margin: 0, fontWeight: 600, fontSize: 15, color: c.text }}>
-              {BRANCHES[branch].semesters[selSem].name}
+              {semName}
             </p>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: c.sub }}>
               Total: <strong style={{ color: c.text }}>{totalCr} credits</strong>
