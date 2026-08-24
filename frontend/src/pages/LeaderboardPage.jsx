@@ -12,12 +12,10 @@ function getMedal(idx) {
   return null;
 }
 
-// Combined branch lookup — works for both engineering and pharmacy
 function getBranchInfo(branchKey) {
   return BRANCHES[branchKey] || PHARMACY_BRANCHES[branchKey] || null;
 }
 
-// All branches for the filter pill bar
 const ALL_FILTER_OPTIONS = [
   { key: "ALL", label: "All", color: null },
   ...Object.entries(BRANCHES).map(([key, b]) => ({
@@ -31,7 +29,7 @@ const ALL_FILTER_OPTIONS = [
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function LeaderboardPage() {
   const {
-    user, branch, faculty: userFaculty, cgpa,
+    user, branch, cgpa,
     lbData, fetchLeaderboard,
   } = useAppData();
   const { c, dark, cardSty, scoreClr } = useTheme();
@@ -40,19 +38,32 @@ export default function LeaderboardPage() {
   const [branchFilter, setBranchFilter] = useState("ALL"); 
   const [loading,      setLoading]      = useState(false);
 
-  // Safe array regardless of API response shape
+  // Always re-fetch clean data on component mount
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+
+    fetchLeaderboard()
+      .catch((err) => console.error("Failed to fetch leaderboard:", err))
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchLeaderboard]);
+
   const entries = useMemo(() =>
     Array.isArray(lbData) ? lbData : [],
     [lbData]
   );
 
-  // Overall tab — filtered by branch pill selection
   const overallEntries = useMemo(() => {
     if (branchFilter === "ALL") return entries;
     return entries.filter(e => e.branch === branchFilter);
   }, [entries, branchFilter]);
 
-  // Branch tab — always the user's own branch
   const branchEntries = useMemo(() =>
     branch ? entries.filter(e => e.branch === branch) : [],
     [entries, branch]
@@ -60,32 +71,33 @@ export default function LeaderboardPage() {
 
   const displayEntries = activeTab === "branch" ? branchEntries : overallEntries;
 
-  // Lazy load on first visit
-  useEffect(() => {
-    if (!entries.length) {
-      setLoading(true);
-      fetchLeaderboard().finally(() => setLoading(false));
-    }
-  }, []); 
-
   const userBranchInfo = getBranchInfo(branch);
-  const myEntry        = entries.find(e => e.username === user?.username);
-  const myRank         = myEntry ? entries.indexOf(myEntry) + 1 : null;
+
+  // Robust user entry matching using MongoDB ObjectIDs/User IDs
+  const currentUserId = user?._id || user?.id;
+  const myEntry = useMemo(() => {
+    if (!currentUserId) return null;
+    return entries.find(e => {
+      const entryUserId = e.userId?._id || e.userId;
+      return String(entryUserId) === String(currentUserId);
+    });
+  }, [entries, currentUserId]);
+
+  const myRank = myEntry ? entries.indexOf(myEntry) + 1 : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* ── Hero stats card ─────────────────────────────────────── */}
       <div style={{
-        background:   dark
+        background: dark
           ? "linear-gradient(135deg, rgba(109,40,217,0.15), rgba(6,182,212,0.08))"
           : "linear-gradient(135deg, rgba(109,40,217,0.06), rgba(6,182,212,0.04))",
-        border:       `1px solid ${dark ? "rgba(124,131,245,0.25)" : "rgba(109,40,217,0.15)"}`,
+        border: `1px solid ${dark ? "rgba(124,131,245,0.25)" : "rgba(109,40,217,0.15)"}`,
         borderRadius: 16,
-        padding:      "20px 24px",
+        padding: "20px 24px",
       }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          {/* Left — title */}
           <div>
             <p style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800, color: c.text }}>
               🏆 CGPA Leaderboard
@@ -95,16 +107,15 @@ export default function LeaderboardPage() {
             </p>
           </div>
 
-          {/* Right — user's own stats */}
-          {cgpa && (
+          {cgpa != null && (
             <div style={{
-              display:      "flex",
-              alignItems:   "center",
-              gap:          16,
-              background:   dark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.7)",
-              border:       `1px solid ${dark ? "rgba(124,131,245,0.2)" : "rgba(109,40,217,0.12)"}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              background: dark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.7)",
+              border: `1px solid ${dark ? "rgba(124,131,245,0.2)" : "rgba(109,40,217,0.12)"}`,
               borderRadius: 12,
-              padding:      "12px 20px",
+              padding: "12px 20px",
             }}>
               <div style={{ textAlign: "center" }}>
                 <p style={{ margin: "0 0 2px", fontSize: 10, color: c.muted, textTransform: "uppercase", letterSpacing: 0.8 }}>Your CGPA</p>
@@ -141,9 +152,9 @@ export default function LeaderboardPage() {
       }}>
         {/* Tab bar */}
         <div style={{
-          display:        "flex",
-          borderBottom:   `1px solid ${c.border}`,
-          background:     dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
+          display: "flex",
+          borderBottom: `1px solid ${c.border}`,
+          background: dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
         }}>
           {[
             { key: "overall", label: "🌐 Overall" },
@@ -153,19 +164,19 @@ export default function LeaderboardPage() {
               key={t.key}
               onClick={() => setActiveTab(t.key)}
               style={{
-                padding:      "14px 24px",
-                background:   "transparent",
-                border:       "none",
+                padding: "14px 24px",
+                background: "transparent",
+                border: "none",
                 borderBottom: activeTab === t.key
                   ? `2px solid ${c.accent}`
                   : "2px solid transparent",
-                color:        activeTab === t.key ? c.accent : c.sub,
-                fontWeight:   activeTab === t.key ? 700 : 400,
-                fontSize:     14,
-                cursor:       "pointer",
-                fontFamily:   "inherit",
-                transition:   "all 0.15s",
-                position:     "relative",
+                color: activeTab === t.key ? c.accent : c.sub,
+                fontWeight: activeTab === t.key ? 700 : 400,
+                fontSize: 14,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all 0.15s",
+                position: "relative",
               }}
             >
               {t.label}
@@ -192,24 +203,24 @@ export default function LeaderboardPage() {
                     key={opt.key}
                     onClick={() => setBranchFilter(opt.key)}
                     style={{
-                      padding:      "5px 12px",
+                      padding: "5px 12px",
                       borderRadius: 99,
-                      border:       isActive
+                      border: isActive
                         ? `1.5px solid ${opt.color || c.accent}`
                         : `1px solid ${c.border}`,
-                      background:   isActive
+                      background: isActive
                         ? `${opt.color || c.accent}18`
                         : "transparent",
-                      color:        isActive
+                      color: isActive
                         ? (opt.color || c.accent)
                         : c.sub,
-                      fontSize:     12,
-                      fontWeight:   isActive ? 700 : 400,
-                      cursor:       "pointer",
-                      fontFamily:   "inherit",
-                      transition:   "all 0.15s",
-                      whiteSpace:   "nowrap",
-                      flexShrink:   0,
+                      fontSize: 12,
+                      fontWeight: isActive ? 700 : 400,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      transition: "all 0.15s",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
                     }}
                   >
                     {opt.key !== "ALL" && (
@@ -222,33 +233,6 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          {/* Branch tab info bar */}
-          {activeTab === "branch" && branch && (
-            <div style={{ fontSize: 12, color: c.muted, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-              {userBranchInfo && <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: userBranchInfo.color }} />}
-              Showing {userBranchInfo?.name || branch} students
-              {branchEntries.length > 0 && ` · ${branchEntries.length} enrolled`}
-            </div>
-          )}
-
-          {/* Column headers — desktop only */}
-          <div
-            className="lb-col-headers"
-            style={{
-              display:             "grid",
-              gridTemplateColumns: "48px 1fr auto auto auto",
-              gap:                 12,
-              padding:             "6px 12px",
-              marginBottom:        4,
-            }}
-          >
-            {["#", "Student", "Programme", "Dept", "CGPA"].map(h => (
-              <p key={h} style={{ margin: 0, fontSize: 10, fontWeight: 700, color: c.muted, textTransform: "uppercase", letterSpacing: 0.8, textAlign: h === "CGPA" || h === "#" ? "center" : "left" }}>
-                {h}
-              </p>
-            ))}
-          </div>
-
           {/* List */}
           {loading ? (
             <div style={{ textAlign: "center", padding: "2.5rem 0", color: c.sub, fontSize: 13 }}>
@@ -258,7 +242,7 @@ export default function LeaderboardPage() {
           ) : displayEntries.length === 0 ? (
             <div style={{ textAlign: "center", padding: "2.5rem 0" }}>
               <p style={{ fontSize: 40, margin: "0 0 12px" }}>🏅</p>
-              <p style={{ color: c.sub,   fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>No entries yet</p>
+              <p style={{ color: c.sub, fontSize: 14, fontWeight: 600, margin: "0 0 4px" }}>No entries yet</p>
               <p style={{ color: c.muted, fontSize: 12, margin: 0 }}>
                 {activeTab === "branch"
                   ? `Be the first from ${userBranchInfo?.short || "your programme"}!`
@@ -269,14 +253,18 @@ export default function LeaderboardPage() {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {displayEntries.map((entry, idx) => (
-                <LeaderboardRow
-                  key={entry._id || entry.id || `${entry.username}-${idx}`}
-                  entry={entry}
-                  idx={idx}
-                  isMe={entry.username === user?.username}
-                />
-              ))}
+              {displayEntries.map((entry, idx) => {
+                const entryUserId = entry.userId?._id || entry.userId;
+                const isMe = String(entryUserId) === String(currentUserId);
+                return (
+                  <LeaderboardRow
+                    key={entry._id || entry.id || `${entry.username}-${idx}`}
+                    entry={entry}
+                    idx={idx}
+                    isMe={isMe}
+                  />
+                );
+              })}
             </div>
           )}
 
@@ -303,19 +291,19 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
 
   return (
     <div style={{
-      display:             "grid",
+      display: "grid",
       gridTemplateColumns: "48px 1fr auto auto auto",
-      gap:                 12,
-      alignItems:          "center",
-      padding:             "11px 12px",
-      borderRadius:        10,
-      background:          isMe
+      gap: 12,
+      alignItems: "center",
+      padding: "11px 12px",
+      borderRadius: 10,
+      background: isMe
         ? dark ? "rgba(109,40,217,0.12)" : "rgba(109,40,217,0.06)"
         : idx % 2 === 0 ? c.hover : "transparent",
-      border:              `1px solid ${isMe
+      border: `1px solid ${isMe
         ? dark ? "rgba(124,131,245,0.3)" : "rgba(109,40,217,0.2)"
         : "transparent"}`,
-      transition:          "background 0.15s",
+      transition: "background 0.15s",
     }}>
 
       {/* Rank */}
@@ -339,34 +327,16 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
         </p>
       </div>
 
-      {/* Faculty badge */}
-      <span style={{
-        fontSize:     11,
-        fontWeight:   600,
-        padding:      "3px 9px",
-        borderRadius: 99,
-        background:   entry.faculty === "pharmacy"
-          ? dark ? "rgba(14,165,233,0.12)" : "rgba(14,165,233,0.08)"
-          : dark ? "rgba(109,40,217,0.12)" : "rgba(109,40,217,0.07)",
-        color:        entry.faculty === "pharmacy" ? "#0ea5e9" : c.accent,
-        whiteSpace:   "nowrap",
-        display:      "none", 
-      }}
-        className="lb-faculty-badge"
-      >
-        {entry.faculty === "pharmacy" ? "Pharmacy" : "Engineering"}
-      </span>
-
       {/* Branch badge */}
       <span style={{
-        fontSize:     11,
-        fontWeight:   700,
-        padding:      "3px 9px",
+        fontSize: 11,
+        fontWeight: 700,
+        padding: "3px 9px",
         borderRadius: 6,
-        background:   `${branchInfo?.color || c.border}15`,
-        border:       `1px solid ${branchInfo?.color || c.border}35`,
-        color:        branchInfo?.color || c.sub,
-        whiteSpace:   "nowrap",
+        background: `${branchInfo?.color || c.border}15`,
+        border: `1px solid ${branchInfo?.color || c.border}35`,
+        color: branchInfo?.color || c.sub,
+        whiteSpace: "nowrap",
       }}>
         {branchInfo?.short || entry.branch || "—"}
       </span>

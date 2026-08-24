@@ -1,34 +1,55 @@
+import mongoose from "mongoose";
 import Leaderboard from "../models/Leaderboard.js";
 
 // ── Get leaderboard entries ───────────────────────────────────────────────────
-// branch: "ALL" = global, anything else = branch-filtered
-// faculty: null = all faculties, "engineering"/"pharmacy" = filtered
-export async function getLeaderboard(branch = "ALL", faculty = null, limit = 50) {
+export async function getLeaderboard(branch = "ALL", faculty = null, limit = 0) {
   const filter = {};
-  if (branch !== "ALL") filter.branch  = branch;
-  if (faculty)          filter.faculty = faculty;
 
-  return await Leaderboard.find(filter)
-    .sort({ cgpa: -1, updatedAt: 1 }) 
-    .limit(limit)
-    .lean();
+  if (branch && branch.toUpperCase() !== "ALL") {
+    filter.branch = branch;
+  }
+
+  if (faculty && faculty.toUpperCase() !== "ALL") {
+    filter.faculty = faculty;
+  }
+
+  let query = Leaderboard.find(filter).sort({ cgpa: -1, updatedAt: 1 });
+
+  const parsedLimit = Number(limit);
+  if (!isNaN(parsedLimit) && parsedLimit > 0) {
+    query = query.limit(parsedLimit);
+  }
+
+  return await query.lean();
 }
 
 // ── Upsert leaderboard entry ──────────────────────────────────────────────────
-// Called automatically after every semester save — no opt-in gate
 export async function upsertLeaderboardEntry({ userId, username, branch, faculty, cgpa, semCount }) {
-  if (cgpa == null || cgpa < 0 || cgpa > 10) return null;
+  if (cgpa == null || isNaN(cgpa) || cgpa < 0 || cgpa > 10 || !semCount || semCount < 1) {
+    return null;
+  }
+
+  // Ensure userId is a valid Mongoose ObjectId
+  const objectUserId = new mongoose.Types.ObjectId(userId);
 
   return await Leaderboard.findOneAndUpdate(
-    { userId },
-    { $set: { username, branch, faculty: faculty || null, cgpa, semCount } },
+    { userId: objectUserId },
+    {
+      $set: {
+        username: username || "Student",
+        branch: branch || "OTHER",
+        faculty: faculty || null,
+        cgpa: Number(cgpa.toFixed(2)),
+        semCount: Number(semCount),
+      },
+    },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   );
 }
 
 // ── Remove leaderboard entry ──────────────────────────────────────────────────
-// Only called when user deletes their account — no longer called on opt-out
 export async function removeLeaderboardEntry(userId) {
-  const result = await Leaderboard.findOneAndDelete({ userId });
+  const objectUserId = new mongoose.Types.ObjectId(userId);
+  const result = await Leaderboard.findOneAndDelete({ userId: objectUserId });
   return { removed: !!result };
 }
