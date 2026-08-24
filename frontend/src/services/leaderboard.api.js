@@ -1,5 +1,8 @@
 import api from "./api.js";
 
+// Helper function to extract response data safely
+const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
+
 // ── GET /api/leaderboard ──────────────────────────────────────────────────────
 // branch = "ALL" | "CSE" | "ECE" etc.
 export async function apiGetLeaderboard(params = {}) {

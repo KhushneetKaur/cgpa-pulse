@@ -40,29 +40,44 @@ function parseSemesterData(sem) {
     credits:           sem.credits,
     isPartial:         sem.isPartial,
     mode:              sem.mode,
-    savedAt:           sem.savedAt ? new Date(sem.savedAt).toISOString() : "", // ISO string — safe on iOS Safari
+    savedAt:           sem.savedAt ? new Date(sem.savedAt).toISOString() : "",
     electiveNames:     electiveNamesObj,
     backlogs:          sem.backlogs || [],
     _electiveNamesObj: electiveNamesObj,
   };
 }
 
+// ── Case-Insensitive Branch Normalization ──────────────────────────────────────
+function normalizeBranchKey(branch) {
+  return branch ? String(branch).toUpperCase().trim() : "";
+}
+
 // ── Branch helpers — both engineering and pharmacy aware ──────────────────────
 function getBranchData(branch, faculty) {
   if (!branch) return null;
-  if (faculty === "pharmacy") return PHARMACY_BRANCHES[branch] || null;
-  return BRANCHES[branch] || null;
+  const key = normalizeBranchKey(branch);
+  
+  if (faculty === "pharmacy" && PHARMACY_BRANCHES[key]) {
+    return PHARMACY_BRANCHES[key];
+  }
+  if (faculty === "engineering" && BRANCHES[key]) {
+    return BRANCHES[key];
+  }
+
+  // General fallback search across both dictionaries
+  return PHARMACY_BRANCHES[key] || BRANCHES[key] || null;
 }
 
 function getBranchSemesters(branch, faculty) {
   return getBranchData(branch, faculty)?.semesters || {};
 }
 
-// Infer faculty from branch key — used to auto-detect existing users on load
+// Infer faculty from normalized branch key
 function inferFaculty(branch) {
   if (!branch) return null;
-  if (PHARMACY_BRANCHES[branch]) return "pharmacy";
-  if (BRANCHES[branch])          return "engineering";
+  const key = normalizeBranchKey(branch);
+  if (PHARMACY_BRANCHES[key]) return "pharmacy";
+  if (BRANCHES[key])          return "engineering";
   return null;
 }
 
@@ -104,7 +119,7 @@ export function AppDataProvider({ children }) {
   const bHiddenSubjects = useMemo(() => (branch ? hiddenSubjects[branch] || {} : {}), [branch, hiddenSubjects]);
 
   // Grade scheme derived from branch — drives getGrade() boundaries in calcSGPA
-  const scheme = useMemo(() => getBranchData(branch, faculty)?.scheme || "engineering", [branch, faculty]);
+  const scheme = useMemo(() => getBranchData(branch, faculty)?.scheme || (faculty === "pharmacy" ? "pharmacy" : "engineering"), [branch, faculty]);
 
   const flashSave = useCallback((msg = "Saved!") => {
     setSaveMsg(msg);
@@ -135,11 +150,11 @@ export function AppDataProvider({ children }) {
 
     async function loadUserData() {
       try {
-        const userBranch = user.branch || null;
+        const userBranch = user.branch ? normalizeBranchKey(user.branch) : null;
         setBranchState(userBranch);
         setLbOptInState(user.lbOptIn || false);
 
-        // Detect faculty — from user record (new) or inferred from branch (existing users)
+        // Detect faculty — from user record or inferred from branch
         const detectedFaculty = user.faculty || inferFaculty(userBranch);
         if (detectedFaculty) setFaculty(detectedFaculty);
 
@@ -186,21 +201,23 @@ export function AppDataProvider({ children }) {
 
   // ── Leaderboard ───────────────────────────────────────────────────────────
   const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter = null) => {
-  try {
-    const params = { branch: branchFilter };
-    if (facultyFilter) params.faculty = facultyFilter;
-    const result  = await apiGetLeaderboard(params);
-    const entries = result?.entries || result?.data?.entries || [];
-    setLbData(entries);
-  } catch (err) {
-    console.error("Failed to load leaderboard:", err);
-  }
-}, []);
+    try {
+      const params = { branch: branchFilter };
+      if (facultyFilter) params.faculty = facultyFilter;
+      const result  = await apiGetLeaderboard(params);
+      const entries = result?.entries || result?.data?.entries || [];
+      setLbData(entries);
+    } catch (err) {
+      console.error("Failed to load leaderboard:", err);
+    }
+  }, []);
 
   // ── setBranch ─────────────────────────────────────────────────────────────
-  const setBranch = useCallback(async (key) => {
+  const setBranch = useCallback(async (rawKey) => {
+    const key           = normalizeBranchKey(rawKey);
     const isPharmacy    = !!PHARMACY_BRANCHES[key];
     const isEngineering = !!BRANCHES[key];
+
     if (!isPharmacy && !isEngineering) return;
 
     if (isPharmacy) setFaculty("pharmacy");
@@ -235,7 +252,7 @@ export function AppDataProvider({ children }) {
 
   const selectSem = useCallback((s) => { setSelSem(s); setSaveMsg(""); }, []);
 
-  // Sync marks when selSem/branch/hist changes — iOS-safe pattern (no inline in selectSem)
+  // Sync marks when selSem/branch/hist changes
   useEffect(() => {
     setMarks(branch && selSem ? hist[branch]?.[selSem]?.marks || {} : {});
   }, [selSem, branch, hist]);
@@ -291,8 +308,6 @@ export function AppDataProvider({ children }) {
         },
       }));
 
-      // Refresh profile to pick up backend auto opt-in (fires on first save)
-      // Don't optimistically set lbOptIn — backend decides, not frontend
       try {
         const { apiGetProfile } = await import("../services/user.api.js");
         const updatedUser = await apiGetProfile();
@@ -300,7 +315,7 @@ export function AppDataProvider({ children }) {
           setUser(updatedUser);
           setLbOptInState(updatedUser.lbOptIn || false);
         }
-      } catch { /* non-critical — profile refresh failure doesn't affect save */ }
+      } catch { /* non-critical */ }
 
       toast.success("Semester saved!");
     } catch (err) {
@@ -362,7 +377,6 @@ export function AppDataProvider({ children }) {
         },
       }));
 
-      // Refresh profile to pick up backend auto opt-in
       try {
         const { apiGetProfile } = await import("../services/user.api.js");
         const updatedUser = await apiGetProfile();
@@ -412,7 +426,6 @@ export function AppDataProvider({ children }) {
     }
   }, [branch, selSem]);
 
-
   const runCalcTarget = useCallback(() => {
     if (!branch || !targetCGPA) return;
     const branchSems         = getBranchSemesters(branch, faculty);
@@ -453,7 +466,7 @@ export function AppDataProvider({ children }) {
     ];
   }, [selSem, branch, faculty, bHiddenSubjects, bCustomSubjects]);
 
-  // scheme passed through so pharmacy gets O/A/B/C/D/F not A+/A/B+...
+  // Pass scheme to calculation so pharmacy uses O/A/B/C/D/F grading logic
   const liveRes = useMemo(() => (selSem && branch ? calcSGPA(curSubs, marks, scheme) : null), [selSem, branch, curSubs, marks, scheme]);
 
   const subDisplayName = useCallback((sub) => bElectiveNames[sub.code] || sub.name, [bElectiveNames]);
@@ -480,7 +493,6 @@ export function AppDataProvider({ children }) {
       ? [...currentHidden.filter(c => c !== code), code]
       : currentHidden.filter(c => c !== code);
 
-    // Optimistic update
     setHiddenSubjects(prev => ({ ...prev, [branch]: { ...(prev[branch] || {}), [semNumber]: newHiddenCodes } }));
 
     if (bHist[semNumber]?.marks) {
@@ -506,7 +518,6 @@ export function AppDataProvider({ children }) {
     try {
       await apiToggleSubjectVisibility(branch, semNumber, code, hidden);
     } catch (err) {
-      // Revert optimistic update on failure
       setHiddenSubjects(prev => ({ ...prev, [branch]: { ...(prev[branch] || {}), [semNumber]: currentHidden } }));
       console.error("toggleHiddenSubject error:", err);
       throw err;

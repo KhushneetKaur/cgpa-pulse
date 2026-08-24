@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from "react";
-import { AuthProvider }              from "./context/AuthContext";
+import { AuthProvider, useAuth }      from "./context/AuthContext";
 import { ThemeProvider, useTheme }   from "./context/ThemeContext";
 import { AppDataProvider, useAppData } from "./context/AppDataContext";
 import { Toaster }                   from "react-hot-toast";
@@ -57,16 +57,29 @@ export default function App() {
 
 // ── Shell — guards auth + data loading ───────────────────────────────────────
 function Shell() {
-  const { screen, authLoading, user } = useAppData();
+  const { authLoading, user } = useAuth();
+  const { screen } = useAppData();
   const { c } = useTheme();
 
-  if (authLoading || (user && screen !== "app")) {
+  if (authLoading) {
+    return <Spinner bg={c?.bg} />;
+  }
+
+  if (!user) {
+    return (
+      <Suspense fallback={<Spinner bg={c?.bg} />}>
+        <LoginPage />
+      </Suspense>
+    );
+  }
+
+  if (screen !== "app") {
     return <Spinner bg={c?.bg} />;
   }
 
   return (
-    <Suspense fallback={null}>
-      {screen === "app" ? <AppLayout /> : <LoginPage />}
+    <Suspense fallback={<Spinner bg={c?.bg} />}>
+      <AppLayout />
     </Suspense>
   );
 }
@@ -84,10 +97,6 @@ function AppLayout() {
   const [hasShownOnboarding, setHasShownOnboarding]  = useState(false);
 
   // ── Main content to render ──────────────────────────────────────────────────
-  // Priority order:
-  //   1. No faculty yet → DepartmentPickerPage
-  //   2. Faculty set, no branch → BranchSelect (filtered by faculty)
-  //   3. Both set → main app
   const mainContent = useMemo(() => {
     if (!faculty) return "dept";
     if (!branch)  return "branch";
@@ -95,8 +104,6 @@ function AppLayout() {
   }, [faculty, branch]);
 
   // ── Onboarding trigger ──────────────────────────────────────────────────────
-  // Only fires AFTER faculty is picked (so OnboardingModal knows which branches to show)
-  // For existing engineering users faculty is auto-set in AppDataContext — they skip this
   useEffect(() => {
     if (!user || !faculty || hasShownOnboarding) return;
     if (!user.branch) {
