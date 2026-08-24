@@ -199,11 +199,19 @@ export function AppDataProvider({ children }) {
     loadUserData();
   }, [user, authLoading]);
 
-  // ── Leaderboard ───────────────────────────────────────────────────────────
+// ── Leaderboard ───────────────────────────────────────────────────────────
 const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter = null) => {
   try {
-    const params = { branch: branchFilter, limit: 500 }; 
-    if (facultyFilter) params.faculty = facultyFilter;
+    const params = { limit: 100 }; // Use a standard limit boundary
+
+    // Only include the branch query parameter if filtering by a specific branch
+    if (branchFilter && branchFilter !== "ALL") {
+      params.branch = branchFilter;
+    }
+
+    if (facultyFilter) {
+      params.faculty = facultyFilter;
+    }
 
     const result = await apiGetLeaderboard(params);
     const entries = result?.entries || result?.data?.entries || result?.data || [];
