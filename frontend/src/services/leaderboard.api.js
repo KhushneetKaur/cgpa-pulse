@@ -7,8 +7,9 @@ const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
 // branch = "ALL" | "CSE" | "ECE" etc.
 export async function apiGetLeaderboard(params = {}) {
   const query = typeof params === "string"
-    ? { branch: params }      // backwards compat
-    : { branch: "ALL", ...params };
+    ? { branch: params, limit: "all" } // backwards compat with unlimited default
+    : { branch: "ALL", limit: "all", ...params }; // default limit set to "all"
+
   const res = await api.get("/leaderboard", { params: query });
   return unwrap(res);
 }

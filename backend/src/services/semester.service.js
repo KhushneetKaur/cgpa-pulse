@@ -1,5 +1,5 @@
 import SemesterData from "../models/SemesterData.js";
-import User from "../models/User.js"; // Needed to get user metadata for leaderboard
+import User from "../models/User.js"; 
 import ApiError from "../utils/ApiError.js";
 import { upsertLeaderboardEntry, removeLeaderboardEntry } from "./leaderboard.service.js";
 

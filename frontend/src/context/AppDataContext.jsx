@@ -200,17 +200,18 @@ export function AppDataProvider({ children }) {
   }, [user, authLoading]);
 
   // ── Leaderboard ───────────────────────────────────────────────────────────
-  const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter = null) => {
-    try {
-      const params = { branch: branchFilter };
-      if (facultyFilter) params.faculty = facultyFilter;
-      const result  = await apiGetLeaderboard(params);
-      const entries = result?.entries || result?.data?.entries || [];
-      setLbData(entries);
-    } catch (err) {
-      console.error("Failed to load leaderboard:", err);
-    }
-  }, []);
+const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter = null) => {
+  try {
+    const params = { branch: branchFilter, limit: 500 }; 
+    if (facultyFilter) params.faculty = facultyFilter;
+
+    const result = await apiGetLeaderboard(params);
+    const entries = result?.entries || result?.data?.entries || result?.data || [];
+    setLbData(entries);
+  } catch (err) {
+    console.error("Failed to load leaderboard:", err);
+  }
+}, []);
 
   // ── setBranch ─────────────────────────────────────────────────────────────
   const setBranch = useCallback(async (rawKey) => {
