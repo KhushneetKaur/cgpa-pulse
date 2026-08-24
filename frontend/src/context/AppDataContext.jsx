@@ -81,7 +81,7 @@ export function AppDataProvider({ children }) {
   const [hist,            setHist]            = useState({});
   const [backlogs,        setBacklogs]        = useState({});
   const [electiveNames,   setElectiveNames]   = useState({});
-  const [lbOptIn,         setLbOptInState]    = useState(false);
+  const [lbOptIn,         setLbOptInState]    = useState(true);
   const [lbData,          setLbData]          = useState([]);
   const [selSem,          setSelSem]          = useState(null);
   const [marks,           setMarks]           = useState({});

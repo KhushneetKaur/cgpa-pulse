@@ -194,3 +194,17 @@ button, input, select, textarea, a, .theme-transition {
               transform 0.15s ease,
               opacity 0.15s ease;
 }
+/* Show faculty badge only on desktop */
+@media (min-width: 640px) {
+  .lb-faculty-badge {
+    display: inline-block !important;
+  }
+}
+
+/* On mobile, collapse leaderboard grid to 3 columns (rank, name, cgpa) */
+@media (max-width: 639px) {
+  .lb-col-headers,
+  [style*="gridTemplateColumns: \"48px 1fr auto auto auto\""] {
+    grid-template-columns: 40px 1fr auto !important;
+  }
+}
