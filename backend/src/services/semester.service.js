@@ -4,14 +4,17 @@ import ApiError from "../utils/ApiError.js";
 import { upsertLeaderboardEntry, removeLeaderboardEntry } from "./leaderboard.service.js";
 
 // ── Helper to recalculate & sync user leaderboard entry ─────────────────────
-async function syncUserLeaderboard(userId, branch) {
+async function syncUserLeaderboard(userId) {
   try {
-    // 1. Fetch user to get username & faculty
-    const user = await User.findById(userId).select("username faculty name").lean();
+    // 1. Fetch user to get primary branch & metadata
+    const user = await User.findById(userId).select("username faculty name branch").lean();
     if (!user) return;
 
-    // 2. Fetch all saved semesters for this user + branch
-    const allSemesters = await SemesterData.find({ userId, branch }).lean();
+    // Force sync strictly for user's primary enrolled branch (defaults to CSE if undefined)
+    const primaryBranch = (user.branch || "CSE").toUpperCase().trim();
+
+    // 2. Fetch semesters strictly for user's primary branch
+    const allSemesters = await SemesterData.find({ userId, branch: primaryBranch }).lean();
 
     // 3. Calculate CGPA & count valid semesters
     const validSemesters = allSemesters.filter(
@@ -28,12 +31,12 @@ async function syncUserLeaderboard(userId, branch) {
 
     const cgpa = calculateCGPA(validSemesters);
 
-    // 4. Upsert entry to Leaderboard
+    // 4. Upsert entry to Leaderboard strictly for primary branch
     if (cgpa != null) {
       await upsertLeaderboardEntry({
         userId,
         username: user.username || user.name || "Student",
-        branch,
+        branch: primaryBranch,
         faculty: user.faculty || null,
         cgpa,
         semCount,
