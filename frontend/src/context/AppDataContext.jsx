@@ -11,7 +11,7 @@ import {
   apiAddCustomSubject, apiRemoveCustomSubject, apiToggleSubjectVisibility,
 } from "../services/semester.api.js";
 import { apiGetLeaderboard }           from "../services/leaderboard.api.js";
-import { apiUpdateBranch, apiUpdateLbOptIn } from "../services/user.api.js";
+import { apiUpdateBranch } from "../services/user.api.js";
 
 const AppDataContext = createContext(null);
 
@@ -185,27 +185,17 @@ export function AppDataProvider({ children }) {
   }, [user, authLoading]);
 
   // ── Leaderboard ───────────────────────────────────────────────────────────
-  const fetchLeaderboard = useCallback(async () => {
-    try {
-      const result  = await apiGetLeaderboard("ALL");
-      const entries = result?.entries || result?.data?.entries || [];
-      setLbData(entries);
-    } catch (err) {
-      console.error("Failed to load leaderboard:", err);
-    }
-  }, []);
-
-  // Days remaining in 45-day opt-out lock — specific field deps, not whole user object
-  const lbDaysRemaining = useMemo(() => {
-    if (!user?.lbOptIn) return 0;
-    const lockStart = user.lbOptInDate || user.createdAt;
-    if (!lockStart) return 0;
-    const daysPassed = Math.floor((Date.now() - new Date(lockStart).getTime()) / 86400000);
-    return Math.max(0, 45 - daysPassed);
-  }, [user?.lbOptIn, user?.lbOptInDate, user?.createdAt]);
-
-  // Plain boolean — no useMemo needed since lbDaysRemaining is already memoized
-  const isLbLocked = lbDaysRemaining > 0;
+  const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter = null) => {
+  try {
+    const params = { branch: branchFilter };
+    if (facultyFilter) params.faculty = facultyFilter;
+    const result  = await apiGetLeaderboard(params);
+    const entries = result?.entries || result?.data?.entries || [];
+    setLbData(entries);
+  } catch (err) {
+    console.error("Failed to load leaderboard:", err);
+  }
+}, []);
 
   // ── setBranch ─────────────────────────────────────────────────────────────
   const setBranch = useCallback(async (key) => {
@@ -422,22 +412,6 @@ export function AppDataProvider({ children }) {
     }
   }, [branch, selSem]);
 
-  const toggleLbOptIn = useCallback(async () => {
-    const next = !lbOptIn;
-    setLbOptInState(next); // optimistic
-    try {
-      const res         = await apiUpdateLbOptIn(next);
-      const updatedUser = res?.user || res?.data?.user;
-      if (updatedUser) setUser(updatedUser);
-      await fetchLeaderboard();
-      return next;
-    } catch (err) {
-      setLbOptInState(!next); // revert
-      toast.error(err?.message || "Failed to update leaderboard preference");
-      console.error("toggleLbOptIn error:", err);
-      throw err;
-    }
-  }, [lbOptIn, fetchLeaderboard, setUser]);
 
   const runCalcTarget = useCallback(() => {
     if (!branch || !targetCGPA) return;

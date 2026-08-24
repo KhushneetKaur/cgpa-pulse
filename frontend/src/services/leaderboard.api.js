@@ -2,11 +2,12 @@ import api from "./api.js";
 
 // ── GET /api/leaderboard ──────────────────────────────────────────────────────
 // branch = "ALL" | "CSE" | "ECE" etc.
-export async function apiGetLeaderboard(branch = "ALL", limit = 50) {
-  const res = await api.get("/leaderboard", {
-    params: { branch, limit },
-  });
-  return res.data;   // { entries, myRank, total }
+export async function apiGetLeaderboard(params = {}) {
+  const query = typeof params === "string"
+    ? { branch: params }      // backwards compat
+    : { branch: "ALL", ...params };
+  const res = await api.get("/leaderboard", { params: query });
+  return unwrap(res);
 }
 
 // ── GET /api/leaderboard/stats ────────────────────────────────────────────────
