@@ -4,7 +4,7 @@ import { useTheme }   from "../context/ThemeContext";
 import { getGrade, getMaxMarks } from "../data/gradeTable";
 import { ELECTIVE_OPTIONS }    from "../data/electiveOptions";
 import { PHARMACY_ELECTIVE_OPTIONS } from "../data/pharmacyBranches";
-import ElectiveDockInput from "./ElectiveDockInput";
+
 
 const SubjectRow = memo(function SubjectRow({ sub, selSem, branch }) {
   const {
