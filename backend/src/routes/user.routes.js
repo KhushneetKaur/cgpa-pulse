@@ -1,20 +1,15 @@
 import { Router } from "express";
 import {
-  getProfile,
-  updateBranch,
-  updateUsername,
-  updateCurrentSem,
-  checkUsername,
-  recordAppInstall,
+  getProfile, updateBranch, updateFaculty,
+  updateUsername, updateCurrentSem,
+  checkUsername, recordAppInstall,
 } from "../controllers/user.controller.js";
 import { protect }                   from "../middleware/auth.middleware.js";
 import { validate }                  from "../middleware/validate.middleware.js";
 import { readLimiter, saveLimiter }  from "../middleware/rateLimit.middleware.js";
 import {
-  updateBranchSchema,
-  updateUsernameSchema,
-  updateCurrentSemSchema,
-  appInstallSchema,
+  updateBranchSchema, updateFacultySchema,
+  updateUsernameSchema, updateCurrentSemSchema, appInstallSchema,
 } from "../utils/validators.js";
 
 const router = Router();
@@ -30,5 +25,6 @@ router.put("/username",    saveLimiter, validate(updateUsernameSchema),    updat
 router.put("/branch",      saveLimiter, validate(updateBranchSchema),      updateBranch);
 router.put("/current-sem", saveLimiter, validate(updateCurrentSemSchema),  updateCurrentSem);
 router.post("/app-install", saveLimiter, validate(appInstallSchema),       recordAppInstall);
+router.put("/faculty", saveLimiter, validate(updateFacultySchema), updateFaculty);
 
 export default router;
