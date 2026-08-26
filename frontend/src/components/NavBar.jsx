@@ -1,21 +1,25 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { useTheme } from "../context/ThemeContext";
-import { BRANCHES } from "../data/branches";
-import { TABS } from "../utils/constants";
-import MRSPTULogo from "./MRSPTULogo";
-import InstallButton from "./InstallButton";
+import { useTheme }   from "../context/ThemeContext";
+import { BRANCHES }          from "../data/branches";
+import { PHARMACY_BRANCHES } from "../data/pharmacyBranches";
+import { TABS }        from "../utils/constants";
+import MRSPTULogo      from "./MRSPTULogo";
+import InstallButton   from "./InstallButton";
 import UsernameSetupModal from "./UsernameSetupModal";
-import AboutModal from "../pages/login/AboutModal";
+import AboutModal      from "../pages/login/AboutModal";
 
-// Module-level — never recreated
-const BRANCH_ENTRIES = Object.entries(BRANCHES);
+// ── Branch lookup — both faculties ────────────────────────────────────────────
+function getBranchInfo(branchKey) {
+  return BRANCHES[branchKey] || PHARMACY_BRANCHES[branchKey] || null;
+}
 
 export default function NavBar() {
   const {
     user, setUser, logout,
     saveMsg, totalBacklogs, cgpa,
     branch, setBranch,
+    faculty, setFaculty,   
     tab, setTab,
     screen, setScreen,
     lbOptIn,
@@ -23,16 +27,16 @@ export default function NavBar() {
 
   const { c, dark, scoreClr, toggleDark } = useTheme();
 
-  const [branchMenuOpen,   setBranchMenuOpen]   = useState(false);
-  const [showUsernameModal,setShowUsernameModal] = useState(false);
-  const [showAvatarMenu,   setShowAvatarMenu]    = useState(false);
-  const [showAbout,        setShowAbout]         = useState(false);
-  const [showProfileSheet, setShowProfileSheet]  = useState(false);
-  const [mobileBranchOpen, setMobileBranchOpen]  = useState(false);
+  const [branchMenuOpen,    setBranchMenuOpen]    = useState(false);
+  const [showUsernameModal, setShowUsernameModal]  = useState(false);
+  const [showAvatarMenu,    setShowAvatarMenu]     = useState(false);
+  const [showAbout,         setShowAbout]          = useState(false);
+  const [showProfileSheet,  setShowProfileSheet]   = useState(false);
+  const [mobileBranchOpen,  setMobileBranchOpen]   = useState(false);
 
   const showSecondBar = screen === "app" && !!branch;
 
-  // Compute once — used in both desktop dropdown and mobile sheet
+  // 30-day username cooldown
   const daysLeft = useMemo(() => {
     if (!user?.usernameSetAt) return 0;
     return Math.max(0, 30 - Math.floor(
@@ -40,33 +44,53 @@ export default function NavBar() {
     ));
   }, [user?.usernameSetAt]);
 
-  // Memoize current branch data
-  const currentBranch = useMemo(() => BRANCHES[branch], [branch]);
+  // Current branch info — checks both engineering and pharmacy
+  const currentBranch = useMemo(() => getBranchInfo(branch), [branch]);
 
-  // Stable handlers
-  const handleToggleDark   = useCallback((e) => { e.currentTarget.blur(); toggleDark(); }, [toggleDark]);
-  const handleToggleAvatar = useCallback(() => setShowAvatarMenu(v => !v), []);
-  const handleCloseAvatar  = useCallback(() => setShowAvatarMenu(false), []);
-  const handleOpenAbout    = useCallback(() => { setShowAvatarMenu(false); setShowAbout(true); }, []);
-  const handleOpenAboutMobile = useCallback(() => { setShowProfileSheet(false); setShowAbout(true); }, []);
-  const handleCloseAbout   = useCallback(() => setShowAbout(false), []);
-  const handleOpenUsername = useCallback(() => { setShowAvatarMenu(false); setShowUsernameModal(true); }, []);
+  // Branch entries for dropdown — only show branches matching current faculty
+  const branchEntries = useMemo(() => {
+    if (faculty === "pharmacy") return Object.entries(PHARMACY_BRANCHES);
+    return Object.entries(BRANCHES);
+  }, [faculty]);
+
+  // Brand subtitle — faculty-aware
+  const brandSubtitle = useMemo(() => {
+    if (faculty === "pharmacy") return "Pharmacy CGPA Calculator";
+    return "B.Tech CGPA Calculator";
+  }, [faculty]);
+
+  // ── Stable handlers ───────────────────────────────────────────────────────
+  const handleToggleDark       = useCallback((e) => { e.currentTarget.blur(); toggleDark(); }, [toggleDark]);
+  const handleToggleAvatar     = useCallback(() => setShowAvatarMenu(v => !v), []);
+  const handleCloseAvatar      = useCallback(() => setShowAvatarMenu(false), []);
+  const handleOpenAbout        = useCallback(() => { setShowAvatarMenu(false); setShowAbout(true); }, []);
+  const handleOpenAboutMobile  = useCallback(() => { setShowProfileSheet(false); setShowAbout(true); }, []);
+  const handleCloseAbout       = useCallback(() => setShowAbout(false), []);
+  const handleOpenUsername     = useCallback(() => { setShowAvatarMenu(false); setShowUsernameModal(true); }, []);
   const handleOpenUsernameMobile = useCallback(() => { setShowProfileSheet(false); setShowUsernameModal(true); }, []);
-  const handleCloseUsername = useCallback(() => setShowUsernameModal(false), []);
-  const handleUsernameDone = useCallback((updatedUser) => {
-    setShowUsernameModal(false);
-    if (updatedUser) setUser(updatedUser);
-  }, [setUser]);
-  const handleOpenSheet    = useCallback(() => setShowProfileSheet(true), []);
-  const handleCloseSheet   = useCallback(() => { setShowProfileSheet(false); setMobileBranchOpen(false); }, []);
-  const handleSignOut      = useCallback(() => { setShowAvatarMenu(false); logout(); setScreen("login"); }, [logout, setScreen]);
-  const handleSignOutMobile = useCallback(() => { setShowProfileSheet(false); logout(); setScreen("login"); }, [logout, setScreen]);
-  const handleBacklogTab   = useCallback(() => setTab("backlogs"), [setTab]);
+  const handleUsernameDone     = useCallback((updatedUser) => { setShowUsernameModal(false); if (updatedUser) setUser(updatedUser); }, [setUser]);
+  const handleOpenSheet        = useCallback(() => setShowProfileSheet(true), []);
+  const handleCloseSheet       = useCallback(() => { setShowProfileSheet(false); setMobileBranchOpen(false); }, []);
+  const handleSignOut          = useCallback(() => { setShowAvatarMenu(false); logout(); setScreen("login"); }, [logout, setScreen]);
+  const handleSignOutMobile    = useCallback(() => { setShowProfileSheet(false); logout(); setScreen("login"); }, [logout, setScreen]);
+  const handleBacklogTab       = useCallback(() => setTab("backlogs"), [setTab]);
   const handleToggleBranchMenu = useCallback(() => setBranchMenuOpen(o => !o), []);
   const handleCloseBranchMenu  = useCallback(() => setBranchMenuOpen(false), []);
   const handleToggleMobileBranch = useCallback(() => setMobileBranchOpen(v => !v), []);
-  const handleResetBranch = useCallback(() => { setBranch(null); setBranchMenuOpen(false); }, [setBranch]);
-  const handleResetBranchMobile = useCallback(() => { setBranch(null); setMobileBranchOpen(false); setShowProfileSheet(false); }, [setBranch]);
+
+  // "Switch Programme" — clears both branch AND faculty → shows DepartmentPickerPage
+  const handleSwitchProgramme = useCallback(() => {
+    setBranch(null);
+    setFaculty(null);
+    setBranchMenuOpen(false);
+  }, [setBranch, setFaculty]);
+
+  const handleSwitchProgrammeMobile = useCallback(() => {
+    setBranch(null);
+    setFaculty(null);
+    setMobileBranchOpen(false);
+    setShowProfileSheet(false);
+  }, [setBranch, setFaculty]);
 
   const initials = user?.username?.[0]?.toUpperCase() || "?";
 
@@ -74,19 +98,10 @@ export default function NavBar() {
     <>
       <header style={{ position: "sticky", top: 0, zIndex: 100 }}>
 
-        {/* ── Top bar ─────────────────────────────────────────────── */}
-        <div style={{
-          background:           dark ? "rgba(13,14,26,0.85)" : "rgba(255,255,255,0.85)",
-          backdropFilter:       "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom:         `1px solid ${dark ? "rgba(129,140,248,0.15)" : "rgba(109,40,217,0.1)"}`,
-          position:             "relative",
-          zIndex:               2,
-        }}>
-          <div
-            className="navbar-top-grid"
-            style={{ maxWidth: "100%", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", height: 56, padding: "0 1.25rem", gap: 18 }}
-          >
+        {/* ── Top bar ───────────────────────────────────────────── */}
+        <div style={{ background: dark ? "rgba(13,14,26,0.85)" : "rgba(255,255,255,0.85)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${dark ? "rgba(129,140,248,0.15)" : "rgba(109,40,217,0.1)"}`, position: "relative", zIndex: 2 }}>
+          <div className="navbar-top-grid" style={{ maxWidth: "100%", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", height: 56, padding: "0 1.25rem", gap: 18 }}>
+
             {/* Brand */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, justifySelf: "start", minWidth: 0 }}>
               <MRSPTULogo size={36} />
@@ -95,7 +110,7 @@ export default function NavBar() {
                   MRSPTU Bathinda
                 </p>
                 <p className="navbar-brand-subtitle" style={{ margin: 0, fontSize: 10, color: c.sub, lineHeight: 1.2 }}>
-                  B.Tech CGPA Calculator
+                  {brandSubtitle}
                 </p>
               </div>
             </div>
@@ -124,15 +139,17 @@ export default function NavBar() {
               )}
             </div>
 
-            {/* Right: dark toggle + user */}
+            {/* Right */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-              <button type="button" onClick={handleToggleDark} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: c.hover, border: `1px solid ${c.border}`, borderRadius: 8, color: c.sub, fontSize: 15, cursor: "pointer", flexShrink: 0, transition: "all 0.2s", outline: "none" }}>
+              <button type="button" onClick={handleToggleDark}
+                style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: c.hover, border: `1px solid ${c.border}`, borderRadius: 8, color: c.sub, fontSize: 15, cursor: "pointer", flexShrink: 0, transition: "all 0.2s", outline: "none" }}>
                 {dark ? "☀" : "☾"}
               </button>
 
               {/* Desktop user */}
               <div className="navbar-desktop-user" style={{ position: "relative" }}>
-                <button onClick={handleToggleAvatar} style={{ display: "flex", alignItems: "center", gap: 8, background: c.hover, border: `1px solid ${showAvatarMenu ? c.accent : c.border}`, borderRadius: 99, padding: "4px 12px 4px 4px", cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
+                <button onClick={handleToggleAvatar}
+                  style={{ display: "flex", alignItems: "center", gap: 8, background: c.hover, border: `1px solid ${showAvatarMenu ? c.accent : c.border}`, borderRadius: 99, padding: "4px 12px 4px 4px", cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
                   <div style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg,#6d28d9,#a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                     {initials}
                   </div>
@@ -168,13 +185,10 @@ export default function NavBar() {
 
                       {/* Menu items */}
                       <div style={{ padding: "6px" }}>
-                        <button
-                          onClick={handleOpenUsername}
-                          disabled={daysLeft > 0}
-                          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", border: "none", background: "transparent", cursor: daysLeft > 0 ? "not-allowed" : "pointer", fontFamily: "inherit", borderRadius: 9, transition: "background 0.15s", opacity: daysLeft > 0 ? 0.5 : 1 }}
+                        <button onClick={handleOpenUsername} disabled={daysLeft > 0}
+                          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px", border: "none", background: "transparent", cursor: daysLeft > 0 ? "not-allowed" : "pointer", fontFamily: "inherit", borderRadius: 9, transition: "background 0.15s", opacity: daysLeft > 0 ? 0.5 : 1 }}
                           onMouseEnter={e => { if (!daysLeft) e.currentTarget.style.background = c.hover; }}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        >
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                           <span style={{ fontSize: 16 }}>✏️</span>
                           <div style={{ textAlign: "left" }}>
                             <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: c.text }}>Change Username</p>
@@ -182,24 +196,23 @@ export default function NavBar() {
                           </div>
                         </button>
 
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 10px" }}>
+                        {/* Leaderboard — always enrolled, no toggle */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <span style={{ fontSize: 16 }}>🏆</span>
                             <p style={{ margin: 0, fontSize: 13, color: c.text }}>Leaderboard</p>
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: lbOptIn ? (dark ? "rgba(45,212,170,0.12)" : "rgba(5,150,105,0.08)") : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"), color: lbOptIn ? c.ok : c.muted }}>
-                            {lbOptIn ? "Opted in" : "Private"}
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: dark ? "rgba(45,212,170,0.12)" : "rgba(5,150,105,0.08)", color: c.ok }}>
+                            Enrolled
                           </span>
                         </div>
 
                         <div style={{ height: 1, background: c.border, margin: "4px 0" }} />
 
-                        <button
-                          onClick={handleOpenAbout}
-                          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 9, background: "rgba(16,185,129,0.05)", cursor: "pointer", fontFamily: "monospace", transition: "all 0.2s", animation: "termGlow 3s ease-in-out infinite", margin: "4px 0" }}
+                        <button onClick={handleOpenAbout}
+                          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px", border: "1px solid rgba(16,185,129,0.25)", borderRadius: 9, background: "rgba(16,185,129,0.05)", cursor: "pointer", fontFamily: "monospace", transition: "all 0.2s", animation: "termGlow 3s ease-in-out infinite", margin: "4px 0" }}
                           onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
-                          onMouseLeave={e => e.currentTarget.style.background = "rgba(16,185,129,0.05)"}
-                        >
+                          onMouseLeave={e => e.currentTarget.style.background = "rgba(16,185,129,0.05)"}>
                           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", flexShrink: 0, animation: "consolePulse 1.2s step-end infinite", boxShadow: "0 0 5px #10b981" }} />
                           <div style={{ textAlign: "left" }}>
                             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#10b981" }}>[ Developer Console ]</p>
@@ -209,12 +222,10 @@ export default function NavBar() {
 
                         <div style={{ height: 1, background: c.border, margin: "4px 0" }} />
 
-                        <button
-                          onClick={handleSignOut}
-                          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", borderRadius: 9, transition: "background 0.15s" }}
+                        <button onClick={handleSignOut}
+                          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px", border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", borderRadius: 9, transition: "background 0.15s" }}
                           onMouseEnter={e => e.currentTarget.style.background = `${c.bad}14`}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        >
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                           <span style={{ fontSize: 16 }}>→</span>
                           <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: c.bad }}>Sign out</p>
                         </button>
@@ -226,7 +237,8 @@ export default function NavBar() {
 
               {/* Mobile avatar */}
               <div className="navbar-mobile-user">
-                <button onClick={handleOpenSheet} style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#6d28d9,#a78bfa)", border: "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", flexShrink: 0, transition: "all 0.2s" }}>
+                <button onClick={handleOpenSheet}
+                  style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#6d28d9,#a78bfa)", border: "2px solid transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", flexShrink: 0, transition: "all 0.2s" }}>
                   {initials}
                 </button>
               </div>
@@ -234,22 +246,19 @@ export default function NavBar() {
           </div>
         </div>
 
-        {/* ── Second bar ───────────────────────────────────────────── */}
+        {/* ── Second bar ────────────────────────────────────────────── */}
         {showSecondBar && (
           <div className="navbar-second-bar" style={{ background: dark ? "rgba(19,22,42,0.9)" : "rgba(248,247,255,0.9)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${dark ? "rgba(129,140,248,0.1)" : "rgba(109,40,217,0.08)"}`, position: "relative", zIndex: 1 }}>
             <div className="navbar-second-bar-inner" style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "stretch", padding: "0 1.25rem" }}>
 
               {/* Branch dropdown */}
               <div style={{ position: "relative", display: "flex", alignItems: "center", flexShrink: 0 }}>
-                <button
-                  className="navbar-branch-btn"
-                  onClick={handleToggleBranchMenu}
+                <button className="navbar-branch-btn" onClick={handleToggleBranchMenu}
                   style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px 0 12px", height: 44, background: "transparent", border: "none", borderRight: `1px solid ${c.border}`, cursor: "pointer", color: c.text, fontSize: 13, fontWeight: 600, fontFamily: "inherit", whiteSpace: "nowrap", transition: "background 0.15s" }}
                   onMouseEnter={e => e.currentTarget.style.background = c.hover}
-                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", background: currentBranch?.color || c.accent, flexShrink: 0, boxShadow: `0 0 6px ${currentBranch?.color || c.accent}88` }} />
-                  {currentBranch?.short}
+                  {currentBranch?.short || branch}
                   <span style={{ fontSize: 9, color: c.muted, marginLeft: 2 }}>▾</span>
                 </button>
 
@@ -257,15 +266,19 @@ export default function NavBar() {
                   <>
                     <div onClick={handleCloseBranchMenu} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
                     <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 200, background: c.card, border: `1px solid ${c.border}`, borderRadius: 14, boxShadow: dark ? "0 16px 48px rgba(0,0,0,0.5)" : "0 16px 48px rgba(109,40,217,0.12)", minWidth: 240, overflow: "hidden", padding: "6px" }}>
-                      <p style={{ margin: "6px 10px 6px", fontSize: 10, color: c.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8 }}>Switch Branch</p>
-                      {BRANCH_ENTRIES.map(([key, b]) => {
+
+                      <p style={{ margin: "6px 10px", fontSize: 10, color: c.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                        Switch {faculty === "pharmacy" ? "Programme" : "Branch"}
+                      </p>
+
+                      {/* Faculty-filtered branch list */}
+                      {branchEntries.map(([key, b]) => {
                         const isActive = branch === key;
                         return (
                           <button key={key} onClick={() => { setBranch(key); setBranchMenuOpen(false); }}
                             style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", background: isActive ? (dark ? "rgba(129,140,248,0.15)" : "rgba(109,40,217,0.07)") : "transparent", border: "none", borderRadius: 9, cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "background 0.1s" }}
                             onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = c.hover; }}
-                            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
-                          >
+                            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
                             <span style={{ width: 10, height: 10, borderRadius: "50%", background: b.color, flexShrink: 0, boxShadow: isActive ? `0 0 8px ${b.color}99` : "none" }} />
                             <span style={{ flex: 1 }}>
                               <span style={{ display: "block", fontSize: 13, fontWeight: isActive ? 700 : 400, color: isActive ? c.accent : c.text }}>{b.short}</span>
@@ -275,12 +288,15 @@ export default function NavBar() {
                           </button>
                         );
                       })}
+
                       <div style={{ height: 1, background: c.border, margin: "6px 0" }} />
-                      <button onClick={handleResetBranch} style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "transparent", border: "none", borderRadius: 9, cursor: "pointer", fontSize: 12, color: c.sub, fontFamily: "inherit", transition: "background 0.1s" }}
-                        onMouseEnter={e => e.currentTarget.style.background = c.hover}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        ← Back to branch picker
+
+                      {/* Switch Programme — resets both branch and faculty */}
+                      <button onClick={handleSwitchProgramme}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "transparent", border: "none", borderRadius: 9, cursor: "pointer", fontSize: 12, color: c.accent, fontFamily: "inherit", fontWeight: 600, transition: "background 0.1s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = `${c.accent}10`}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        ⇄ Switch Programme (Engineering / Pharmacy)
                       </button>
                     </div>
                   </>
@@ -293,13 +309,9 @@ export default function NavBar() {
                   const isActive  = tab === t.key;
                   const showBadge = t.key === "backlogs" && totalBacklogs > 0;
                   return (
-                    <button
-                      key={t.key}
-                      type="button"
-                      className="navbar-tab-btn"
+                    <button key={t.key} type="button" className="navbar-tab-btn"
                       onClick={e => { e.currentTarget.blur(); setTab(t.key); }}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, minWidth: "fit-content", gap: 5, padding: "0 14px", height: 44, background: isActive ? (dark ? "rgba(129,140,248,0.14)" : "rgba(109,40,217,0.08)") : "transparent", border: "none", borderBottom: isActive ? `2px solid ${c.accent}` : "2px solid transparent", cursor: "pointer", color: isActive ? c.accent : c.sub, fontSize: 13, fontWeight: isActive ? 700 : 400, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "inherit", transition: "all 0.2s", outline: "none", boxShadow: "none" }}
-                    >
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, minWidth: "fit-content", gap: 5, padding: "0 14px", height: 44, background: isActive ? (dark ? "rgba(129,140,248,0.14)" : "rgba(109,40,217,0.08)") : "transparent", border: "none", borderBottom: isActive ? `2px solid ${c.accent}` : "2px solid transparent", cursor: "pointer", color: isActive ? c.accent : c.sub, fontSize: 13, fontWeight: isActive ? 700 : 400, whiteSpace: "nowrap", flexShrink: 0, fontFamily: "inherit", transition: "all 0.2s", outline: "none", boxShadow: "none" }}>
                       <span className="tab-icon" style={{ fontSize: 13 }}>{t.icon}</span>
                       {t.label}
                       {showBadge && <span style={{ fontSize: 9, background: c.bad, color: "#fff", borderRadius: 99, padding: "1px 5px", fontWeight: 700, marginLeft: 2, lineHeight: 1.6 }}>{totalBacklogs}</span>}
@@ -341,22 +353,28 @@ export default function NavBar() {
             </div>
 
             <div style={{ padding: "8px 12px" }}>
+
               {/* Branch switcher */}
-              <p style={{ margin: "8px 0 6px 4px", fontSize: 10, fontWeight: 700, color: c.muted, textTransform: "uppercase", letterSpacing: 0.8 }}>Current Branch</p>
-              <button onClick={handleToggleMobileBranch} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 10, border: `1px solid ${mobileBranchOpen ? c.accent : c.border}`, background: mobileBranchOpen ? `${c.accent}10` : c.hover, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", marginBottom: 4 }}>
+              <p style={{ margin: "8px 0 6px 4px", fontSize: 10, fontWeight: 700, color: c.muted, textTransform: "uppercase", letterSpacing: 0.8 }}>
+                Current {faculty === "pharmacy" ? "Programme" : "Branch"}
+              </p>
+              <button onClick={handleToggleMobileBranch}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", borderRadius: 10, border: `1px solid ${mobileBranchOpen ? c.accent : c.border}`, background: mobileBranchOpen ? `${c.accent}10` : c.hover, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s", marginBottom: 4 }}>
                 <span style={{ width: 10, height: 10, borderRadius: "50%", background: currentBranch?.color || c.accent, flexShrink: 0, boxShadow: `0 0 6px ${currentBranch?.color || c.accent}88` }} />
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: c.text, textAlign: "left" }}>{currentBranch?.name || "Select Branch"}</span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: c.text, textAlign: "left" }}>
+                  {currentBranch?.name || currentBranch?.short || branch || "Select"}
+                </span>
                 <span style={{ fontSize: 10, color: c.muted }}>{mobileBranchOpen ? "▴" : "▾"}</span>
               </button>
 
               {mobileBranchOpen && (
                 <div style={{ borderRadius: 10, border: `1px solid ${c.border}`, background: c.card, overflow: "hidden", marginBottom: 4 }}>
-                  {BRANCH_ENTRIES.map(([key, b]) => {
+                  {/* Faculty-filtered branch list */}
+                  {branchEntries.map(([key, b]) => {
                     const isActive = branch === key;
                     return (
                       <button key={key} onClick={() => { setBranch(key); setMobileBranchOpen(false); setShowProfileSheet(false); }}
-                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "none", background: isActive ? (dark ? "rgba(129,140,248,0.15)" : "rgba(109,40,217,0.07)") : "transparent", cursor: "pointer", fontFamily: "inherit", transition: "background 0.1s" }}
-                      >
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "none", background: isActive ? (dark ? "rgba(129,140,248,0.15)" : "rgba(109,40,217,0.07)") : "transparent", cursor: "pointer", fontFamily: "inherit", transition: "background 0.1s" }}>
                         <span style={{ width: 8, height: 8, borderRadius: "50%", background: b.color, flexShrink: 0, boxShadow: isActive ? `0 0 6px ${b.color}88` : "none" }} />
                         <span style={{ flex: 1, fontSize: 13, fontWeight: isActive ? 700 : 400, color: isActive ? c.accent : c.text, textAlign: "left" }}>{b.short}</span>
                         <span style={{ fontSize: 11, color: c.muted }}>{b.name.split("(")[0].trim()}</span>
@@ -364,18 +382,18 @@ export default function NavBar() {
                       </button>
                     );
                   })}
-                  <button onClick={handleResetBranchMobile} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "none", borderTop: `1px solid ${c.border}`, background: "transparent", cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: c.sub }}>
-                    ← Back to branch picker
+
+                  {/* Switch Programme */}
+                  <button onClick={handleSwitchProgrammeMobile}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "none", borderTop: `1px solid ${c.border}`, background: "transparent", cursor: "pointer", fontFamily: "inherit", fontSize: 12, color: c.accent, fontWeight: 600 }}>
+                    ⇄ Switch Programme (Engineering / Pharmacy)
                   </button>
                 </div>
               )}
 
-              {/* Username change */}
-              <button
-                onClick={handleOpenUsernameMobile}
-                disabled={daysLeft > 0}
-                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.border}`, background: c.hover, cursor: daysLeft > 0 ? "not-allowed" : "pointer", fontFamily: "inherit", marginBottom: 4, opacity: daysLeft > 0 ? 0.5 : 1 }}
-              >
+              {/* Username */}
+              <button onClick={handleOpenUsernameMobile} disabled={daysLeft > 0}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.border}`, background: c.hover, cursor: daysLeft > 0 ? "not-allowed" : "pointer", fontFamily: "inherit", marginBottom: 4, opacity: daysLeft > 0 ? 0.5 : 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 16 }}>✏️</span>
                   <div style={{ textAlign: "left" }}>
@@ -386,14 +404,14 @@ export default function NavBar() {
                 <span style={{ fontSize: 10, color: c.muted }}>@{user?.username}</span>
               </button>
 
-              {/* Leaderboard */}
+              {/* Leaderboard — always enrolled */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.border}`, background: c.hover, marginBottom: 4 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 16 }}>🏆</span>
                   <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: c.text }}>Leaderboard</p>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: lbOptIn ? (dark ? "rgba(45,212,170,0.12)" : "rgba(5,150,105,0.08)") : "transparent", color: lbOptIn ? c.ok : c.muted, border: lbOptIn ? `1px solid ${c.ok}44` : "none" }}>
-                  {lbOptIn ? "Opted in" : "Private"}
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, background: dark ? "rgba(45,212,170,0.12)" : "rgba(5,150,105,0.08)", color: c.ok }}>
+                  Enrolled
                 </span>
               </div>
 
@@ -409,7 +427,8 @@ export default function NavBar() {
               <div style={{ height: 1, background: c.border, margin: "2px 0" }} />
 
               {/* Developer Console */}
-              <button onClick={handleOpenAboutMobile} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 14px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)", cursor: "pointer", fontFamily: "monospace", marginBottom: 4, animation: "termGlow 3s ease-in-out infinite", transition: "all 0.2s" }}>
+              <button onClick={handleOpenAboutMobile}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 14px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)", cursor: "pointer", fontFamily: "monospace", marginBottom: 4, animation: "termGlow 3s ease-in-out infinite", transition: "all 0.2s" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", flexShrink: 0, animation: "consolePulse 1.2s step-end infinite", boxShadow: "0 0 6px #10b981" }} />
                 <div style={{ textAlign: "left" }}>
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#10b981", fontFamily: "monospace" }}>[ Developer Console ]</p>
@@ -418,7 +437,8 @@ export default function NavBar() {
               </button>
 
               {/* Sign out */}
-              <button onClick={handleSignOutMobile} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.bad}33`, background: `${c.bad}08`, cursor: "pointer", fontFamily: "inherit", marginBottom: 24 }}>
+              <button onClick={handleSignOutMobile}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.bad}33`, background: `${c.bad}08`, cursor: "pointer", fontFamily: "inherit", marginBottom: 24 }}>
                 <span style={{ fontSize: 16 }}>→</span>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: c.bad }}>Sign out</p>
               </button>
@@ -430,11 +450,7 @@ export default function NavBar() {
       {showAbout && <AboutModal onClose={handleCloseAbout} dark={dark} />}
 
       {showUsernameModal && (
-        <UsernameSetupModal
-          user={user}
-          onDone={handleUsernameDone}
-          isChange={true}
-        />
+        <UsernameSetupModal user={user} onDone={handleUsernameDone} isChange={true} />
       )}
     </>
   );
