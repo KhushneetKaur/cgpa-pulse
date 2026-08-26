@@ -17,7 +17,7 @@ function getBranchInfo(branchKey) {
 }
 
 const ALL_FILTER_OPTIONS = [
-  { key: "ALL", label: "All", color: null },
+  { key: "ALL", label: "All Branches", color: null },
   ...Object.entries(BRANCHES).map(([key, b]) => ({
     key, label: b.short, color: b.color, faculty: "engineering",
   })),
@@ -87,6 +87,43 @@ export default function LeaderboardPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Responsive layout styles to prevent wrapping bugs */}
+      <style>{`
+        .lb-header-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid ${c.border};
+          background: ${dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)"};
+        }
+        .lb-filter-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+        }
+        @media (max-width: 640px) {
+          .lb-header-bar {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .lb-tabs-container {
+            width: 100%;
+            justify-content: space-around;
+            border-bottom: 1px solid ${c.border};
+          }
+          .lb-filter-container {
+            width: 100%;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: ${dark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.02)"};
+          }
+          .lb-filter-select {
+            flex: 1;
+            max-width: none !important;
+          }
+        }
+      `}</style>
 
       {/* ── Hero stats card ─────────────────────────────────────── */}
       <div style={{
@@ -150,89 +187,87 @@ export default function LeaderboardPage() {
         padding: 0,
         overflow: "hidden",
       }}>
-        {/* Tab bar */}
-        <div style={{
-          display: "flex",
-          borderBottom: `1px solid ${c.border}`,
-          background: dark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
-        }}>
-          {[
-            { key: "overall", label: "🌐 Overall" },
-            { key: "branch",  label: `🎓 ${userBranchInfo?.short || "My Branch"}` },
-          ].map(t => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              style={{
-                padding: "14px 24px",
-                background: "transparent",
-                border: "none",
-                borderBottom: activeTab === t.key
-                  ? `2px solid ${c.accent}`
-                  : "2px solid transparent",
-                color: activeTab === t.key ? c.accent : c.sub,
-                fontWeight: activeTab === t.key ? 700 : 400,
-                fontSize: 14,
-                cursor: "pointer",
-                fontFamily: "inherit",
-                transition: "all 0.15s",
-                position: "relative",
-              }}
-            >
-              {t.label}
-              {t.key === "branch" && branchEntries.length > 0 && (
-                <span style={{ marginLeft: 8, fontSize: 11, background: c.accent, color: "#fff", borderRadius: 99, padding: "2px 7px", fontWeight: 700 }}>
-                  {branchEntries.length}
-                </span>
-              )}
-            </button>
-          ))}
+        {/* Tab & Filter Header Bar */}
+        <div className="lb-header-bar">
+          {/* Tabs */}
+          <div className="lb-tabs-container" style={{ display: "flex" }}>
+            {[
+              { key: "overall", label: "🌐 Overall" },
+              { key: "branch",  label: `🎓 ${userBranchInfo?.short || "My Branch"}` },
+            ].map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                style={{
+                  padding: "14px 20px",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: activeTab === t.key
+                    ? `2px solid ${c.accent}`
+                    : "2px solid transparent",
+                  color: activeTab === t.key ? c.accent : c.sub,
+                  fontWeight: activeTab === t.key ? 700 : 400,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "all 0.15s",
+                  position: "relative",
+                  marginBottom: -1,
+                }}
+              >
+                {t.label}
+                {t.key === "branch" && branchEntries.length > 0 && (
+                  <span style={{ marginLeft: 8, fontSize: 11, background: c.accent, color: "#fff", borderRadius: 99, padding: "2px 7px", fontWeight: 700 }}>
+                    {branchEntries.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Branch Dropdown Filter */}
+          {activeTab === "overall" && (
+            <div className="lb-filter-container">
+              <span style={{ fontSize: 12, color: c.muted, fontWeight: 500, whitespace: "nowrap" }}>
+                Filter:
+              </span>
+              <select
+                className="lb-filter-select"
+                value={branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  border: `1px solid ${branchFilter !== "ALL" ? c.accent : c.border}`,
+                  background: dark ? "#1a1a24" : "#ffffff",
+                  color: branchFilter !== "ALL" ? c.accent : c.text,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  outline: "none",
+                  fontFamily: "inherit",
+                  transition: "all 0.15s",
+                  maxWidth: 160,
+                }}
+              >
+                {ALL_FILTER_OPTIONS.map(opt => (
+                  <option
+                    key={opt.key}
+                    value={opt.key}
+                    style={{
+                      background: dark ? "#1e1e2d" : "#ffffff",
+                      color: dark ? "#ffffff" : "#000000",
+                    }}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div style={{ padding: "16px 20px" }}>
-          {/* Branch filter pills — overall tab only */}
-          {activeTab === "overall" && (
-            <div
-              className="no-scrollbar"
-              style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 12, marginBottom: 4, flexWrap: "wrap" }}
-            >
-              {ALL_FILTER_OPTIONS.map(opt => {
-                const isActive = branchFilter === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    onClick={() => setBranchFilter(opt.key)}
-                    style={{
-                      padding: "5px 12px",
-                      borderRadius: 99,
-                      border: isActive
-                        ? `1.5px solid ${opt.color || c.accent}`
-                        : `1px solid ${c.border}`,
-                      background: isActive
-                        ? `${opt.color || c.accent}18`
-                        : "transparent",
-                      color: isActive
-                        ? (opt.color || c.accent)
-                        : c.sub,
-                      fontSize: 12,
-                      fontWeight: isActive ? 700 : 400,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      transition: "all 0.15s",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {opt.key !== "ALL" && (
-                      <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: opt.color || c.muted, marginRight: 5, verticalAlign: "middle" }} />
-                    )}
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
           {/* List */}
           {loading ? (
             <div style={{ textAlign: "center", padding: "2.5rem 0", color: c.sub, fontSize: 13 }}>
