@@ -87,7 +87,7 @@ export default function LeaderboardPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Responsive layout styles to prevent wrapping bugs */}
+      {/* Responsive layout styles to prevent truncation bugs */}
       <style>{`
         .lb-header-bar {
           display: flex;
@@ -101,6 +101,15 @@ export default function LeaderboardPage() {
           align-items: center;
           gap: 8px;
           padding: 8px 16px;
+        }
+        .lb-row {
+          display: grid;
+          grid-template-columns: 44px 1fr auto auto;
+          gap: 12px;
+          align-items: center;
+          padding: 11px 12px;
+          border-radius: 10px;
+          transition: background 0.15s;
         }
         @media (max-width: 640px) {
           .lb-header-bar {
@@ -121,6 +130,19 @@ export default function LeaderboardPage() {
           .lb-filter-select {
             flex: 1;
             max-width: none !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .lb-row {
+            grid-template-columns: 36px 1fr auto;
+            gap: 8px;
+            padding: 10px 8px;
+          }
+          .lb-row-badge {
+            display: none !important;
+          }
+          .lb-mobile-branch-tag {
+            display: inline-block !important;
           }
         }
       `}</style>
@@ -228,7 +250,7 @@ export default function LeaderboardPage() {
           {/* Branch Dropdown Filter */}
           {activeTab === "overall" && (
             <div className="lb-filter-container">
-              <span style={{ fontSize: 12, color: c.muted, fontWeight: 500, whitespace: "nowrap" }}>
+              <span style={{ fontSize: 12, color: c.muted, fontWeight: 500, whiteSpace: "nowrap" }}>
                 Filter:
               </span>
               <select
@@ -267,7 +289,7 @@ export default function LeaderboardPage() {
           )}
         </div>
 
-        <div style={{ padding: "16px 20px" }}>
+        <div style={{ padding: "12px 14px" }}>
           {/* List */}
           {loading ? (
             <div style={{ textAlign: "center", padding: "2.5rem 0", color: c.sub, fontSize: 13 }}>
@@ -325,59 +347,60 @@ const LeaderboardRow = memo(function LeaderboardRow({ entry, idx, isMe }) {
   const username   = entry.username || "Anonymous";
 
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "48px 1fr auto auto auto",
-      gap: 12,
-      alignItems: "center",
-      padding: "11px 12px",
-      borderRadius: 10,
-      background: isMe
-        ? dark ? "rgba(109,40,217,0.12)" : "rgba(109,40,217,0.06)"
-        : idx % 2 === 0 ? c.hover : "transparent",
-      border: `1px solid ${isMe
-        ? dark ? "rgba(124,131,245,0.3)" : "rgba(109,40,217,0.2)"
-        : "transparent"}`,
-      transition: "background 0.15s",
-    }}>
-
+    <div
+      className="lb-row"
+      style={{
+        background: isMe
+          ? dark ? "rgba(109,40,217,0.12)" : "rgba(109,40,217,0.06)"
+          : idx % 2 === 0 ? c.hover : "transparent",
+        border: `1px solid ${isMe
+          ? dark ? "rgba(124,131,245,0.3)" : "rgba(109,40,217,0.2)"
+          : "transparent"}`,
+      }}
+    >
       {/* Rank */}
       <div style={{ textAlign: "center" }}>
         {medal ? (
-          <span style={{ fontSize: 20 }}>{medal}</span>
+          <span style={{ fontSize: 18 }}>{medal}</span>
         ) : (
           <span style={{ fontSize: 12, fontWeight: 600, color: c.muted }}>#{idx + 1}</span>
         )}
       </div>
 
       {/* Name + branch name */}
-      <div style={{ minWidth: 0 }}>
+      <div style={{ minWidth: 0, overflow: "hidden" }}>
         <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: isMe ? 700 : 500, color: isMe ? c.accent : c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {username}
           {isMe && <span style={{ marginLeft: 6, fontSize: 10, color: c.accent, fontWeight: 400 }}>(you)</span>}
         </p>
         <p style={{ margin: 0, fontSize: 11, color: c.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span className="lb-mobile-branch-tag" style={{ display: "none", color: branchInfo?.color || c.accent, fontWeight: 700, marginRight: 4 }}>
+            [{branchInfo?.short || entry.branch || "—"}]
+          </span>
           {branchInfo?.name || entry.branch || "—"}
           {entry.semCount ? ` · ${entry.semCount} sem${entry.semCount !== 1 ? "s" : ""}` : ""}
         </p>
       </div>
 
-      {/* Branch badge */}
-      <span style={{
-        fontSize: 11,
-        fontWeight: 700,
-        padding: "3px 9px",
-        borderRadius: 6,
-        background: `${branchInfo?.color || c.border}15`,
-        border: `1px solid ${branchInfo?.color || c.border}35`,
-        color: branchInfo?.color || c.sub,
-        whiteSpace: "nowrap",
-      }}>
+      {/* Branch badge (Desktop/Tablet) */}
+      <span
+        className="lb-row-badge"
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          padding: "3px 9px",
+          borderRadius: 6,
+          background: `${branchInfo?.color || c.border}15`,
+          border: `1px solid ${branchInfo?.color || c.border}35`,
+          color: branchInfo?.color || c.sub,
+          whiteSpace: "nowrap",
+        }}
+      >
         {branchInfo?.short || entry.branch || "—"}
       </span>
 
       {/* CGPA */}
-      <span style={{ fontSize: 20, fontWeight: 900, color: scoreClr(entry.cgpa), textAlign: "center", letterSpacing: -0.5 }}>
+      <span style={{ fontSize: 18, fontWeight: 900, color: scoreClr(entry.cgpa), textAlign: "right", letterSpacing: -0.5, minWidth: 42 }}>
         {entry.cgpa}
       </span>
     </div>
