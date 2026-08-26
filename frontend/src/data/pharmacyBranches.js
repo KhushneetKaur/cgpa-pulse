@@ -28,7 +28,7 @@ export const PHARMACY_BRANCHES = {
         { code: "BP103T",    name: "Pharmaceutics I",                      type: "theory",       credits: 4 },
         { code: "BP104T",    name: "Pharmaceutical Inorganic Chemistry",   type: "theory",       credits: 4 },
         { code: "BP105T",    name: "Communication Skills",                 type: "theory-small", credits: 2 }, // NUE
-        { code: "BP106RBT",  name: "Remedial Biology",                     type: "theory-small", credits: 2 }, // NUE — hide if Maths stream
+        { code: "BP106RBT",  name: "Remedial Biology/Remedial Maths",                     type: "theory-small", credits: 2 }, // NUE — hide if Maths stream
         { code: "BP107P",    name: "Human Anatomy & Physiology I Lab",     type: "lab",          credits: 2 },
         { code: "BP108P",    name: "Pharmaceutical Analysis I Lab",        type: "lab",          credits: 2 },
         { code: "BP109P",    name: "Pharmaceutics I Lab",                  type: "lab",          credits: 2 },
