@@ -39,10 +39,9 @@ export default function TargetPage() {
     runCalcTarget,
   } = useAppData();
 
-  // Remove dark + toggleDark — unused
   const { c, btn, inp, cardSty, scoreClr } = useTheme();
 
-  const card = cardSty(); // call once — already memoized in ThemeContext
+  const card = cardSty(); 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
