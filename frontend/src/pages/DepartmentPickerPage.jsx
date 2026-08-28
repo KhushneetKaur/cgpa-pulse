@@ -33,27 +33,32 @@ export default function DepartmentPickerPage() {
   const { setFaculty } = useAppData();
   const { c, dark, cardSty } = useTheme();
 
-  const handlePick = useCallback((key) => setFaculty(key), [setFaculty]);
+  const handlePick = useCallback((key) => {
+    if (key === "pharmacy") {
+      setFaculty("pharmacy");
+      setBranch("BPHARM");
+      setShowBranchHint(true); 
+    } else {
+      setFaculty("engineering");
+    }
+  }, [setFaculty, setBranch, setShowBranchHint]);
 
   return (
     <div style={{ ...cardSty(), textAlign: "center", padding: "2.5rem 2rem" }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
         <MRSPTULogo size={56} />
       </div>
-
       <h2 style={{ fontSize: 20, fontWeight: 700, color: c.text, margin: "0 0 6px" }}>
         MRSPTU Bathinda
       </h2>
       <p style={{ fontSize: 13, color: c.sub, margin: "0 0 32px", lineHeight: 1.5 }}>
         Select your programme to get started.
       </p>
-
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 480, margin: "0 auto" }}>
         {DEPARTMENTS.map(d => (
           <DeptCard key={d.key} dept={d} onPick={handlePick} />
         ))}
       </div>
-
       <p style={{ fontSize: 11, color: c.muted, marginTop: 28, lineHeight: 1.5 }}>
         More programmes coming soon. You can switch anytime from your profile.
       </p>
@@ -73,7 +78,7 @@ const DeptCard = memo(function DeptCard({ dept, onPick }) {
       style={{
         padding:       "24px 16px",
         borderRadius:  14,
-        border:        `1.5px solid ${dept.border}`, // ← fixed: was dark ? border : border
+        border:        `1.5px solid ${dept.border}`, 
         background:    dark ? dept.bgDark : dept.bgLight,
         cursor:        "pointer",
         fontFamily:    "inherit",

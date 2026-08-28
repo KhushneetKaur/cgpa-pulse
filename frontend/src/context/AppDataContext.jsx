@@ -112,7 +112,7 @@ export function AppDataProvider({ children }) {
   const [predDesiredSGPA, setPredDesiredSGPA] = useState("");
   const [customSubjects,  setCustomSubjects]  = useState({});
   const [hiddenSubjects,  setHiddenSubjects]  = useState({});
-
+  const [showBranchHint, setShowBranchHint] = useState(false);
   const hasLoaded = useRef(false);
 
   const bCustomSubjects = useMemo(() => (branch ? customSubjects[branch] || {} : {}), [branch, customSubjects]);
@@ -549,7 +549,7 @@ const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter 
     subDisplayName, toggleBacklog, setElectiveName, flashSave,
     user, setUser, logout, authErr, setAuthErr, authLoading, clearForm, googleLogin,
     bCustomSubjects, bHiddenSubjects,
-    addCustomSubject, removeCustomSubject, toggleHiddenSubject,
+    addCustomSubject, removeCustomSubject, toggleHiddenSubject,showBranchHint, setShowBranchHint,
   }), [
     screen, tab, saveMsg,
     branch, setBranch, faculty, scheme,
@@ -565,7 +565,7 @@ const fetchLeaderboard = useCallback(async (branchFilter = "ALL", facultyFilter 
     openQuick, closeQuick, saveQuick, deleteQuick,
     user, setUser, logout, authErr, setAuthErr, authLoading, clearForm, googleLogin,
     bCustomSubjects, bHiddenSubjects,
-    addCustomSubject, removeCustomSubject, toggleHiddenSubject,
+    addCustomSubject, removeCustomSubject, toggleHiddenSubject,showBranchHint, setShowBranchHint,
   ]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

@@ -13,6 +13,7 @@ import UsernameSetupModal from "./components/UsernameSetupModal";
 import BottomTabBar       from "./components/BottomTabBar";
 import OnboardingModal    from "./components/OnboardingModal";
 import InstallPromptToast from "./components/InstallPromptToast";
+import BranchHintBanner from "./components/BranchHintBanner";
 
 // Code-split pages
 const LoginPage          = React.lazy(() => import("./pages/login/LoginPage"));
@@ -87,7 +88,7 @@ function Shell() {
 // ── App layout ────────────────────────────────────────────────────────────────
 function AppLayout() {
   const {
-    user, branch, faculty, tab,
+    user, branch, faculty, tab,showBranchHint,
     setUser, setBranch, setFaculty, selectSem,
   } = useAppData();
   const { c, dark } = useTheme();
@@ -165,7 +166,9 @@ function AppLayout() {
       {showUsernameModal && (
         <UsernameSetupModal user={user} onDone={handleUsernameDone} isChange={true} />
       )}
-
+       
+      {faculty && <NavBar />}
+       {showBranchHint && branch && faculty === "pharmacy" && <BranchHintBanner />} 
       <main style={{ flex: 1, maxWidth: 1080, margin: "0 auto", width: "100%", padding: "1.5rem 1.25rem 2rem" }}>
         <Suspense fallback={null}>
           {mainContent === "dept" && <DepartmentPickerPage />}

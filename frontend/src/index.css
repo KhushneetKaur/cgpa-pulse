@@ -208,3 +208,12 @@ button, input, select, textarea, a, .theme-transition {
     grid-template-columns: 40px 1fr auto !important;
   }
 }
+/* Desktop — hide mobile instruction line */
+@media (min-width: 640px) {
+  .branch-hint-mobile  { display: none; }
+}
+
+/* Mobile — hide desktop instruction line */
+@media (max-width: 639px) {
+  .branch-hint-desktop { display: none; }
+}
