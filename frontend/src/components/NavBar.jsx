@@ -22,7 +22,6 @@ export default function NavBar() {
     faculty, setFaculty,   
     tab, setTab,
     screen, setScreen,
-    lbOptIn,
   } = useAppData();
 
   const { c, dark, scoreClr, toggleDark } = useTheme();
@@ -431,14 +430,14 @@ export default function NavBar() {
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 14px", borderRadius: 10, border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)", cursor: "pointer", fontFamily: "monospace", marginBottom: 4, animation: "termGlow 3s ease-in-out infinite", transition: "all 0.2s" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", flexShrink: 0, animation: "consolePulse 1.2s step-end infinite", boxShadow: "0 0 6px #10b981" }} />
                 <div style={{ textAlign: "left" }}>
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#10b981", fontFamily: "monospace" }}>[ Developer Console ]</p>
-                  <p style={{ margin: 0, fontSize: 9, color: "rgba(16,185,129,0.55)", fontFamily: "sans-serif" }}>Khushneet Kaur · GitHub · LinkedIn</p>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#10b981" }}>[ Developer Console ]</p>
+                  <p style={{ margin: 0, fontSize: 9, color: "rgba(16,185,129,0.6)" }}>meet the architect · GitHub · LinkedIn</p>
                 </div>
               </button>
 
               {/* Sign out */}
               <button onClick={handleSignOutMobile}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.bad}33`, background: `${c.bad}08`, cursor: "pointer", fontFamily: "inherit", marginBottom: 24 }}>
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 14px", borderRadius: 10, border: `1px solid ${c.bad}30`, background: `${c.bad}10`, cursor: "pointer", fontFamily: "inherit" }}>
                 <span style={{ fontSize: 16 }}>→</span>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: c.bad }}>Sign out</p>
               </button>
@@ -447,10 +446,17 @@ export default function NavBar() {
         </>
       )}
 
-      {showAbout && <AboutModal onClose={handleCloseAbout} dark={dark} />}
-
+      {/* ── Modals ────────────────────────────────────────────────── */}
       {showUsernameModal && (
-        <UsernameSetupModal user={user} onDone={handleUsernameDone} isChange={true} />
+        <UsernameSetupModal
+          user={user}
+          onDone={handleUsernameDone}
+          onClose={() => setShowUsernameModal(false)}
+        />
+      )}
+
+      {showAbout && (
+        <AboutModal onClose={handleCloseAbout} />
       )}
     </>
   );

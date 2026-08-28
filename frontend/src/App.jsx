@@ -13,7 +13,7 @@ import UsernameSetupModal from "./components/UsernameSetupModal";
 import BottomTabBar       from "./components/BottomTabBar";
 import OnboardingModal    from "./components/OnboardingModal";
 import InstallPromptToast from "./components/InstallPromptToast";
-import BranchHintBanner from "./components/BranchHintBanner";
+import BranchHintBanner   from "./components/BranchHintBanner";
 
 // Code-split pages
 const LoginPage          = React.lazy(() => import("./pages/login/LoginPage"));
@@ -88,8 +88,8 @@ function Shell() {
 // ── App layout ────────────────────────────────────────────────────────────────
 function AppLayout() {
   const {
-    user, branch, faculty, tab,showBranchHint,
-    setUser, setBranch, setFaculty, selectSem,
+    user, branch, faculty, tab, showBranchHint,
+    setUser, setBranch, selectSem,
   } = useAppData();
   const { c, dark } = useTheme();
 
@@ -97,7 +97,7 @@ function AppLayout() {
   const [showUsernameModal,  setShowUsernameModal]   = useState(false);
   const [hasShownOnboarding, setHasShownOnboarding]  = useState(false);
 
-  // ── Main content to render ──────────────────────────────────────────────────
+  // ── Main content view determination ─────────────────────────────────────────
   const mainContent = useMemo(() => {
     if (!faculty) return "dept";
     if (!branch)  return "branch";
@@ -156,8 +156,8 @@ function AppLayout() {
       <DisclaimerModal />
       <QuickSGPAModal />
 
-      {/* NavBar hidden on dept picker — user hasn't set up yet */}
-      {faculty && <NavBar />}
+      {/* Render NavBar once user picks a faculty and pass modal opener */}
+      {faculty && <NavBar onOpenUsernameModal={() => setShowUsernameModal(true)} />}
 
       {showOnboarding && (
         <OnboardingModal user={user} faculty={faculty} onDone={handleOnboardingDone} />
@@ -166,11 +166,11 @@ function AppLayout() {
       {showUsernameModal && (
         <UsernameSetupModal user={user} onDone={handleUsernameDone} isChange={true} />
       )}
-       
-      {faculty && <NavBar />}
-       {showBranchHint && branch && faculty === "pharmacy" && <BranchHintBanner />} 
+        
+      {showBranchHint && branch && faculty === "pharmacy" && <BranchHintBanner />} 
+
       <main style={{ flex: 1, maxWidth: 1080, margin: "0 auto", width: "100%", padding: "1.5rem 1.25rem 2rem" }}>
-        <Suspense fallback={null}>
+        <Suspense fallback={<Spinner bg={c?.bg} />}>
           {mainContent === "dept" && <DepartmentPickerPage />}
           {mainContent === "branch" && <BranchSelect />}
           {mainContent === "app"    && (
@@ -182,9 +182,12 @@ function AppLayout() {
         </Suspense>
       </main>
 
-      {/* Bottom bar hidden until user is fully set up */}
-      {faculty && branch && <InstallPromptToast />}
-      {faculty && branch && <BottomTabBar />}
+      {faculty && branch && (
+        <>
+          <InstallPromptToast />
+          <BottomTabBar />
+        </>
+      )}
     </div>
   );
 }
