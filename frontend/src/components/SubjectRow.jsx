@@ -172,7 +172,7 @@ const SubjectRow = memo(function SubjectRow({ sub, selSem, branch }) {
             value={entry.int ?? ""}
             onChange={handleIntChange}
             placeholder={`0–${mx.int}`}
-            disabled={isProject && mx.int === 0} // Project Work has no internal
+            disabled={isProject && mx.int === 0} 
             style={inputStyle(intVal, mx.int)}
           />
         </div>
