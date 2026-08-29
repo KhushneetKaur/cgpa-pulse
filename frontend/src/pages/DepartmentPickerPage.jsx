@@ -28,43 +28,39 @@ const DEPARTMENTS = [
   },
 ];
 
+// Default branch per faculty — used for instant entry without BranchSelect
+const FACULTY_DEFAULTS = {
+  engineering: "CSE",
+  pharmacy:    "BPHARM",
+};
+
 export default function DepartmentPickerPage() {
-  // Destructured setShowBranchHint to prevent ReferenceError crash
   const { setFaculty, setBranch, setShowBranchHint } = useAppData();
-  const { c, cardSty } = useTheme();
+  const { c, dark, cardSty } = useTheme();
 
   const handlePick = useCallback((key) => {
-    if (key === "pharmacy") {
-      setFaculty("pharmacy");
-      setBranch("BPHARM");
-      if (typeof setShowBranchHint === "function") {
-        setShowBranchHint(true);
-      }
-    } else {
-      setFaculty("engineering");
-    }
+    // Both directions: auto-select a sensible default and let the banner guide them
+    setFaculty(key);
+    setBranch(FACULTY_DEFAULTS[key]);
+    setShowBranchHint(true); // triggers BranchHintBanner in AppLayout
   }, [setFaculty, setBranch, setShowBranchHint]);
 
   return (
-    <div style={{ ...cardSty(), textAlign: "center", padding: "2.5rem 1.5rem" }}>
+    <div style={{ ...cardSty(), textAlign: "center", padding: "2.5rem 2rem" }}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
         <MRSPTULogo size={56} />
       </div>
-
       <h2 style={{ fontSize: 20, fontWeight: 700, color: c.text, margin: "0 0 6px" }}>
         MRSPTU Bathinda
       </h2>
       <p style={{ fontSize: 13, color: c.sub, margin: "0 0 32px", lineHeight: 1.5 }}>
         Select your programme to get started.
       </p>
-
-      {/* Grid shifts to single-column on mobile screens */}
-      <div className="dept-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, maxWidth: 480, margin: "0 auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 480, margin: "0 auto" }}>
         {DEPARTMENTS.map(d => (
           <DeptCard key={d.key} dept={d} onPick={handlePick} />
         ))}
       </div>
-
       <p style={{ fontSize: 11, color: c.muted, marginTop: 28, lineHeight: 1.5 }}>
         More programmes coming soon. You can switch anytime from your profile.
       </p>
@@ -74,7 +70,6 @@ export default function DepartmentPickerPage() {
 
 const DeptCard = memo(function DeptCard({ dept, onPick }) {
   const { c, dark } = useTheme();
-
   const handleClick = useCallback(() => onPick(dept.key), [onPick, dept.key]);
 
   return (
@@ -82,44 +77,23 @@ const DeptCard = memo(function DeptCard({ dept, onPick }) {
       type="button"
       onClick={handleClick}
       style={{
-        padding:        "24px 16px",
-        borderRadius:   14,
-        border:         `1.5px solid ${dept.border}`, 
-        background:     dark ? dept.bgDark : dept.bgLight,
-        cursor:         "pointer",
-        fontFamily:     "inherit",
-        display:        "flex",
-        flexDirection:  "column",
-        alignItems:     "center",
-        justifyContent: "space-between",
-        gap:            12,
-        transition:     "all 0.18s ease-in-out",
-        outline:        "none",
+        padding: "24px 16px", borderRadius: 14,
+        border:     `1.5px solid ${dept.border}`,
+        background: dark ? dept.bgDark : dept.bgLight,
+        cursor: "pointer", fontFamily: "inherit",
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+        transition: "all 0.18s",
       }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = "translateY(-3px)";
-        e.currentTarget.style.boxShadow = `0 8px 24px ${dept.border}`;
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "none";
-      }}
+      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${dept.border}`; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)";    e.currentTarget.style.boxShadow = "none"; }}
     >
       <span style={{ fontSize: 36, lineHeight: 1 }}>{dept.emoji}</span>
-
       <div>
-        <p style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 700, color: dept.color }}>
-          {dept.title}
-        </p>
-        <p style={{ margin: "0 0 6px", fontSize: 11, color: c.muted, fontWeight: 500 }}>
-          {dept.sub}
-        </p>
-        <p style={{ margin: 0, fontSize: 11, color: c.muted, lineHeight: 1.5 }}>
-          {dept.desc}
-        </p>
+        <p style={{ margin: "0 0 2px", fontSize: 15, fontWeight: 700, color: dept.color }}>{dept.title}</p>
+        <p style={{ margin: "0 0 6px", fontSize: 11, color: c.muted, fontWeight: 500 }}>{dept.sub}</p>
+        <p style={{ margin: 0, fontSize: 11, color: c.muted, lineHeight: 1.5 }}>{dept.desc}</p>
       </div>
-
-      <div style={{ marginTop: 4, padding: "5px 14px", borderRadius: 99, background: dept.color, color: "#fff", fontSize: 11, fontWeight: 700 }}>
+      <div style={{ marginTop: 4, padding: "4px 12px", borderRadius: 99, background: dept.color, color: "#fff", fontSize: 11, fontWeight: 700 }}>
         Select →
       </div>
     </button>

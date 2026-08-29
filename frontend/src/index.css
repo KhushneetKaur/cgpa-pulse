@@ -1,7 +1,10 @@
-﻿/* Google Font Inter */
+﻿/* Google Fonts Preconnect Hints (Place in your HTML <head> for best performance):
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+*/
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* Reset & Root Setup */
+/* ── Reset & Root Setup ────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -9,12 +12,25 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Global Layout Selector Consolidation & Theme Setup */
+:root {
+  --bg: #080c18;
+  --text: #f8fafc;
+  --scrollbar-thumb: #c4b5fd;
+  --scrollbar-thumb-hover: #a78bfa;
+  --focus-ring: #818cf8;
+}
+
+html.light {
+  --bg: #f4f3ff;
+  --text: #0f172a;
+}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
 }
 
 html, body, #root {
@@ -23,23 +39,18 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: 400;
   line-height: 1.6;
-  background-color: var(--bg, #080c18);
-  color: var(--text, #f8fafc);
+  background-color: var(--bg);
+  color: var(--text);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-html.light body {
-  --bg: #f4f3ff;
-  --text: #0f172a;
-}
-
-/* Scrollbar (Modern Standard + WebKit Fallback) */
+/* ── Custom Scrollbar ──────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #c4b5fd transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -50,14 +61,22 @@ html.light body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c4b5fd;
+  background: var(--scrollbar-thumb);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a78bfa;
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* Number inputs hide spinner arrows */
+.no-scrollbar::-webkit-scrollbar { 
+  display: none; 
+}
+.no-scrollbar { 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+/* ── Form & Selection Resets ────────────────────────────────────────────── */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -67,81 +86,73 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* Focus ring global */
 :focus-visible {
-  outline: 2px solid #818cf8;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* Selection color */
 ::selection {
   background: #ddd6fe;
   color: #1e1b4b;
 }
 
-/* Utility: hide scrollbar but keep scroll */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Responsive & Accessibility Overrides */
-@media (max-width: 640px) {
-  html {
-    scroll-behavior: auto;
-  }
-  [style*="backdrop-filter"],
-  [style*="BackdropFilter"] {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
+/* ── Interactive Transitions ────────────────────────────────────────────── */
+button, input, select, textarea, a, .theme-transition {
+  transition: background-color 0.15s ease,
+              border-color 0.15s ease,
+              color 0.15s ease,
+              box-shadow 0.15s ease,
+              transform 0.15s ease,
+              opacity 0.15s ease;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Keyframes */
+/* ── Keyframe Animations ───────────────────────────────────────────────── */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
 }
+
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
+
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(22px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
+
 @keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-16px); }
-  to   { opacity: 1; transform: translateY(0);     }
+  from { opacity: 0; transform: translate3d(0, -16px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
 }
+
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.94); }
-  to   { opacity: 1; transform: scale(1);    }
+  to   { opacity: 1; transform: scale(1); }
 }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
 @keyframes floatY {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(6px); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, 6px, 0); }
 }
+
 @keyframes gradientShift {
-  0%   { background-position: 0% 50%;   }
+  0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%;   }
+  100% { background-position: 0% 50%; }
 }
+
 @keyframes neonPulse {
   0%, 100% { opacity: 0.55; }
-  50%      { opacity: 1;    }
+  50%      { opacity: 1; }
 }
+
 @keyframes termGlow {
   0%, 100% {
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
@@ -153,67 +164,77 @@ input[type=number] {
     color: #34d399;
   }
 }
+
 @keyframes consolePulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
+
 @keyframes floatCard {
-  0%   { transform: translateY(0);      opacity: 0; }
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
   8%   { opacity: 0.65; }
   85%  { opacity: 0.45; }
-  100% { transform: translateY(-110vh); opacity: 0; }
+  100% { transform: translate3d(0, -110vh, 0); opacity: 0; }
 }
 
-/* Background Orb Animations */
+/* Orb Ambient Floating Animations */
 @keyframes orbFloat0 {
-  0%, 100% { transform: translate(0,0) scale(1);           }
-  33%      { transform: translate(28px,-38px) scale(1.07); }
-  66%      { transform: translate(-18px,18px) scale(0.95); }
-}
-@keyframes orbFloat1 {
-  0%, 100% { transform: translate(0,0) scale(1.04);         }
-  33%      { transform: translate(-32px,22px) scale(0.93);  }
-  66%      { transform: translate(18px,-28px) scale(1.08);  }
-}
-@keyframes orbFloat2 {
-  0%, 100% { transform: translate(0,-10px) scale(0.97); }
-  50%      { transform: translate(22px,14px) scale(1.05); }
-}
-@keyframes orbFloat3 {
-  0%, 100% { transform: translate(0,0) scale(1);           }
-  40%      { transform: translate(-18px,-32px) scale(1.09); }
-  80%      { transform: translate(26px,12px) scale(0.94);  }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(28px, -38px, 0) scale(1.07); }
+  66%      { transform: translate3d(-18px, 18px, 0) scale(0.95); }
 }
 
-/* Scoped Interactive & Theme Transitions */
-button, input, select, textarea, a, .theme-transition {
-  transition: background-color 0.15s ease,
-              border-color 0.15s ease,
-              color 0.15s ease,
-              box-shadow 0.15s ease,
-              transform 0.15s ease,
-              opacity 0.15s ease;
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.04); }
+  33%      { transform: translate3d(-32px, 22px, 0) scale(0.93); }
+  66%      { transform: translate3d(18px, -28px, 0) scale(1.08); }
 }
-/* Show faculty badge only on desktop */
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate3d(0, -10px, 0) scale(0.97); }
+  50%      { transform: translate3d(22px, 14px, 0) scale(1.05); }
+}
+
+@keyframes orbFloat3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40%      { transform: translate3d(-18px, -32px, 0) scale(1.09); }
+  80%      { transform: translate3d(26px, 12px, 0) scale(0.94); }
+}
+
+/* ── Responsive & Device Adaptation ──────────────────────────────────── */
+@media (max-width: 639px) {
+  html {
+    scroll-behavior: auto;
+  }
+  .branch-hint-desktop { 
+    display: none !important; 
+  }
+  .lb-col-headers,
+  [style*="gridTemplateColumns: \"48px 1fr auto auto auto\""] {
+    grid-template-columns: 40px 1fr auto !important;
+  }
+  [style*="backdrop-filter"],
+  [style*="BackdropFilter"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
 @media (min-width: 640px) {
+  .branch-hint-mobile { 
+    display: none !important; 
+  }
   .lb-faculty-badge {
     display: inline-block !important;
   }
 }
 
-/* On mobile, collapse leaderboard grid to 3 columns (rank, name, cgpa) */
-@media (max-width: 639px) {
-  .lb-col-headers,
-  [style*="gridTemplateColumns: \"48px 1fr auto auto auto\""] {
-    grid-template-columns: 40px 1fr auto !important;
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
-}
-/* Desktop — hide mobile instruction line */
-@media (min-width: 640px) {
-  .branch-hint-mobile  { display: none; }
-}
-
-/* Mobile — hide desktop instruction line */
-@media (max-width: 639px) {
-  .branch-hint-desktop { display: none; }
 }

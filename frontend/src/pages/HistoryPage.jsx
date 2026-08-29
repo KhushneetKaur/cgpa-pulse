@@ -27,7 +27,6 @@ export default function HistoryPage() {
     openQuick,
     authLoading,
   } = useAppData();
-  // lbOptIn + toggleLbOptIn removed — leaderboard is now mandatory, no opt-out
 
   const { c, cardSty, scoreClr } = useTheme();
 
@@ -44,7 +43,7 @@ export default function HistoryPage() {
   const branchData = useMemo(() => getBranchData(branch, faculty), [branch, faculty]);
   const branchName = branchData?.name || "Your Programme";
   const semLabel   = branchData?.semLabel || "Sem"; // "Year" for Pharm.D, "Sem" for everything else
-  const totalSems  = semKeys.length; // dynamic — 8 for B.Tech, 5 for Pharm.D, 4 for M.Pharm
+  const totalSems  = semKeys.length; 
 
   // Bar chart data
   const barData = useMemo(() =>

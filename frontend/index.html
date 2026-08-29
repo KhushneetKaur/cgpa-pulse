@@ -2,22 +2,56 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-   <title>CGPA Pulse | MRSPTU CGPA & SGPA Calculator</title>
-  <meta name="description" content="The ultimate live SGPA tracker, grade predictor, and target CGPA calculator built specifically for Maharaja Ranjit Singh Punjab Technical University (MRSPTU) affiliated students." />
-  <meta name="google-site-verification" content="C9qxoZ6R37E01WH9JmtILHaDQugI1LhjEB0l3siYv90" />
-  
-  
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#7c3aed" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="CGPA Pulse" />
-  <link rel="apple-touch-icon" href="/icon-192.png" />
+    
+    <!-- Primary Page Information -->
+    <title>CGPA Pulse | MRSPTU CGPA & SGPA Calculator</title>
+    <meta name="title" content="CGPA Pulse | MRSPTU CGPA & SGPA Calculator" />
+    <meta name="description" content="The ultimate live SGPA tracker, grade predictor, and target CGPA calculator built specifically for Maharaja Ranjit Singh Punjab Technical University (MRSPTU) affiliated students." />
+    <meta name="google-site-verification" content="C9qxoZ6R37E01WH9JmtILHaDQugI1LhjEB0l3siYv90" />
+    <meta name="robots" content="index, follow" />
 
-</head>
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CGPA Pulse | MRSPTU CGPA & SGPA Calculator" />
+    <meta property="og:description" content="Track your SGPA, predict target CGPA, and calculate grades specifically tailored for MRSPTU Bathinda students." />
+    <meta property="og:image" content="/icon-512.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="CGPA Pulse | MRSPTU CGPA & SGPA Calculator" />
+    <meta property="twitter:description" content="Track your SGPA, predict target CGPA, and calculate grades specifically tailored for MRSPTU Bathinda students." />
+    <meta property="twitter:image" content="/icon-512.png" />
+
+    <!-- Performance: Preconnect Fonts & Static Assets -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Icons & Manifest (PWA) -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Web App & Theme Configuration -->
+    <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#080c18" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CGPA Pulse" />
+
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "CGPA Pulse",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "All",
+        "description": "SGPA tracker, grade predictor, and target CGPA calculator for MRSPTU students."
+      }
+    </script>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
