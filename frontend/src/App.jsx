@@ -3,6 +3,7 @@ import { AuthProvider, useAuth }      from "./context/AuthContext";
 import { ThemeProvider, useTheme }   from "./context/ThemeContext";
 import { AppDataProvider, useAppData } from "./context/AppDataContext";
 import { Toaster }                   from "react-hot-toast";
+import { Analytics }                 from "@vercel/analytics/react";
 
 import NavBar             from "./components/NavBar";
 import DisclaimerModal    from "./components/DisclaimerModal";
@@ -50,6 +51,7 @@ export default function App() {
       <ThemeProvider>
         <AppDataProvider>
           <Shell />
+          <Analytics />
         </AppDataProvider>
       </ThemeProvider>
     </AuthProvider>
