@@ -1,61 +1,91 @@
+<div align="center">
+
 # CGPA Pulse ⚡
 
-> **The smartest way to track, predict, and own your academic journey — built for MRSPTU Bathinda students, by one of them.**
+**The smartest way to track, predict, and own your academic journey.**
+Built for MRSPTU Bathinda students, by one of them.
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-cgpa--pulse.vercel.app-7c3aed?style=for-the-badge&logo=vercel)](https://cgpa-pulse.vercel.app)
 [![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://cgpa-pulse-backend.onrender.com)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 [![PWA Ready](https://img.shields.io/badge/PWA-Installable-5A0FC8?style=for-the-badge&logo=pwa)](https://cgpa-pulse.vercel.app)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+
+
+</div>
+
+<!-- SCREENSHOTS: save 3 phone screenshots in docs/screenshots/ (leaderboard.png, calculator.png, predictor.png), then uncomment:
+<div align="center">
+  <img src="docs/screenshots/calculator.png" width="30%" alt="Live SGPA calculator" />
+  <img src="docs/screenshots/predictor.png" width="30%" alt="Target CGPA predictor" />
+  <img src="docs/screenshots/leaderboard.png" width="30%" alt="Leaderboard" />
+</div>
+-->
+
+**Jump to:** [Impact](#impact) · [Features](#features) · [Tech Stack](#tech-stack) · [Architecture](#architecture) · [Getting Started](#getting-started) · [API](#api-reference) · [Security](#security) · [Roadmap](#roadmap)
 
 ---
 
 ## What Is This?
 
-Every MRSPTU student has been there — exam season ends, results drop, and you're frantically punching numbers into a calculator trying to figure out if your CGPA went up or down. Spreadsheets. WhatsApp forwards. Manual arithmetic at 2am.
+Every MRSPTU student has been there. Exam season ends, results drop, and you're frantically punching numbers into a calculator trying to figure out if your CGPA went up or down. Spreadsheets. WhatsApp forwards. Manual arithmetic at 2am.
+
+The university's result PDFs show an SGPA per semester but never a CGPA, so every student was doing this math by hand.
 
 **CGPA Pulse eliminates all of that.**
 
-It's a full-stack progressive web application that lets B.Tech students at Maharaja Ranjit Singh Punjab Technical University enter their internal and external marks, get a live SGPA preview as they type, track their cumulative CGPA across all 8 semesters, predict what they need to hit a target, and compare themselves on a real-time leaderboard — all from their phone, installed like a native app.
+It's a full-stack progressive web app for MRSPTU students (B.Tech, B.Pharm, Pharm.D and M.Pharm). Enter your internal and external marks, get a live SGPA preview as you type, track your cumulative CGPA across every semester, predict what you need to hit a target, and compare yourself on a real-time leaderboard, all from your phone, installed like a native app.
+
+---
+
+## Impact
+
+*As of November 2026*
+
+| Registered students | On the leaderboard | Google Search CTR |
+|:---:|:---:|:---:|
+| **193+** | **70+** | **10.7%** at avg. position 6.5 |
+
+Students found it on their own: the Google Search Console number is organic, with no ads and no promotion behind it.
 
 ---
 
 ## Features
 
 ### Core Calculator Engine
-- **Live SGPA preview** — SGPA updates in real time as you type each mark, before you save
-- **Theory + Lab support** — correct Internal/External split (40+60 for theory, 60+40 for lab)
-- **Partial save detection** — marks unfilled subjects as partial, estimates SGPA with a `~` prefix
-- **Quick SGPA entry** — already know your SGPA? Skip mark entry entirely with ⚡ Quick SGPA
-- **Delete records** — remove any semester's data cleanly
+- **Live SGPA preview:** updates in real time as you type each mark, before you save
+- **Theory + Lab support:** correct Internal/External split (40+60 for theory, 60+40 for lab)
+- **Partial save detection:** marks unfilled subjects as partial, estimates SGPA with a `~` prefix
+- **Quick SGPA entry:** already know your SGPA? Skip mark entry entirely with ⚡ Quick SGPA
+- **Delete records:** remove any semester's data cleanly
+
+### Scheme-Aware Grading Engine
+Different programmes grade differently, and the engine handles all of them from one codebase:
+
+- **Engineering (B.Tech):** numeric 10-point GPA (see [SGPA Calculation](#sgpa-calculation))
+- **University Departments (B.Pharm, Pharm.D, M.Pharm):** O/A/B/C/D/F letter grades + percentage system
+- **Pharm.D:** supports its 5-year annual structure instead of semesters
 
 ### Branch & Syllabus Support
-All 7 MRSPTU B.Tech branches fully supported with official subject lists:
+Official subject lists for every supported programme, loaded automatically once you pick your branch:
 
-| Branch | Code | Semesters |
-|--------|------|-----------|
-| Computer Science & Engineering | CSE | 1–8 |
-| Computer Science (AI & ML) | CSE AI/ML | 1–8 |
-| Electronics & Communication | ECE | 1–8 |
-| Electrical Engineering | EE | 1–8 |
-| Mechanical Engineering | ME | 1–8 |
-| Civil Engineering | CIVIL | 1–8 |
-| Textile Engineering | TEXTILE | 1–8 |
+- **B.Tech:** CSE, CSE (AI & ML), ECE, EE, ME, Civil, Textile
+- **University Departments:** B.Pharm, Pharm.D, M.Pharm
+- More branches and programmes are being added over time
 
 ### Subject Customisation
-- **Hide subjects** — remove dropped/obsolete subjects from SGPA calculation
-- **Add subjects** — add new subjects with custom credits and type (theory/lab)
-- **Elective picker** — dropdown with official elective options per branch per semester
+- **Hide subjects:** remove dropped/obsolete subjects from SGPA calculation
+- **Add subjects:** add new subjects with custom credits and type (theory/lab)
+- **Elective picker:** dropdown with official elective options per branch per semester
 - All customisations persist across sessions in the database
 
 ### CGPA Predictor & Target
-- **Target CGPA calculator** — enter a target CGPA, get the exact SGPA needed in remaining semesters
-- **Grade predictor** — enter internal marks, see what external score you need for each grade
-- **Per-semester credit awareness** — calculations account for hidden/custom subjects automatically
+- **Target CGPA calculator:** enter a target CGPA, get the exact SGPA needed in the remaining semesters
+- **Grade predictor:** enter internal marks, see what external score you need for each grade
+- **Per-semester credit awareness:** calculations account for hidden/custom subjects automatically
 
 ### Leaderboard
-- Real-time opt-in leaderboard visible to all users
-- 30-day opt-out lock (commit to the board for at least a month)
-- Confirmation modal with disclaimer before opting in
+- Real-time leaderboard with **Overall** and **Branch** tabs
+- Participation is mandatory, so the board reflects everyone
 - Branch badges, medal rankings (🥇🥈🥉), CGPA colour coding
 
 ### Backlogs Tracker
@@ -64,23 +94,23 @@ All 7 MRSPTU B.Tech branches fully supported with official subject lists:
 - ⚠ badge on the navigation tab when backlogs exist
 
 ### Mobile-First UX
-- **Hybrid marks layout on mobile** — bird's-eye subject grid at top, sticky input dock at bottom
-- **Tap any subject card** to load it into the dock — no scrolling through rows
+- **Hybrid marks layout on mobile:** bird's-eye subject grid at the top, sticky input dock at the bottom
+- **Tap any subject card** to load it into the dock, no scrolling through rows
 - **← Prev / Next →** navigation inside the dock with Enter key support
-- **Bottom tab bar** with core 4 tabs + "More ⋯" sheet for secondary pages
-- **Installable PWA** — works offline, adds to home screen like a native app
+- **Bottom tab bar** with the core 4 tabs + a "More ⋯" sheet for secondary pages
+- **Installable PWA:** works offline, adds to the home screen like a native app
 
 ### Authentication
-- **Google OAuth only** — one-tap sign in, no passwords to remember or forget
-- **JWT + HttpOnly cookies** — access token (15m) + refresh token (7d), cross-domain safe
-- **Persistent sessions** — stay logged in across browser restarts
-- **New user onboarding** — 4-step flow: username → branch → current semester → quick guide
+- **Google OAuth only:** one-tap sign in, no passwords to remember or forget
+- **JWT + HttpOnly cookies:** access token (15m) + refresh token (7d), cross-domain safe
+- **Persistent sessions:** stay logged in across browser restarts
+- **New user onboarding:** 4-step flow: username → branch → current semester → quick guide
 
 ### Developer Identity
-- **Terminal boot sequence** on first visit — full typewriter effect with system boot messages
+- **Terminal boot sequence** on first visit with a full typewriter effect and system boot messages
 - **Floating grade cards** ambient background animation on the login page
-- **[ Developer Console ]** glowing button in login drawer and avatar dropdown
-- About modal with terminal aesthetic, tech stack pills, GitHub/LinkedIn links
+- **[ Developer Console ]** glowing button in the login drawer and avatar dropdown
+- About modal with terminal aesthetic, tech stack pills, and GitHub/LinkedIn links
 
 ---
 
@@ -88,29 +118,29 @@ All 7 MRSPTU B.Tech branches fully supported with official subject lists:
 
 ### Frontend
 ```
-React 18          — UI framework with hooks
-Vite              — build tool, HMR, code splitting
-React Hot Toast   — notification system
-@react-oauth/google — Google OAuth integration
-PWA (manifest + SW) — installable, offline-capable
-CSS Variables     — instant theme switching without flash
+React 18              UI framework with hooks
+Vite                  build tool, HMR, code splitting
+React Hot Toast       notification system
+@react-oauth/google   Google OAuth integration
+PWA (manifest + SW)   installable, offline-capable
+CSS Variables         instant theme switching without flash
 ```
 
 ### Backend
 ```
-Node.js + Express  — REST API server
-MongoDB + Mongoose — database with compound indexes
-JWT (HttpOnly)     — stateless auth, XSS-safe
-Helmet             — security headers
-express-rate-limit — brute force protection
-Joi                — request validation
+Node.js + Express     REST API server
+MongoDB + Mongoose    database with compound indexes
+JWT (HttpOnly)        stateless auth, XSS-safe
+Helmet                security headers
+express-rate-limit    brute force protection
+Joi                   request validation
 ```
 
 ### Infrastructure
 ```
-Vercel   — frontend hosting, edge CDN
-Render   — backend hosting
-MongoDB Atlas — managed database cluster
+Vercel          frontend hosting, edge CDN
+Render          backend hosting
+MongoDB Atlas   managed database cluster
 ```
 
 ---
@@ -119,34 +149,30 @@ MongoDB Atlas — managed database cluster
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Vercel (Frontend)                     │
-│                                                          │
-│  React App ──► AuthContext ──► AppDataContext            │
-│       │              │               │                   │
-│  LoginPage    Google OAuth    API Services               │
-│  MobileDrawer  JWT Cookies    semester.api.js            │
-│  NavBar        Session        user.api.js                │
-│  Calculator    Restore        leaderboard.api.js         │
+│                    Vercel (Frontend)                    │
+│                                                         │
+│   React 18 + Vite PWA                                   │
+│     └─ AuthContext ─ AppDataContext ─ API services      │
+│        (semester / user / leaderboard)                  │
 └────────────────────────┬────────────────────────────────┘
-                         │  HTTPS / HttpOnly Cookies
+                         │  HTTPS + HttpOnly cookies
 ┌────────────────────────▼────────────────────────────────┐
-│                    Render (Backend)                      │
-│                                                          │
-│  Express App                                             │
-│    ├── /api/auth     — Google OAuth, JWT, refresh        │
-│    ├── /api/user     — profile, branch, username, LB     │
-│    ├── /api/semesters — CRUD, marks, backlogs, electives │
-│    └── /api/leaderboard — ranked entries                 │
-│                                                          │
-│  Middleware: Helmet, CORS, Rate Limit, JWT Protect       │
+│                    Render (Backend)                     │
+│                                                         │
+│   Express API                                           │
+│     ├── /api/auth         Google OAuth, JWT, refresh    │
+│     ├── /api/user         profile, branch, username     │
+│     ├── /api/semesters    marks, backlogs, electives    │
+│     └── /api/leaderboard  ranked entries                │
+│                                                         │
+│   Middleware: Helmet, CORS, rate limit, JWT protect     │
 └────────────────────────┬────────────────────────────────┘
                          │  Mongoose ODM
 ┌────────────────────────▼────────────────────────────────┐
-│                 MongoDB Atlas                            │
-│                                                          │
-│  Collections:                                            │
-│    users          — profile, auth, LB opt-in, install    │
-│    semesterdatas  — marks, SGPA, custom/hidden subjects  │
+│                     MongoDB Atlas                       │
+│                                                         │
+│   users           profile, auth, install tracking       │
+│   semesterdatas   marks, SGPA, custom/hidden subjects   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -196,10 +222,10 @@ GOOGLE_CLIENT_ID=your_google_client_id
 ### Run Locally
 
 ```bash
-# Terminal 1 — Backend
+# Terminal 1: Backend
 cd backend && npm run dev
 
-# Terminal 2 — Frontend
+# Terminal 2: Frontend
 cd frontend && npm run dev
 ```
 
@@ -232,7 +258,7 @@ cgpa-pulse/
     └── src/
         ├── config/            # DB connection, logger
         ├── controllers/       # Route handlers
-        ├── middleware/        # Auth, CSRF, rate limit, validation
+        ├── middleware/        # Auth, rate limit, validation
         ├── models/            # Mongoose schemas
         ├── routes/            # Express routers
         ├── services/          # Business logic (auth, email)
@@ -257,7 +283,6 @@ cgpa-pulse/
 | GET | `/api/user/profile` | Get profile |
 | PUT | `/api/user/branch` | Update branch |
 | PUT | `/api/user/username` | Change username (30d cooldown) |
-| PUT | `/api/user/leaderboard` | Toggle LB opt-in (30d lock) |
 | PUT | `/api/user/current-sem` | Update current semester |
 | POST | `/api/user/app-install` | Record PWA install |
 | GET | `/api/user/check-username` | Check username availability |
@@ -275,24 +300,28 @@ cgpa-pulse/
 | DELETE | `/api/semesters/:branch/:sem/custom-subjects/:code` | Remove custom subject |
 | PATCH | `/api/semesters/:branch/:sem/subjects/:code/visibility` | Hide/restore subject |
 
+### Leaderboard
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/leaderboard` | Ranked entries (Overall and per-branch) |
+
 ---
 
 ## Security
 
-- **HttpOnly JWT cookies** — tokens are never accessible from JavaScript, XSS-proof
-- **SameSite=None; Secure** — cross-domain cookies work safely on HTTPS
-- **Helmet.js** — sets 11 security headers including CSP, HSTS, X-Frame-Options
-- **Rate limiting** — auth routes limited to 50 req/15min, save routes limited separately
-- **Joi validation** — every request body validated before hitting controllers
-- **Google token verification** — tokens verified against Google's userinfo endpoint, not trusted client-side
-- **30-day username cooldown** — enforced server-side, prevents username squatting
-- **30-day leaderboard lock** — prevents users gaming the leaderboard with repeated opt-in/out
+- **HttpOnly JWT cookies:** tokens are never accessible from JavaScript, XSS-proof
+- **SameSite=None; Secure:** cross-domain cookies work safely on HTTPS
+- **Helmet.js:** sets 11 security headers including CSP, HSTS, X-Frame-Options
+- **Rate limiting:** auth routes limited to 50 req/15min, save routes limited separately
+- **Joi validation:** every request body validated before hitting controllers
+- **Google token verification:** tokens verified against Google's userinfo endpoint, not trusted client-side
+- **30-day username cooldown:** enforced server-side, prevents username squatting
 
 ---
 
 ## SGPA Calculation
 
-MRSPTU uses a 10-point grading system:
+B.Tech programmes use MRSPTU's 10-point grading system:
 
 | Marks Range | Grade | Grade Points |
 |-------------|-------|--------------|
@@ -305,12 +334,12 @@ MRSPTU uses a 10-point grading system:
 | 40–45 | E | 4 |
 | Below 40 | F | 0 |
 
-**SGPA Formula:**
+**SGPA formula**
 ```
 SGPA = Σ(Grade Points × Credits) / Σ(Credits)
 ```
 
-**CGPA Formula:**
+**CGPA formula**
 ```
 CGPA = Σ(SGPA × Semester Credits) / Σ(All Semester Credits)
 ```
@@ -319,11 +348,20 @@ Hidden subjects are excluded from both numerator and denominator. Custom subject
 
 ---
 
+## Engineering Notes
+
+Two things that were harder than they look:
+
+- **Cross-domain auth.** HttpOnly cookies between Vercel and Render needed careful `SameSite`/`Secure` handling, and an iOS login loop had to be tracked down and fixed.
+- **Removing dead weight.** Deleted a CSRF middleware that wasn't doing anything and was adding latency, and cleaned up duplicate routes.
+
+---
+
 ## Deployment
 
 ### Frontend → Vercel
 ```bash
-# Set environment variables in Vercel dashboard:
+# Set environment variables in the Vercel dashboard:
 VITE_API_URL=https://your-backend.onrender.com/api
 VITE_GOOGLE_CLIENT_ID=your_google_client_id
 
@@ -343,7 +381,7 @@ COOKIE_SAMESITE=none
 GOOGLE_CLIENT_ID=...
 ```
 
-**Cold start tip:** Add a cron job at `cron-job.org` to ping `https://your-backend.onrender.com/health` every 10 minutes — keeps Render warm and eliminates cold start delays for users.
+**Cold start tip:** add a cron job at `cron-job.org` to ping `https://your-backend.onrender.com/health` every 10 minutes. It keeps Render warm and removes cold start delays for users.
 
 ---
 
@@ -360,20 +398,20 @@ GOOGLE_CLIENT_ID=...
 
 ## About the Developer
 
-Built with obsession by **Khushneet Kaur** — B.Tech CSE student at GZSCCET, affiliated with MRSPTU Bathinda.
+Built with obsession by **Khushneet Kaur**, B.Tech CSE student at GZSCCET, affiliated with MRSPTU Bathinda.
 
-This started as "I just need a quick calculator" and turned into a full-stack production application with OAuth, PWA capabilities, a leaderboard, grade prediction, subject customisation, and a terminal boot sequence on the login page.
+This started as "I just need a quick calculator" and turned into a production application with OAuth, PWA capabilities, a leaderboard, grade prediction, subject customisation, support for multiple grading schemes, and a terminal boot sequence on the login page.
 
 That escalated quickly.
 
 [![GitHub](https://img.shields.io/badge/GitHub-KhushneetKaur-181717?style=flat-square&logo=github)](https://github.com/KhushneetKaur)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Khushneet%20Kaur-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/khushneet)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Khushneet%20Kaur-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/khushneet)
 
 ---
 
 ## License
 
-MIT — use it, fork it, learn from it. Just don't claim you built it.
+MIT. Use it, fork it, learn from it. Just don't claim you built it.
 
 ---
 
